@@ -2,7 +2,8 @@
 
 class VocabularyMappings extends Omeka_Record_AbstractRecord
 {
-    public $nomenclature_id;
-    public $common_term;
+    public $element_id;
+    public $mapping;
     public $local_term;
+    public $common_term;
 }

@@ -28,7 +28,10 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
 
     public function hookInstall()
     {
+        VocabularyTableFactory::createVocabularyCommonTermsTable();
+        VocabularyTableFactory::createVocabularyLocalTermsTable();
         VocabularyTableFactory::createVocabularyMappingsTable();
+
         VocabularyTableFactory::initializeVocabularyMappingsTable();
     }
 
@@ -38,7 +41,10 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
         if (!$deleteTables)
             return;
 
+        VocabularyTableFactory::dropVocabularyCommonTermsTable();
+        VocabularyTableFactory::dropVocabularyLocalTermsTable();
         VocabularyTableFactory::dropVocabularyMappingsTable();
+
         VocabularyConfig::removeConfiguration();
     }
 

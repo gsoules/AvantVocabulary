@@ -9,12 +9,11 @@ class AvantVocabulary
         $this->db = get_db();
     }
 
-    public function getCommonTerm($text)
+    public function getMappedTermForLocalTerm($elementId, $localTerm)
     {
-        $term = $this->db->getTable('VocabularyMappings')->getVocabularyMapping($text);
-        if ($term)
-            return $term->common_term;
-        else
-            return $text;
+        $mappedTerm = $this->db->getTable('VocabularyLocalTerms')->getMappedTerm($elementId, $localTerm);
+        if (!$mappedTerm)
+            $mappedTerm = 'UNMAPPED';
+        return $mappedTerm;
     }
 }
