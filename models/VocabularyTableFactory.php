@@ -9,8 +9,10 @@ class VocabularyTableFactory
         $sql = "
         CREATE TABLE IF NOT EXISTS `{$db->prefix}vocabulary_common_terms` (
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-            `nomenclature_id` int(10) unsigned NOT NULL,
+            `kind` int(10) unsigned NOT NULL,
+            `identifier` int(10) unsigned NOT NULL,
             `common_term` varchar(512) DEFAULT NULL,
+            `leaf_term` varchar(128) DEFAULT NULL,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 

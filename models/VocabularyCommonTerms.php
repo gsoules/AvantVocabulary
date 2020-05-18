@@ -2,6 +2,8 @@
 
 class VocabularyCommonTerms extends Omeka_Record_AbstractRecord
 {
-    public $nomenclature_id;
+    public $kind;
+    public $identifier;
     public $common_term;
+    public $leaf_term;
 }

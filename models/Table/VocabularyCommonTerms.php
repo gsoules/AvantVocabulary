@@ -9,4 +9,12 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         $mapping = $this->fetchObject($select);
         return $mapping;
     }
+
+    public function getRowCount()
+    {
+        $select = $this->getSelect();
+        $select->columns('COUNT(*) AS count');
+        $result = $this->fetchObject($select);
+        return $result->count;
+    }
 }
