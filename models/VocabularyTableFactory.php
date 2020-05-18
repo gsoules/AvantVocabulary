@@ -26,7 +26,7 @@ class VocabularyTableFactory
         $sql = "
         CREATE TABLE IF NOT EXISTS `{$db->prefix}vocabulary_local_terms` (
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-            `element_id` int(10) unsigned NOT NULL,
+            `kind` int(10) unsigned NOT NULL,
             `local_term` varchar(512) DEFAULT NULL,
             `mapped_term` varchar(512) DEFAULT NULL,
             PRIMARY KEY (`id`)
@@ -42,7 +42,7 @@ class VocabularyTableFactory
         $sql = "
         CREATE TABLE IF NOT EXISTS `{$db->prefix}vocabulary_mappings` (
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-            `element_id` int(10) unsigned NOT NULL,
+            `kind` int(10) unsigned NOT NULL,
             `local_term` varchar(512) NOT NULL,
             `mapping` int(10) unsigned NOT NULL,
             `common_term` varchar(512) DEFAULT NULL,
@@ -76,7 +76,7 @@ class VocabularyTableFactory
     public static function initializeVocabularyMappingsTable()
     {
         $mapping = new VocabularyMappings();
-        $mapping['element_id'] = 3456;
+        $mapping['kind'] = 3456;
         $mapping['local_term'] = 'fubar';
         $mapping['mapping'] = 0;
         $mapping['common_term'] = 'foo bar';

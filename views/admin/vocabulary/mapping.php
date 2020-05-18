@@ -16,6 +16,14 @@ if (AvantCommon::isAjaxRequest())
 $pageTitle = __('Vocabulary Mapping');
 echo head(array('title' => $pageTitle, 'bodyclass' => 'mapping'));
 
+// Warn if this session is running in the debugger because simultaneous Ajax requests won't work while debugging.
+if (isset($_COOKIE['XDEBUG_SESSION']))
+{
+    echo '<div class="health-report-error">XDEBUG_SESSION in progress. Build status will not be reported in real-time.<br/>';
+    echo '<a href="http://localhost/omeka-2.6/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
+    echo '</div>';
+}
+
 echo "<hr/>";
 echo "<button id='start-button'>Start</button>";
 echo '<div id="status-area"></div>';

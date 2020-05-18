@@ -9,9 +9,9 @@ class AvantVocabulary
         $this->db = get_db();
     }
 
-    public function getMappedTermForLocalTerm($elementId, $localTerm)
+    public function getMappedTermForLocalTerm($kind, $localTerm)
     {
-        $mappedTerm = $this->db->getTable('VocabularyLocalTerms')->getMappedTerm($elementId, $localTerm);
+        $mappedTerm = $this->db->getTable('VocabularyLocalTerms')->getMappedTerm($kind, $localTerm);
         if (!$mappedTerm)
             $mappedTerm = 'UNMAPPED';
         return $mappedTerm;
