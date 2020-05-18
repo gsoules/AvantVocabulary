@@ -6,10 +6,28 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
         'admin_head',
         'config',
         'config_form',
+        'define_routes',
         'install',
         'uninstall',
         'upgrade'
- );
+    );
+
+    protected $_filters = array(
+        'admin_navigation_main'
+    );
+
+    public function filterAdminNavigationMain($nav)
+    {
+        $user = current_user();
+        if ($user->role == 'super')
+        {
+            $nav[] = array(
+                'label' => __('Vocabulary'),
+                'uri' => url('vocabulary/mapping')
+            );
+        }
+        return $nav;
+    }
 
     public function hookAdminHead($args)
     {
@@ -24,6 +42,11 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
     public function hookConfigForm()
     {
         require dirname(__FILE__) . '/config_form.php';
+    }
+
+    public function hookDefineRoutes($args)
+    {
+        $args['router']->addConfig(new Zend_Config_Ini(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'routes.ini', 'routes'));
     }
 
     public function hookInstall()
