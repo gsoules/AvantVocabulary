@@ -54,8 +54,6 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
         VocabularyTableFactory::createVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyLocalTermsTable();
         VocabularyTableFactory::createVocabularyMappingsTable();
-
-        VocabularyTableFactory::initializeVocabularyMappingsTable();
     }
 
     public function hookUninstall()

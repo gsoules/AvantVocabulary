@@ -2,7 +2,28 @@
 
 class AvantVocabularyTableBuilder
 {
-    public function createCommonTerm($csvFileRow)
+    protected $db;
+    protected $mappingTable;
+
+    public function __construct()
+    {
+        $this->db = get_db();
+    }
+
+    protected function addRecordForLocalTerm($kind, $localTerm)
+    {
+        $localTermRecord = new VocabularyLocalTerms();
+        $localTermRecord['kind'] = $kind;
+        $localTermRecord['local_term'] = $localTerm;
+
+        $commonTerm = $this->db->getTable('VocabularyCommonTerms')->commonTermExists($kind, $localTerm);
+        if ($commonTerm)
+            $localTermRecord['common_term'] = $localTerm;
+
+        return $localTermRecord;
+    }
+
+    protected function createCommonTerm($csvFileRow)
     {
         $commonTerm = new VocabularyCommonTerms();
         $commonTerm['kind'] = $csvFileRow[0];
@@ -11,6 +32,54 @@ class AvantVocabularyTableBuilder
         $commonTerm['leaf_term'] = $csvFileRow[3];
 
         return $commonTerm;
+    }
+
+    protected function createLocalTerms($elementName, $kind)
+    {
+        $elementId = ItemMetadata::getElementIdForElementName($elementName);
+
+        // Get the set of unique text values for this elements.
+        $results = $this->fetchUniqueLocalTerms($elementId);
+
+        // Add each value as a local term.
+        foreach ($results as $result)
+        {
+            $text = $result['text'];
+            $localTerm = $this->addRecordForLocalTerm($kind, $text);
+            $success = $localTerm->save();
+
+            if (!$success)
+            {
+                break;
+            }
+        }
+    }
+
+    protected function fetchUniqueLocalTerms($elementId)
+    {
+        $results = array();
+
+        try
+        {
+            $table = "{$this->db->prefix}element_texts";
+
+            $sql = "
+                SELECT
+                  DISTINCT text
+                FROM
+                  $table
+                WHERE
+                  record_type = 'Item' AND element_id = $elementId
+            ";
+
+            $results = $this->db->query($sql)->fetchAll();
+        }
+        catch (Exception $e)
+        {
+            $itemFieldTexts = array();
+        }
+
+        return $results;
     }
 
     public function handleAjaxRequest()
@@ -26,7 +95,8 @@ class AvantVocabularyTableBuilder
             switch ($action)
             {
                 case 'rebuild':
-                    $this->rebuildTables();
+                    //$this->rebuildCommonTermsTable();
+                    $this->rebuildLocalTermsTable();
                     $buildAction = true;
                     break;
 
@@ -55,14 +125,12 @@ class AvantVocabularyTableBuilder
 
     protected function getProgress()
     {
-        $db = get_db();
-        $count = $db->getTable('VocabularyCommonTerms')->getRowCount();
+        $count = $this->db->getTable('VocabularyCommonTerms')->getRowCount();
         return "$count records written";
     }
 
-    protected function rebuildTables()
+    protected function rebuildCommonTermsTable()
     {
-        // Delete the rows in the tables
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyCommonTermsTable();
 
@@ -84,5 +152,18 @@ class AvantVocabularyTableBuilder
                 break;
             }
         }
+    }
+
+    protected function rebuildLocalTermsTable()
+    {
+        VocabularyTableFactory::dropVocabularyLocalTermsTable();
+        VocabularyTableFactory::createVocabularyLocalTermsTable();
+
+        $results = $this->db->getTable('VocabularyMappings')->getAllMappings();
+        $this->mappingTable = $results;
+
+        $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
+        $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
+        $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
     }
 }

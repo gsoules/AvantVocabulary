@@ -28,7 +28,8 @@ class VocabularyTableFactory
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `kind` int(10) unsigned NOT NULL,
             `local_term` varchar(512) DEFAULT NULL,
-            `mapped_term` varchar(512) DEFAULT NULL,
+            `mapping` int(10) unsigned NOT NULL,
+            `common_term` varchar(512) DEFAULT NULL,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 
@@ -71,15 +72,5 @@ class VocabularyTableFactory
         $db = get_db();
         $sql = "DROP TABLE IF EXISTS `{$db->prefix}vocabulary_mappings`";
         $db->query($sql);
-    }
-
-    public static function initializeVocabularyMappingsTable()
-    {
-        $mapping = new VocabularyMappings();
-        $mapping['kind'] = 3456;
-        $mapping['local_term'] = 'fubar';
-        $mapping['mapping'] = 0;
-        $mapping['common_term'] = 'foo bar';
-        $mapping->save();
     }
 }

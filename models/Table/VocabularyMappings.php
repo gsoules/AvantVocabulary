@@ -9,4 +9,11 @@ class Table_VocabularyMappings extends Omeka_Db_Table
         $mapping = $this->fetchObject($select);
         return $mapping;
     }
+
+    public function getAllMappings()
+    {
+        $select = $this->getSelect();
+        $mappings = $this->fetchObjects($select);
+        return $mappings;
+    }
 }
