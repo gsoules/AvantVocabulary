@@ -3,7 +3,6 @@
 class AvantVocabularyTableBuilder
 {
     protected $db;
-    protected $mappingTable;
 
     public function __construct()
     {
@@ -18,7 +17,14 @@ class AvantVocabularyTableBuilder
 
         $commonTerm = $this->db->getTable('VocabularyCommonTerms')->commonTermExists($kind, $localTerm);
         if ($commonTerm)
+        {
             $localTermRecord['common_term'] = $localTerm;
+            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_SAME_AS_COMMON;
+        }
+        else
+        {
+            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_NONE;
+        }
 
         return $localTermRecord;
     }
@@ -158,9 +164,6 @@ class AvantVocabularyTableBuilder
     {
         VocabularyTableFactory::dropVocabularyLocalTermsTable();
         VocabularyTableFactory::createVocabularyLocalTermsTable();
-
-        $results = $this->db->getTable('VocabularyMappings')->getAllMappings();
-        $this->mappingTable = $results;
 
         $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
         $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);

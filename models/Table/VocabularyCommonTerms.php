@@ -4,10 +4,12 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 {
     public function commonTermExists($kind, $commonTerm)
     {
+        $whereKind = AvantVocabulary::getWhereKind($kind);
+
         $select = $this->getSelect();
         $select->reset(Zend_Db_Select::COLUMNS);
         $select->columns('COUNT(*) AS count');
-        $select->where("vocabulary_common_terms.kind = $kind AND vocabulary_common_terms.common_term = '$commonTerm'");
+        $select->where("$whereKind AND common_term = '$commonTerm'");
         $result = $this->fetchObject($select);
         return $result->count == 1;
     }
