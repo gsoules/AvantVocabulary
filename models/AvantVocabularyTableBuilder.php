@@ -15,8 +15,9 @@ class AvantVocabularyTableBuilder
         $localTermRecord['kind'] = $kind;
         $localTermRecord['local_term'] = $localTerm;
 
-        $commonTerm = $this->db->getTable('VocabularyCommonTerms')->commonTermExists($kind, $localTerm);
-        if ($commonTerm)
+        // Check if there is a common term that's the sames as the local term.
+        $commonTermExists = $this->db->getTable('VocabularyCommonTerms')->commonTermExists($kind, $localTerm);
+        if ($commonTermExists)
         {
             $localTermRecord['common_term'] = $localTerm;
             $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_SAME_AS_COMMON;
@@ -42,23 +43,47 @@ class AvantVocabularyTableBuilder
 
     protected function createLocalTerms($elementName, $kind)
     {
+        $success = true;
         $elementId = ItemMetadata::getElementIdForElementName($elementName);
 
         // Get the set of unique text values for this elements.
         $results = $this->fetchUniqueLocalTerms($elementId);
 
-        // Add each value as a local term.
         foreach ($results as $result)
         {
-            $text = $result['text'];
-            $localTerm = $this->addRecordForLocalTerm($kind, $text);
-            $success = $localTerm->save();
+            $localTerm = $result['text'];
 
-            if (!$success)
+            // Check if the value is already in the table.
+            $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $localTerm);
+
+            if ($localTermRecord)
             {
-                break;
+                // Then make sure it matches the existing common value.
+                $commonTerm = $localTermRecord->common_term;
+                if ($commonTerm)
+                {
+                    $commonTermExists = $this->db->getTable('VocabularyCommonTerms')->commonTermExists($kind, $commonTerm);
+                    if (!$commonTermExists)
+                    {
+                        // The table is out of date. Change this local term to not mapped.
+                        $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_NONE;
+                        $localTermRecord->common_term = null;
+                        $success = $localTermRecord->save();
+                        if (!$success)
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                // Add the value as a local term.
+                $localTermRecord = $this->addRecordForLocalTerm($kind, $localTerm);
+                $success = $localTermRecord->save();
+                if (!$success)
+                    break;
             }
         }
+        return $success;
     }
 
     protected function fetchUniqueLocalTerms($elementId)
@@ -101,9 +126,12 @@ class AvantVocabularyTableBuilder
             switch ($action)
             {
                 case 'rebuild':
-                    //$this->rebuildCommonTermsTable();
-                    $this->rebuildLocalTermsTable();
-                    $buildAction = true;
+                    //$success = $this->rebuildCommonTermsTable();
+                    $success = $this->rebuildLocalTermsTable();
+                    if (!$success)
+                        $response = 'REBUILD FAILED';
+                    else
+                        $buildAction = true;
                     break;
 
                 case 'progress':
@@ -137,6 +165,8 @@ class AvantVocabularyTableBuilder
 
     protected function rebuildCommonTermsTable()
     {
+        $success = true;
+
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyCommonTermsTable();
 
@@ -152,21 +182,30 @@ class AvantVocabularyTableBuilder
 
             $commonTerm = $this->createCommonTerm($row);
             $success = $commonTerm->save();
-
             if (!$success)
-            {
                 break;
-            }
         }
+
+        return $success;
     }
 
     protected function rebuildLocalTermsTable()
     {
-        VocabularyTableFactory::dropVocabularyLocalTermsTable();
-        VocabularyTableFactory::createVocabularyLocalTermsTable();
+//        VocabularyTableFactory::dropVocabularyLocalTermsTable();
+//        VocabularyTableFactory::createVocabularyLocalTermsTable();
 
-        $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
-        $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
-        $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
+        $success = $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
+        if (!$success)
+            return false;
+
+        $success = $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
+        if (!$success)
+            return false;
+
+        $success = $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
+        if (!$success)
+            return false;
+
+        return false;
     }
 }

@@ -22,10 +22,10 @@ class AvantVocabulary
 
     public function getCommonTermForLocalTerm($kind, $localTerm)
     {
-        $mappedTerm = $this->db->getTable('VocabularyLocalTerms')->getCommonTermForLocalTerm($kind, $localTerm);
-        if (!$mappedTerm)
-            $mappedTerm = 'UNMAPPED';
-        return $mappedTerm;
+        $commonTerm = $this->db->getTable('VocabularyLocalTerms')->getCommonTermForLocalTerm($kind, $localTerm);
+        if (!$commonTerm)
+            $commonTerm = 'UNMAPPED';
+        return $commonTerm;
     }
 
     public static function getWhereKind($kind)

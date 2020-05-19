@@ -2,13 +2,21 @@
 
 class Table_VocabularyLocalTerms extends Omeka_Db_Table
 {
+    public function getLocalTermRecord($kind, $localTerm)
+    {
+        $select = $this->getSelect();
+        $select->where("kind = $kind AND local_term = '$localTerm'");
+        $result = $this->fetchObject($select);
+        return $result;
+    }
+
     public function getCommonTermForLocalTerm($kind, $localTerm)
     {
         $select = $this->getSelect();
         $select->where("kind = $kind AND local_term = '$localTerm'");
-        $mapping = $this->fetchObject($select);
-        if ($mapping)
-            return $mapping->common_term;
+        $result = $this->fetchObject($select);
+        if ($result)
+            return $result->common_term;
         else
             return '';
     }

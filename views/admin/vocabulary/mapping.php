@@ -62,7 +62,7 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
         {
             startButton.on("click", function()
             {
-                if (selectedAction === 'rebuild-tables')
+                if (selectedAction === 'rebuild')
                 {
                     if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
                         return;
@@ -108,8 +108,8 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
 
         function showStatus(status)
         {
-            status = status.replace(/(\r\n|\n|\r)/gm, '<BR/>');
-            statusArea.html(status);
+            //status = status.replace(/(\r\n|\n|\r)/gm, '<BR/>');
+            statusArea.html(statusArea.html() + '<BR/>' + status);
         }
 
         function startMapping()
