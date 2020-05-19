@@ -28,6 +28,34 @@ echo "<hr/>";
 echo "<button id='start-button'>Start</button>";
 echo '<div id="status-area"></div>';
 
+$localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords();
+
+?>
+
+<table class="relationships-editor-table">
+    <thead>
+    <tr>
+        <th class="relationship-table-relationship"><?php echo __('Local Term'); ?></th>
+        <th class="relationship-table-related-item"><?php echo __('Mapping'); ?></th>
+        <th class="relationship-table-related-item-title"><?php echo __('Common Term'); ?></th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php
+    foreach ($localTermRecords as $localTermRecord)
+    {
+        ?>
+        <tr>
+            <td><?php echo $localTermRecord->local_term; ?></td>
+            <td><?php echo $localTermRecord->mapping; ?></td>
+            <td><?php echo $localTermRecord->common_term; ?></td>
+        </tr>
+    <?php }; ?>
+    </tbody>
+</table>
+
+<?php
+
 echo foot();
 
 // Form the URL for this page which is the same page that satisfies the Ajax requests.
