@@ -1,15 +1,15 @@
 <script type="text/javascript">
 
-    var itemEditorUrl = '<?php echo url('/vocabulary/update/term'); ?>';
+    var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
 
     function addNewItem()
     {
-        var lastItem = jQuery('ul#relationship-items-list > li:last-child');
+        var lastItem = jQuery('ul#vocabulary-terms-list > li:last-child');
         var newItem = lastItem.clone();
 
         newItem.attr('id', 'new-item');
-        newItem.find('.relationship-rule-title').first().text('New');
-        newItem.find('.relationship-item-count').text('0');
+        newItem.find('.vocabulary-term-local').first().text('New');
+        newItem.find('.vocabulary-term-common').text('0');
         newItem.find('.drawer-contents').show();
 
         // Convert the Update button into the Save button.
@@ -56,7 +56,7 @@
         var newItem = jQuery('#new-item');
         newItem.attr('id', data.itemId);
         newItem.find('.drawer-contents').hide();
-        newItem.find('.relationship-rule-title').first().text('<?php echo __('Rule '); ?>' + data.itemId + ': ' + description);
+        newItem.find('.vocabulary-term-local').first().text('<?php echo __('Rule '); ?>' + data.itemId + ': ' + description);
 
         // Convert the Save button back into the Update button.
         var updateButton = newItem.find('.save-item-button');
@@ -80,7 +80,7 @@
     {
         var item = jQuery('#' + id);
         var itemValues = getItemValues(item);
-        item.find('.relationship-rule-title').first().text(itemValues.description);
+        item.find('.vocabulary-term-local').first().text(itemValues.description);
         item.find('.update-item-button').fadeTo(0, 1.0);
     }
 
@@ -88,8 +88,8 @@
     {
         var itemValues =
             {
-                description:item.find('.description').val(),
-                rule:item.find('.rule').val()
+                localTerm:item.find('.local-term').val(),
+                commonTerm:item.find('.common-term').val()
             };
 
         return itemValues;
@@ -136,7 +136,7 @@
 
     function removeItem(itemId)
     {
-        if (!confirm('<?php echo __('Remove this rule?'); ?>'))
+        if (!confirm('<?php echo __('Remove this term?'); ?>'))
             return;
 
         jQuery('#' + itemId).fadeTo(750, 0.20);
@@ -147,7 +147,7 @@
                 method: 'POST',
                 dataType: 'json',
                 data: {
-                    action: <?php echo RelationshipRulesEditor::REMOVE_RELATIONSHIP_RULE; ?>,
+                    action: <?php echo VocabularyTermsEditor::REMOVE_VOCABULARY_TERM; ?>,
                     id: itemId
                 },
                 success: function (data)
@@ -164,7 +164,7 @@
 
     function saveNewItem()
     {
-        var position = jQuery('ul#relationship-items-list > li').length;
+        var position = jQuery('ul#vocabulary-terms-list > li').length;
         var newItem = jQuery('#new-item');
 
         var itemValues = getItemValues(newItem);
@@ -178,11 +178,11 @@
                 method: 'POST',
                 dataType: 'json',
                 data: {
-                    action: <?php echo RelationshipRulesEditor::ADD_RELATIONSHIP_RULE; ?>,
-                    rule:JSON.stringify(itemValues)
+                    action: <?php echo VocabularyTermsEditor::ADD_VOCABULARY_TERM; ?>,
+                    commonTerm:JSON.stringify(itemValues)
                 },
                 success: function (data) {
-                    afterSaveNewItem(data, itemValues.description);
+                    afterSaveNewItem(data, itemValues.localTerm);
                 },
                 error: function (data) {
                     alert('AJAX Error on Save: ' + data.statusText);
@@ -208,8 +208,8 @@
                 method: 'POST',
                 dataType: 'json',
                 data: {
-                    action: <?php echo RelationshipRulesEditor::UPDATE_RELATIONSHIP_RULE; ?>,
-                    rule: JSON.stringify(itemValues)
+                    action: <?php echo VocabularyTermsEditor::UPDATE_VOCABULARY_TERM; ?>,
+                    commonTerm: JSON.stringify(itemValues)
                 },
                 success: function (data) {
                     afterUpdateItem(id);
@@ -223,9 +223,9 @@
 
     function validateItemValues(itemValues)
     {
-        if (itemValues.description.trim().length === 0 || itemValues.rule.trim().length === 0)
+        if (itemValues.localTerm.trim().length === 0)
         {
-            alert('<?php echo __('Description and Rule must both be specified'); ?>');
+            alert('<?php echo __('Local Term must be specified'); ?>');
             return false;
         }
         return true;

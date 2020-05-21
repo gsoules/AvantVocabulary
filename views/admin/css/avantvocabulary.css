@@ -1,3 +1,27 @@
+#vocabulary-terms-list li {
+    margin-bottom: 6px;
+}
+
+#vocabulary-terms-list .sortable-item {
+    background: #ebe9dc;
+    padding: 4px 10px 4px 10px;
+    font-size: 14px;
+}
+
+#vocabulary-terms-list .drawer-contents td {
+    border: none;
+    padding: 4px 4px 4px 4px;
+}
+
+#vocabulary-terms-list .drawer-contents select {
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+}
+
+#vocabulary-terms-list .drawer-contents label {
+    padding-bottom: 2px;
+}
+
 .vocabulary-term-mapping {
     width: 110px;
     padding-left: 14px;
@@ -17,4 +41,12 @@
 
 .vocabulary-term-common a {
     color: rgba(38, 103, 196, 0.68);
+}
+
+.drawer-contents input[type=text] {
+    width: 500px;
+}
+
+.vocabulary-term-local-input {
+    width: 200px;
 }

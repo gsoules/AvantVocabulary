@@ -47,7 +47,7 @@ $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermReco
 
 ?>
 
-<ul id="relationship-items-list" class="ui-sortable">
+<ul id="vocabulary-terms-list" class="ui-sortable">
     <?php
     foreach ($localTermRecords as $localTermRecord)
     {
@@ -75,17 +75,19 @@ $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermReco
         ?>
         <li id="<?php echo $localTermRecord->id; ?>">
             <div class="main_link ui-sortable-handle">
-                <div class="sortable-item not-sortable">
+                <div class="sortable-item not-sortable vocabulary-term">
                     <div class="vocabulary-term-local"><?php echo $localTermRecord->local_term; ?></div>
                     <div class="vocabulary-term-mapping"><?php echo $mappingText; ?></div>
                     <span class="vocabulary-term-common"><?php echo $commonTerm; ?></span>
                     <span class="drawer"></span>
                 </div>
                 <div class="drawer-contents" style="display:none;">
-                    <label><?php echo __('Description'); ?></label><input class="description" type="text" value="<?php echo $localTermRecord->local_term; ?>">
-                    <label><?php echo __('Rule'); ?></label><input class="rule" type="text" value="<?php echo $localTermRecord->common_term; ?>">
-                    <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
-                    <button type="button" class="action-button remove-item-button red button<?php echo $removeClass; ?>"><?php echo __('Remove'); ?></button>
+                    <label><?php echo __('Local Term'); ?></label><input class="local-term" type="text" value="<?php echo $localTermRecord->local_term; ?>">
+                    <label><?php echo __('Common Term'); ?></label><input class="common-term" type="text" value="<?php echo $localTermRecord->common_term; ?>">
+                    <div>
+                        <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
+                        <button type="button" class="action-button remove-item-button red button<?php echo $removeClass; ?>"><?php echo __('Remove'); ?></button>
+                    </div>
                 </div>
             </div>
         </li>
