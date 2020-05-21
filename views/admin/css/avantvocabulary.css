@@ -1,5 +1,5 @@
 .vocabulary-term-mapping {
-    width: 120px;
+    width: 110px;
     padding-left: 14px;
     display: inline-block;
 }
@@ -7,12 +7,12 @@
 .vocabulary-term-local,
 .vocabulary-term-common {
     font-weight: bold;
-    width: 350px;
     display: inline-block;
 }
 
 .vocabulary-term-local {
     text-align: right;
+    width: 300px;
 }
 
 .vocabulary-term-common a {
