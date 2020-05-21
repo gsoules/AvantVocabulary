@@ -181,16 +181,15 @@ class AvantVocabularyTableBuilder
             switch ($action)
             {
                 case 'rebuild':
-                    //$status = $this->rebuildCommonTermsTable();
-                    $status = $this->rebuildLocalTermsTable();
+                    $status = $this->rebuildCommonTermsTable();
+                    //$status = $this->rebuildLocalTermsTable();
                     if ($status != self::STATUS_SUCCESS)
                         $response = "REBUILD FAILED: $status";
                     else
                         $buildAction = true;
                     break;
 
-                case 'progress':
-                    $response = $this->getProgress();
+                case 'rebuild-local':
                     break;
 
                 default:
@@ -205,17 +204,11 @@ class AvantVocabularyTableBuilder
 
         if ($buildAction)
         {
-            $response = "Rebuild completed.<br/>" . $this->getProgress();
+            $response = "Rebuild is finished";
         }
 
         $response = json_encode($response);
         echo $response;
-    }
-
-    protected function getProgress()
-    {
-        $count = $this->db->getTable('VocabularyCommonTerms')->getRowCount();
-        return "$count records written";
     }
 
     protected function rebuildCommonTermsTable()

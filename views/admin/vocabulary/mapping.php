@@ -1,15 +1,26 @@
 <?php
 
 $avantVocabularyTableBuilder = new AvantVocabularyTableBuilder();
+$avantVocabularyTableBuilderProgress = new AvantVocabularyTableBuilderProgress();
 
 if (AvantCommon::isAjaxRequest())
 {
     // This page just got called to handle an asynchronous Ajax request. Execute the request synchronously,
     // waiting here until it completes (when handleAjaxRequest returns). When ths page returns,  the request's
     // success function will execute in the browser (or its error function if something went wrong).
-    // Give the request plenty of time to execute since it can take several minutes.
-    ini_set('max_execution_time', 10 * 60);
-    $avantVocabularyTableBuilder->handleAjaxRequest();
+    $action = isset($_POST['action']) ? $_POST['action'] : '';
+    if ($action == 'progress')
+    {
+        $avantVocabularyTableBuilderProgress->handleAjaxRequest();
+    }
+    else
+    {
+        // Give the request plenty of time to execute since it can take several minutes.
+        ini_set('max_execution_time', 10 * 60);
+        $avantVocabularyTableBuilder->handleAjaxRequest();
+    }
+
+    // Leave so that the code to display the page won't get executed.
     return;
 }
 
@@ -80,56 +91,6 @@ $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermReco
     }
     ?>
 </ul>
-
-<!---->
-<!--<table class="relationships-editor-table">-->
-<!--    <thead>-->
-<!--    <tr>-->
-<!--        <th class="relationship-table-relationship">--><?php //echo __('Kind'); ?><!--</th>-->
-<!--        <th class="relarelationship-table-related-item-title">--><?php //echo __('Local Term'); ?><!--</th>-->
-<!--        <th class="relationship-table-related-item">--><?php //echo __('Mapping'); ?><!--</th>-->
-<!--        <th class="relationship-table-related-item-title">--><?php //echo __('Common Term'); ?><!--</th>-->
-<!--    </tr>-->
-<!--    </thead>-->
-<!--    <tbody>-->
-<!--    --><?php
-//    foreach ($localTermRecords as $localTermRecord)
-//    {
-//        ?>
-<!--        <tr>-->
-<!--            <td>--><?php //echo $localTermRecord->kind; ?><!--</td>-->
-<!--            <td>--><?php //echo $localTermRecord->local_term; ?><!--</td>-->
-<!--            <td>--><?php //echo $localTermRecord->mapping; ?><!--</td>-->
-<!--            <td>--><?php //echo $localTermRecord->common_term; ?><!--</td>-->
-<!--        </tr>-->
-<!--    --><?php //}; ?>
-<!--    </tbody>-->
-<!--</table>-->
-
-<!--<table class="relationships-editor-table">-->
-<!--    <thead>-->
-<!--    <tr>-->
-<!--        <th class="relationship-table-relationship">--><?php //echo __('Kind'); ?><!--</th>-->
-<!--        <th class="relationship-table-relationship">--><?php //echo __('Identifier'); ?><!--</th>-->
-<!--        <th class="relationship-table-related-item-title">--><?php //echo __('Common Term'); ?><!--</th>-->
-<!--        <th class="relationship-table-related-item-title">--><?php //echo __('Leaf Term'); ?><!--</th>-->
-<!--    </tr>-->
-<!--    </thead>-->
-<!--    <tbody>-->
-<!--    --><?php
-//    foreach ($commonTermRecords as $commonTermRecord)
-//    {
-//        ?>
-<!--        <tr>-->
-<!--            <td>--><?php //echo $commonTermRecord->kind; ?><!--</td>-->
-<!--            <td>--><?php //echo $commonTermRecord->identifier; ?><!--</td>-->
-<!--            <td>--><?php //echo $commonTermRecord->common_term; ?><!--</td>-->
-<!--            <td>--><?php //echo $commonTermRecord->leaf_term; ?><!--</td>-->
-<!--        </tr>-->
-<!--    --><?php //}; ?>
-<!--    </tbody>-->
-<!--</table>-->
-
 <?php
 
 echo get_view()->partial('/edit-vocabulary-mapping-script.php');
@@ -143,8 +104,6 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
 <script type="text/javascript">
     jQuery(document).ready(function ()
     {
-        var actionButtons = jQuery("input[name='action']");
-        var indexNameFields = jQuery("#index-name-fields");
         var startButton = jQuery("#start-button").button();
         var statusArea = jQuery("#status-area");
 
@@ -214,8 +173,7 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
 
         function showStatus(status)
         {
-            //status = status.replace(/(\r\n|\n|\r)/gm, '<BR/>');
-            statusArea.html(statusArea.html() + '<BR/>' + status);
+            statusArea.html(statusArea.html() + status + '<BR/>');
         }
 
         function startMapping()
