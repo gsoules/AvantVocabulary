@@ -11,45 +11,8 @@ class AvantVocabularyTableBuilder
         $this->db = get_db();
     }
 
-    protected function addRecordForLocalTerm($kind, $localTerm)
-    {
-        $localTermRecord = new VocabularyLocalTerms();
-        $localTermRecord['kind'] = $kind;
-        $localTermRecord['local_term'] = $localTerm;
-
-        // Check if the local term is identical to a common term.
-        $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
-        if ($commonTermRecord)
-        {
-            // Add the common term info to the local term record.
-            $localTermRecord['common_term'] = $localTerm;
-            $localTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
-            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_IDENTICAL_TO_COMMON;
-        }
-        else
-        {
-            // The local term is not the same as any common term.
-            $localTermRecord['common_term_id'] = 0;
-            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_NONE;
-        }
-
-        return $localTermRecord->save();
-    }
-
-    protected function createCommonTerm($csvFileRow)
-    {
-        $commonTerm = new VocabularyCommonTerms();
-        $commonTerm['kind'] = $csvFileRow[0];
-        $commonTerm['leaf_term'] = $csvFileRow[3];
-        $commonTerm['common_term'] = $csvFileRow[2];
-        $commonTerm['common_term_id'] = intval($csvFileRow[1]);
-
-        return $commonTerm;
-    }
-
     protected function createLocalTerms($elementName, $kind)
     {
-        $status = self::STATUS_SUCCESS;
         $elementId = ItemMetadata::getElementIdForElementName($elementName);
 
         // Get the set of unique text values for this elements.
@@ -114,26 +77,62 @@ class AvantVocabularyTableBuilder
                     // The local term's mapping has changed. Update its record in the local terms table.
                     // This can happen when the common terms table gets updated and some of the terms have changed such
                     // that they now match a local term, or no longer match a local term's mapping to a common term.
-                    if (!$localTermRecord->save())
-                    {
-                        $status = __('Error: $1%s', __FUNCTION__);
-                        break;
-                    }
+                    $this->databaseUpdateRecordForLocalTerm($localTermRecord);
                 }
                 continue;
             }
             else
             {
                 // The local term does not exist in the local terms table. Add it.
-                if (!$this->addRecordForLocalTerm($kind, $localTerm))
-                {
-                    $status = __('Error: $1%s', __FUNCTION__);
-                    break;
-                }
+                $this->databaseInsertRecordForLocalTerm($kind, $localTerm);
             }
         }
-        return 'xxx ' . __FUNCTION__;
-        return $status;
+
+        return self::STATUS_SUCCESS;
+    }
+
+    protected function databaseInsertRecordForCommonTerm($csvFileRow)
+    {
+        $commonTermRecord = new VocabularyCommonTerms();
+        $commonTermRecord['kind'] = $csvFileRow[0];
+        $commonTermRecord['leaf_term'] = $csvFileRow[3];
+        $commonTermRecord['common_term'] = $csvFileRow[2];
+        $commonTermRecord['common_term_id'] = intval($csvFileRow[1]);
+
+        if (!$commonTermRecord->save())
+            throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
+    }
+
+    protected function databaseInsertRecordForLocalTerm($kind, $localTerm)
+    {
+        $localTermRecord = new VocabularyLocalTerms();
+        $localTermRecord['kind'] = $kind;
+        $localTermRecord['local_term'] = $localTerm;
+
+        // Check if the local term is identical to a common term.
+        $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
+        if ($commonTermRecord)
+        {
+            // Add the common term info to the local term record.
+            $localTermRecord['common_term'] = $localTerm;
+            $localTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
+            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_IDENTICAL_TO_COMMON;
+        }
+        else
+        {
+            // The local term is not the same as any common term.
+            $localTermRecord['common_term_id'] = 0;
+            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_NONE;
+        }
+
+        if (!$localTermRecord->save())
+            throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
+    }
+
+    protected function databaseUpdateRecordForLocalTerm($localTermRecord)
+    {
+        if (!$localTermRecord->save())
+            throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
     }
 
     protected function fetchUniqueLocalTerms($elementId)
@@ -181,12 +180,9 @@ class AvantVocabularyTableBuilder
             switch ($action)
             {
                 case 'rebuild':
-                    $status = $this->rebuildCommonTermsTable();
-                    //$status = $this->rebuildLocalTermsTable();
-                    if ($status != self::STATUS_SUCCESS)
-                        $response = "REBUILD FAILED: $status";
-                    else
-                        $buildAction = true;
+                    //$this->rebuildCommonTermsTable();
+                    $this->rebuildLocalTermsTable();
+                    $buildAction = true;
                     break;
 
                 case 'rebuild-local':
@@ -213,8 +209,6 @@ class AvantVocabularyTableBuilder
 
     protected function rebuildCommonTermsTable()
     {
-        $status = self::STATUS_SUCCESS;
-
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyCommonTermsTable();
 
@@ -228,31 +222,21 @@ class AvantVocabularyTableBuilder
             if ($rowNumber == 1 || empty($row[0]))
                 continue;
 
-            $commonTerm = $this->createCommonTerm($row);
-            if (!$commonTerm->save())
-            {
-                $status = __('Error: $1%s', __FUNCTION__);
-                break;
-            }
+            $this->databaseInsertRecordForCommonTerm($row);
         }
-
-        return $status;
     }
 
     protected function rebuildLocalTermsTable()
     {
-        $status = $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
-        if ($status != self::STATUS_SUCCESS)
-            return $status;
-
-        $status = $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
-        if ($status != self::STATUS_SUCCESS)
-            return $status;
-
-        $status = $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
-        if ($status != self::STATUS_SUCCESS)
-            return $status;
+        $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
+        $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
+        $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
 
         return self::STATUS_SUCCESS;
+    }
+
+    private function reportError($message, $function, $line)
+    {
+        return ("$message: $function on line $line");
     }
 }

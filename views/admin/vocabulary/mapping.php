@@ -108,9 +108,6 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
         var statusArea = jQuery("#status-area");
 
         var actionInProgress = false;
-        var indexingId = '';
-        var indexingName = '';
-        var indexingOperation = '';
         var progressCount = 0;
         var progressTimer;
         var selectedAction = 'rebuild';
@@ -143,7 +140,7 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
 
             console.log('reportProgress ' + ++progressCount);
 
-            // Call back to the server (this page) to get the status of the indexing action.
+            // Call back to the server (this page) to get the status of the action.
             // The server returns the complete status since the action began, not just what has since transpired.
             jQuery.ajax(
                 url,
@@ -151,16 +148,14 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
                     method: 'POST',
                     dataType: 'json',
                     data: {
-                        action: 'progress',
-                        indexing_id: indexingId,
-                        operation: indexingOperation
+                        action: 'progress'
                     },
                     success: function (data)
                     {
                         showStatus(data);
                         if (actionInProgress)
                         {
-                            progressTimer = setTimeout(reportProgress, 2000);
+                            progressTimer = setTimeout(reportProgress, 500);
                         }
                     },
                     error: function (request, status, error)
@@ -183,11 +178,11 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
 
             enableStartButton(false);
 
-            // Initiate periodic calls back to the server to get the status of the indexing action.
+            // Initiate periodic calls back to the server to get the status of the action.
             progressCount = 0;
-            progressTimer = setTimeout(reportProgress, 1000);
+            progressTimer = setTimeout(reportProgress, 500);
 
-            // Call back to the server (this page) to initiate the indexing action which can take several minutes.
+            // Call back to the server (this page) to initiate the action which can take several minutes.
             // While waiting, the reportProgress function is called on a timer to get the status of the action.
             jQuery.ajax(
                 url,
@@ -195,10 +190,7 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
                     method: 'POST',
                     dataType: 'json',
                     data: {
-                        action: selectedAction,
-                        index_name: indexingName,
-                        indexing_id: indexingId,
-                        operation: indexingOperation
+                        action: selectedAction
                     },
                     success: function (data)
                     {
