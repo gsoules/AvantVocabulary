@@ -53,7 +53,7 @@ $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermReco
     {
         $removeClass = '';
         $identifier = $localTermRecord->common_term_id;
-        if ($identifier < AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID)
+        if ($identifier > 0 && $identifier < AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID)
         {
             // Create a link to the Nomenclature 4.0 specification for this term.
             $nomenclatureUrl = "https://www.nomenclature.info/parcourir-browse.app?lang=en&id=$identifier&wo=N&ws=INT";
@@ -66,12 +66,12 @@ $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermReco
             $commonTerm = $localTermRecord->common_term;
         }
         $mapping = $localTermRecord->mapping;
-        if ($mapping == 2)
-            $mappingText = __('synonymous with');
-        elseif ($mapping == 1)
-            $mappingText = __('identical to');
+        if ($mapping == AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS)
+            $mappingText = AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS_LABEL;
+        elseif ($mapping == AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL)
+            $mappingText = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL_LABEL;
         else
-            $mappingText = __('NOT MAPPED');
+            $mappingText = AvantVocabulary::VOCABULARY_MAPPING_NONE_LABEL;
         ?>
         <li id="<?php echo $localTermRecord->id; ?>">
             <div class="main_link ui-sortable-handle">
@@ -102,7 +102,7 @@ echo get_view()->partial('/edit-vocabulary-mapping-script.php');
 echo foot();
 
 // Form the URL for this page which is the same page that satisfies the Ajax requests.
-$url = WEB_ROOT . '/admin/vocabulary/mapping';
+$url = WEB_ROOT . '/admin/vocabulary/terms';
 ?>
 
 <script type="text/javascript">

@@ -2,6 +2,11 @@
 
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
 
+    var mappingLabel = [];
+    mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_NONE; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_NONE_LABEL; ?>';
+    mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL_LABEL; ?>';
+    mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS_LABEL; ?>';
+
     function addNewItem()
     {
         var lastItem = jQuery('ul#vocabulary-terms-list > li:last-child');
@@ -76,11 +81,13 @@
         initializeItems();
     }
 
-    function afterUpdateItem(id)
+    function afterUpdateItem(id, mapping)
     {
         var item = jQuery('#' + id);
         var itemValues = getItemValues(item);
-        item.find('.vocabulary-term-local').first().text(itemValues.description);
+        item.find('.vocabulary-term-local').first().text(itemValues.localTerm);
+        item.find('.vocabulary-term-common').first().text(itemValues.commonTerm);
+        item.find('.vocabulary-term-mapping').first().text(mappingLabel[mapping]);
         item.find('.update-item-button').fadeTo(0, 1.0);
     }
 
@@ -179,7 +186,7 @@
                 dataType: 'json',
                 data: {
                     action: <?php echo VocabularyTermsEditor::ADD_VOCABULARY_TERM; ?>,
-                    commonTerm:JSON.stringify(itemValues)
+                    mapping:JSON.stringify(itemValues)
                 },
                 success: function (data) {
                     afterSaveNewItem(data, itemValues.localTerm);
@@ -209,10 +216,10 @@
                 dataType: 'json',
                 data: {
                     action: <?php echo VocabularyTermsEditor::UPDATE_VOCABULARY_TERM; ?>,
-                    commonTerm: JSON.stringify(itemValues)
+                    mapping: JSON.stringify(itemValues)
                 },
                 success: function (data) {
-                    afterUpdateItem(id);
+                    afterUpdateItem(id, data['mapping']);
                 },
                 error: function (data) {
                     alert('AJAX Error on Update: ' + data.statusText);

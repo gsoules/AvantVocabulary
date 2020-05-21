@@ -8,32 +8,64 @@ class VocabularyTermsEditor
 
     public static function addDefaultTerm($description, $term)
     {
-        $vocabularyTerms = new VocabularyTerms();
-        $vocabularyTerms['description'] = $description;
-        $vocabularyTerms['term'] = $term;
-        $vocabularyTerms->save();
-        return $vocabularyTerms['id'];
+        $localTermRecord = new VocabularyLocalTerms();
+        $localTermRecord['description'] = $description;
+        $localTermRecord['term'] = $term;
+        $localTermRecord->save();
+        return $localTermRecord['id'];
     }
 
     protected function addTerm()
     {
-        $vocabularyTerms = $this->getVocabularyTerms();
+        $vocabularyTerms = $this->getVocabularyTermMapping();
         $success = $vocabularyTerms->save();
         $termId = $success ? $vocabularyTerms->id : 0;
         return json_encode(array('success' => $success, 'itemId' => $termId));
     }
 
-    public function getVocabularyTerms()
+    public function getVocabularyTermMapping()
     {
-        $term = isset($_POST['term']) ? $_POST['term'] : '';
-        $object = json_decode($term, true);
+        $data = isset($_POST['mapping']) ? $_POST['mapping'] : '';
+        $object = json_decode($data, true);
+        $id = isset($object['id']) ? intval($object['id']) : 0;
 
-        $vocabularyTerms = new VocabularyTerms();
-        $vocabularyTerms['id'] = isset($object['id']) ? intval($object['id']) : null;
-        $vocabularyTerms['description'] = $object['description'];
-        $vocabularyTerms['term'] = $object['term'];
+        $originalLocalTermRecord = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
 
-        return $vocabularyTerms;
+        $kind = $originalLocalTermRecord->kind;
+        $localTerm = $object['localTerm'];
+        $commonTerm = $object['commonTerm'];
+        $commonTermId = $originalLocalTermRecord->common_term_id;
+
+        if ($originalLocalTermRecord->common_term != $commonTerm)
+        {
+            $commonTermRecord = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
+            if ($commonTermRecord)
+                $commonTermId = $commonTermRecord->common_term_id;
+            else
+            {
+                // How to report this error?
+            }
+        }
+
+        if ($commonTerm == $localTerm)
+            $mapping = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL;
+        elseif ($commonTerm && $commonTerm != $localTerm)
+            $mapping = AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS;
+        else
+        {
+            $mapping = AvantVocabulary::VOCABULARY_MAPPING_NONE;
+            $commonTermId = 0;
+        }
+
+        $updatedLocalTermRecord = new VocabularyLocalTerms();
+        $updatedLocalTermRecord['id'] = $id;
+        $updatedLocalTermRecord['kind'] = $kind;
+        $updatedLocalTermRecord['local_term'] = $localTerm;
+        $updatedLocalTermRecord['mapping'] = $mapping;
+        $updatedLocalTermRecord['common_term'] = $commonTerm;
+        $updatedLocalTermRecord['common_term_id'] = $commonTermId;
+
+        return $updatedLocalTermRecord;
     }
 
     public static function getUsageCount($vocabularyTermId)
@@ -79,8 +111,8 @@ class VocabularyTermsEditor
 
     protected function updateTerm()
     {
-        $vocabularyTerms = $this->getVocabularyTerms();
+        $vocabularyTerms = $this->getVocabularyTermMapping();
         $success = $vocabularyTerms->save();
-        return json_encode(array('success' => $success));
+        return json_encode(array('success' => $success, 'mapping' => $vocabularyTerms->mapping));
     }
 }

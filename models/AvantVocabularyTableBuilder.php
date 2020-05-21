@@ -68,7 +68,7 @@ class AvantVocabularyTableBuilder
                         // There is now a common term that is identical to this local term.
                         $localTermRecord->common_term = $localTerm;
                         $localTermRecord->common_term_id = $commonTermRecord->common_term_id;
-                        $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_IDENTICAL_TO_COMMON;
+                        $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL;
                         $mappingChanged = true;
                     }
                 }
@@ -86,7 +86,7 @@ class AvantVocabularyTableBuilder
                             // There is now a common term that is identical to this local term.
                             $localTermRecord->common_term = $localTerm;
                             $localTermRecord->common_term_id = $commonTermRecord->common_term_id;
-                            $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_IDENTICAL_TO_COMMON;
+                            $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL;
                             $mappingChanged = true;
                         }
                         else
@@ -144,7 +144,7 @@ class AvantVocabularyTableBuilder
             // Add the common term info to the local term record.
             $localTermRecord['common_term'] = $localTerm;
             $localTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
-            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_IDENTICAL_TO_COMMON;
+            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL;
         }
         else
         {

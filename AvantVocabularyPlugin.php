@@ -23,7 +23,7 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
         {
             $nav[] = array(
                 'label' => __('Vocabulary'),
-                'uri' => url('vocabulary/mapping')
+                'uri' => url('vocabulary/terms')
             );
         }
         return $nav;
