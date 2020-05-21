@@ -1,6 +1,7 @@
 <script type="text/javascript">
 
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
+    var nomenclatureLink = "<?php echo AvantVocabulary::getNomenclatureLink(); ?>";
 
     var mappingLabel = [];
     mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_NONE; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_NONE_LABEL; ?>';
@@ -81,13 +82,26 @@
         initializeItems();
     }
 
-    function afterUpdateItem(id, mapping)
+    function afterUpdateItem(id, data)
     {
         var item = jQuery('#' + id);
-        var itemValues = getItemValues(item);
-        item.find('.vocabulary-term-local').first().text(itemValues.localTerm);
-        item.find('.vocabulary-term-common').first().text(itemValues.commonTerm);
-        item.find('.vocabulary-term-mapping').first().text(mappingLabel[mapping]);
+        if (data['success'])
+        {
+            var itemValues = getItemValues(item);
+            var mapping = data['mapping'];
+            var commonTerm = nomenclatureLink.replace('{ID}', data['common_term_id']);
+            commonTerm = commonTerm.replace('{TERM}', itemValues.commonTerm);
+
+            item.find('.vocabulary-term-local').first().text(itemValues.localTerm);
+            item.find('.vocabulary-term-common').first().html(commonTerm);
+            item.find('.vocabulary-term-mapping').first().text(mappingLabel[mapping]);
+            item.find('.drawer-contents').slideUp();
+            item.find('.drawer').removeClass('opened');
+        }
+        else
+        {
+            alert(data['error']);
+        }
         item.find('.update-item-button').fadeTo(0, 1.0);
     }
 
@@ -219,7 +233,7 @@
                     mapping: JSON.stringify(itemValues)
                 },
                 success: function (data) {
-                    afterUpdateItem(id, data['mapping']);
+                    afterUpdateItem(id, data);
                 },
                 error: function (data) {
                     alert('AJAX Error on Update: ' + data.statusText);

@@ -18,9 +18,17 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
     {
         $whereKind = AvantVocabulary::getWhereKind($kind);
 
-        $select = $this->getSelect();
-        $select->where("$whereKind AND common_term = '$commonTerm'");
-        $result = $this->fetchObject($select);
+        try
+        {
+            $select = $this->getSelect();
+            $select->where("$whereKind AND common_term = '$commonTerm'");
+            $result = $this->fetchObject($select);
+        }
+        catch (Exception $e)
+        {
+            $result = null;
+        }
+
         return $result;
     }
 

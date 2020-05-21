@@ -55,10 +55,11 @@ $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermReco
         $identifier = $localTermRecord->common_term_id;
         if ($identifier > 0 && $identifier < AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID)
         {
-            // Create a link to the Nomenclature 4.0 specification for this term.
-            $nomenclatureUrl = "https://www.nomenclature.info/parcourir-browse.app?lang=en&id=$identifier&wo=N&ws=INT";
-            $altText = __('View the Nomenclature 4.0 specification for term %1$s', $identifier);
-            $commonTerm = "<a href='$nomenclatureUrl' target='_blank' title='$altText'>$localTermRecord->common_term</a>";
+            // Display the common term as a link to the Nomenclature website page for the term.
+            $link = AvantVocabulary::getNomenclatureLink();
+            $link = str_replace('{ID}', $identifier, $link);
+            $link = str_replace('{TERM}', $localTermRecord->common_term, $link);
+            $commonTerm = $link;
         }
         else
         {

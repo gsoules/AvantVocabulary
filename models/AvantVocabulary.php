@@ -12,9 +12,9 @@ class AvantVocabulary
     const VOCABULARY_MAPPING_IDENTICAL = 1;
     const VOCABULARY_MAPPING_SYNONYMOUS = 2;
 
-    const VOCABULARY_MAPPING_NONE_LABEL = 'UNMAPPED';
-    const VOCABULARY_MAPPING_IDENTICAL_LABEL = 'IDENTICAL';
-    const VOCABULARY_MAPPING_SYNONYMOUS_LABEL = 'SYNONYMOUS';
+    const VOCABULARY_MAPPING_NONE_LABEL = 'is not mapped';
+    const VOCABULARY_MAPPING_IDENTICAL_LABEL = 'maps to';
+    const VOCABULARY_MAPPING_SYNONYMOUS_LABEL = 'replaces';
 
     // Common terms with an Id higher than this do not come from Nomenclature 4.0.
     const VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID = 20000;
@@ -32,6 +32,17 @@ class AvantVocabulary
         if (!$commonTerm)
             $commonTerm = 'UNMAPPED';
         return $commonTerm;
+    }
+
+    public static function getNomenclatureLink()
+    {
+        // Create a template for link to the Nomenclature 4.0 specification. The caller of this method must replace
+        // {ID} and {TERM} with the common term identifier and name. It's like this, instead of taking parameters,
+        // so that it can be used in the Ajax Javascript that needs to create the same link as PHP creates.
+        $url = "https://www.nomenclature.info/parcourir-browse.app?lang=en&id={ID}&wo=N&ws=INT";
+        $altText = __('View the Nomenclature 4.0 specification for term {ID}');
+        $link = "<a href='$url' target='_blank' title='$altText'>{TERM}</a>";
+        return $link;
     }
 
     public static function getWhereKind($kind)

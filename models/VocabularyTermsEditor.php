@@ -34,28 +34,35 @@ class VocabularyTermsEditor
         $kind = $originalLocalTermRecord->kind;
         $localTerm = $object['localTerm'];
         $commonTerm = $object['commonTerm'];
-        $commonTermId = $originalLocalTermRecord->common_term_id;
 
-        if ($originalLocalTermRecord->common_term != $commonTerm)
+        if ($originalLocalTermRecord->common_term == $commonTerm)
         {
-            $commonTermRecord = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
-            if ($commonTermRecord)
-                $commonTermId = $commonTermRecord->common_term_id;
+            // The common term has not changed.
+            $commonTermId = $originalLocalTermRecord->common_term_id;
+        }
+        else
+        {
+            // The common term has changed. Verify that it's valid.
+            if (empty(trim($commonTerm)))
+            {
+                $commonTermId = 0;
+            }
             else
             {
-                // How to report this error?
+                $commonTermRecord = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
+                if ($commonTermRecord)
+                    $commonTermId = $commonTermRecord->common_term_id;
+                else
+                    throw new Exception("\"$commonTerm\" is not a Common Term");
             }
         }
 
         if ($commonTerm == $localTerm)
             $mapping = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL;
-        elseif ($commonTerm && $commonTerm != $localTerm)
+        elseif ($commonTermId && $commonTerm != $localTerm)
             $mapping = AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS;
         else
-        {
             $mapping = AvantVocabulary::VOCABULARY_MAPPING_NONE;
-            $commonTermId = 0;
-        }
 
         $updatedLocalTermRecord = new VocabularyLocalTerms();
         $updatedLocalTermRecord['id'] = $id;
@@ -111,8 +118,22 @@ class VocabularyTermsEditor
 
     protected function updateTerm()
     {
-        $vocabularyTerms = $this->getVocabularyTermMapping();
-        $success = $vocabularyTerms->save();
-        return json_encode(array('success' => $success, 'mapping' => $vocabularyTerms->mapping));
+        $error = '';
+        $mapping = '';
+        $commonTermId = 0;
+        try
+        {
+            $vocabularyTerms = $this->getVocabularyTermMapping();
+            $success = $vocabularyTerms->save();
+            $mapping = $vocabularyTerms->mapping;
+            $commonTermId = $vocabularyTerms->common_term_id;
+        }
+        catch (Exception $e)
+        {
+            $error = $e->getMessage();
+            $success = false;
+        }
+
+        return json_encode(array('success'=>$success, 'mapping'=>$mapping, 'common_term_id'=>$commonTermId, 'error'=>$error));
     }
 }

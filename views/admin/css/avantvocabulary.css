@@ -1,36 +1,36 @@
-#vocabulary-terms-list li {
-    margin-bottom: 6px;
-}
 
 #vocabulary-terms-list .sortable-item {
-    background: #ebe9dc;
+    background: #fefefe;
     padding: 4px 10px 4px 10px;
     font-size: 14px;
 }
 
-#vocabulary-terms-list .drawer-contents td {
-    border: none;
-    padding: 4px 4px 4px 4px;
+#vocabulary-terms-list .drawer-contents {
+    background: #f7f7f7;
+    border-width: 3px;
 }
 
-#vocabulary-terms-list .drawer-contents select {
-    padding-bottom: 4px;
-    margin-bottom: 8px;
+#vocabulary-terms-list .drawer-contents input[type=text] {
+    width: 650px;
 }
 
 #vocabulary-terms-list .drawer-contents label {
     padding-bottom: 2px;
 }
 
+#vocabulary-terms-list li {
+    margin-bottom: 6px;
+}
+
 .vocabulary-term-mapping {
     width: 110px;
+    font-weight: bold;
     padding-left: 14px;
     display: inline-block;
 }
 
 .vocabulary-term-local,
 .vocabulary-term-common {
-    font-weight: bold;
     display: inline-block;
 }
 
@@ -40,13 +40,9 @@
 }
 
 .vocabulary-term-common a {
+    word-break: break-word;
+}
+
+.vocabulary-term-common a {
     color: rgba(38, 103, 196, 0.68);
-}
-
-.drawer-contents input[type=text] {
-    width: 500px;
-}
-
-.vocabulary-term-local-input {
-    width: 200px;
 }
