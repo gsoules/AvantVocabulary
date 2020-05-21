@@ -2,6 +2,8 @@
 
 class AvantVocabularyTableBuilder
 {
+    const STATUS_SUCCESS = '';
+
     protected $db;
 
     public function __construct()
@@ -31,8 +33,7 @@ class AvantVocabularyTableBuilder
             $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_NONE;
         }
 
-        $success = $localTermRecord->save();
-        return $success;
+        return $localTermRecord->save();
     }
 
     protected function createCommonTerm($csvFileRow)
@@ -48,7 +49,7 @@ class AvantVocabularyTableBuilder
 
     protected function createLocalTerms($elementName, $kind)
     {
-        $success = true;
+        $status = self::STATUS_SUCCESS;
         $elementId = ItemMetadata::getElementIdForElementName($elementName);
 
         // Get the set of unique text values for this elements.
@@ -113,21 +114,26 @@ class AvantVocabularyTableBuilder
                     // The local term's mapping has changed. Update its record in the local terms table.
                     // This can happen when the common terms table gets updated and some of the terms have changed such
                     // that they now match a local term, or no longer match a local term's mapping to a common term.
-                    $success = $localTermRecord->save();
-                    if (!$success)
+                    if (!$localTermRecord->save())
+                    {
+                        $status = __('Error: $1%s', __FUNCTION__);
                         break;
+                    }
                 }
                 continue;
             }
             else
             {
                 // The local term does not exist in the local terms table. Add it.
-                $success = $this->addRecordForLocalTerm($kind, $localTerm);
-                if (!$success)
+                if (!$this->addRecordForLocalTerm($kind, $localTerm))
+                {
+                    $status = __('Error: $1%s', __FUNCTION__);
                     break;
+                }
             }
         }
-        return $success;
+        return 'xxx ' . __FUNCTION__;
+        return $status;
     }
 
     protected function fetchUniqueLocalTerms($elementId)
@@ -175,10 +181,10 @@ class AvantVocabularyTableBuilder
             switch ($action)
             {
                 case 'rebuild':
-                    //$success = $this->rebuildCommonTermsTable();
-                    $success = $this->rebuildLocalTermsTable();
-                    if (!$success)
-                        $response = 'REBUILD FAILED';
+                    //$status = $this->rebuildCommonTermsTable();
+                    $status = $this->rebuildLocalTermsTable();
+                    if ($status != self::STATUS_SUCCESS)
+                        $response = "REBUILD FAILED: $status";
                     else
                         $buildAction = true;
                     break;
@@ -214,7 +220,7 @@ class AvantVocabularyTableBuilder
 
     protected function rebuildCommonTermsTable()
     {
-        $success = true;
+        $status = self::STATUS_SUCCESS;
 
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyCommonTermsTable();
@@ -230,28 +236,30 @@ class AvantVocabularyTableBuilder
                 continue;
 
             $commonTerm = $this->createCommonTerm($row);
-            $success = $commonTerm->save();
-            if (!$success)
+            if (!$commonTerm->save())
+            {
+                $status = __('Error: $1%s', __FUNCTION__);
                 break;
+            }
         }
 
-        return $success;
+        return $status;
     }
 
     protected function rebuildLocalTermsTable()
     {
-        $success = $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
-        if (!$success)
-            return false;
+        $status = $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
+        if ($status != self::STATUS_SUCCESS)
+            return $status;
 
-        $success = $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
-        if (!$success)
-            return false;
+        $status = $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
+        if ($status != self::STATUS_SUCCESS)
+            return $status;
 
-        $success = $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
-        if (!$success)
-            return false;
+        $status = $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
+        if ($status != self::STATUS_SUCCESS)
+            return $status;
 
-        return false;
+        return self::STATUS_SUCCESS;
     }
 }
