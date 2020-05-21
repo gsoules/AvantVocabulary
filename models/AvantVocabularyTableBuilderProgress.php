@@ -9,23 +9,22 @@ class AvantVocabularyTableBuilderProgress
         $this->db = get_db();
     }
 
-    public function handleAjaxRequest($flavor)
+    public function handleAjaxRequest($tableName)
     {
-        $flavor = isset($_POST['flavor']) ? $_POST['flavor'] : '';
-        $response = $this->getProgress($flavor);
+        $response = $this->getProgress($tableName);
         echo json_encode($response);
     }
 
-    protected function getProgress($flavor)
+    protected function getProgress($tableName)
     {
-        if ($flavor == 'build-common')
+        if ($tableName == 'common')
         {
             $count = $this->db->getTable('VocabularyCommonTerms')->getRowCount();
             return "Progress: $count records written";
         }
         else
         {
-            return 'Working on ' . $flavor;
+            return 'Working on ' . $tableName;
         }
     }
 }

@@ -9,17 +9,17 @@ if (AvantCommon::isAjaxRequest())
     // waiting here until it completes (when handleAjaxRequest returns). When ths page returns,  the request's
     // success function will execute in the browser (or its error function if something went wrong).
     $action = isset($_POST['action']) ? $_POST['action'] : '';
-    $flavor = isset($_POST['flavor']) ? $_POST['flavor'] : '';
-    
+    $tableName = isset($_POST['table_name']) ? $_POST['table_name'] : '';
+
     if ($action == 'progress')
     {
-        $avantVocabularyTableBuilderProgress->handleAjaxRequest($flavor);
+        $avantVocabularyTableBuilderProgress->handleAjaxRequest($tableName);
     }
     else
     {
         // Give the request plenty of time to execute since it can take several minutes.
         ini_set('max_execution_time', 10 * 60);
-        $avantVocabularyTableBuilder->handleAjaxRequest($flavor);
+        $avantVocabularyTableBuilder->handleAjaxRequest($tableName);
     }
 
     // Leave so that the code to display the page won't get executed.
@@ -112,8 +112,8 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
         var actionInProgress = false;
         var progressCount = 0;
         var progressTimer;
-        var selectedAction = 'build-common';
-        //var selectedAction = 'build-local';
+        //var tableName = 'common';
+        var tableName = 'local';
         var url = '<?php echo $url; ?>';
 
         initialize();
@@ -127,7 +127,7 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
         {
             startButton.on("click", function()
             {
-                if (selectedAction === 'build-common')
+                if (tableName === 'common')
                 {
                     if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
                         return;
@@ -152,14 +152,14 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
                     dataType: 'json',
                     data: {
                         action: 'progress',
-                        flavor: selectedAction
+                        table_name: tableName
                     },
                     success: function (data)
                     {
                         showStatus(data);
                         if (actionInProgress)
                         {
-                            progressTimer = setTimeout(reportProgress, 500);
+                            progressTimer = setTimeout(reportProgress, 1000);
                         }
                     },
                     error: function (request, status, error)
@@ -184,7 +184,7 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
 
             // Initiate periodic calls back to the server to get the status of the action.
             progressCount = 0;
-            progressTimer = setTimeout(reportProgress, 500);
+            progressTimer = setTimeout(reportProgress, 1000);
 
             // Call back to the server (this page) to initiate the action which can take several minutes.
             // While waiting, the reportProgress function is called on a timer to get the status of the action.
@@ -194,19 +194,20 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
                     method: 'POST',
                     dataType: 'json',
                     data: {
-                        action: selectedAction,
-                        flavor: selectedAction
+                        action: 'build',
+                        table_name: tableName
                     },
                     success: function (data)
                     {
                         actionInProgress = false;
+                        console.log("DONE");
                         showStatus(data);
                         enableStartButton(true);
                     },
                     error: function (request, status, error)
                     {
                         clearTimeout(progressTimer);
-                        alert('AJAX ERROR on ' + selectedAction + ' >>> ' +  JSON.stringify(request));
+                        alert('AJAX ERROR on build ' + tableName + ' >>> ' +  JSON.stringify(request));
                     }
                 }
             );

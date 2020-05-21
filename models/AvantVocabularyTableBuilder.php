@@ -195,27 +195,25 @@ class AvantVocabularyTableBuilder
         return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
     }
 
-    public function handleAjaxRequest($flavor)
+    public function handleAjaxRequest($tableName)
     {
         // This method is called in response to Ajax requests from the client. For more information, see the comments
         // for this same method in AvantElasticSearchIndexBuilder.
 
-        $action = isset($_POST['action']) ? $_POST['action'] : 'NO ACTION PROVIDED';
-
         try
         {
-            switch ($action)
+            switch ($tableName)
             {
-                case 'build-common':
+                case 'common':
                     $this->buildCommonTermsTable();
                     break;
 
-                 case 'build-local':
+                 case 'local':
                     $this->buildLocalTermsTable();
                     break;
 
                 default:
-                    $response = 'Unexpected action: ' . $action;
+                    $response = 'Unexpected table name: ' . $tableName;
             }
         }
         catch (Exception $e)
@@ -224,7 +222,7 @@ class AvantVocabularyTableBuilder
             $response = $e->getMessage();
         }
 
-        $response = "Rebuild is now finished";
+        $response = "Build of $tableName finished";
 
         $response = json_encode($response);
         echo $response;
