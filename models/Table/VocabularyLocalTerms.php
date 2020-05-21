@@ -21,11 +21,12 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         return $result;
     }
 
-    public function getLocalTermRecords()
+    public function getLocalTermRecords($kind)
     {
         $select = $this->getSelect();
+        $select->where("kind = $kind");
+        $select->order('local_term');
         $results = $this->fetchObjects($select);
         return $results;
     }
-
 }

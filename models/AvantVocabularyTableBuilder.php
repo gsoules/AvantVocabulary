@@ -15,28 +15,33 @@ class AvantVocabularyTableBuilder
         $localTermRecord['kind'] = $kind;
         $localTermRecord['local_term'] = $localTerm;
 
-        // Check if there is a common term that's the sames as the local term.
-        $commonTermExists = $this->db->getTable('VocabularyCommonTerms')->commonTermExists($kind, $localTerm);
-        if ($commonTermExists)
+        // Check if the local term is identical to a common term.
+        $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
+        if ($commonTermRecord)
         {
+            // Add the common term info to the local term record.
             $localTermRecord['common_term'] = $localTerm;
-            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_SAME_AS_COMMON;
+            $localTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
+            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_IDENTICAL_TO_COMMON;
         }
         else
         {
+            // The local term is not the same as any common term.
+            $localTermRecord['common_term_id'] = 0;
             $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_NONE;
         }
 
-        return $localTermRecord;
+        $success = $localTermRecord->save();
+        return $success;
     }
 
     protected function createCommonTerm($csvFileRow)
     {
         $commonTerm = new VocabularyCommonTerms();
         $commonTerm['kind'] = $csvFileRow[0];
-        $commonTerm['identifier'] = intval($csvFileRow[1]);
-        $commonTerm['common_term'] = $csvFileRow[2];
         $commonTerm['leaf_term'] = $csvFileRow[3];
+        $commonTerm['common_term'] = $csvFileRow[2];
+        $commonTerm['common_term_id'] = intval($csvFileRow[1]);
 
         return $commonTerm;
     }
@@ -51,34 +56,73 @@ class AvantVocabularyTableBuilder
 
         foreach ($results as $result)
         {
+            // Check if this local term is already in the local terms table.
             $localTerm = $result['text'];
-
-            // Check if the value is already in the table.
             $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $localTerm);
+
+            $commonTermRecord = null;
 
             if ($localTermRecord)
             {
-                // Then make sure it matches the existing common value.
-                $commonTerm = $localTermRecord->common_term;
-                if ($commonTerm)
+                // The local term is already in the local terms table. Assess its common term mapping.
+                $mappingChanged = false;
+
+                if ($localTermRecord->mapping == AvantVocabulary::VOCABULARY_MAPPING_NONE)
                 {
-                    $commonTermExists = $this->db->getTable('VocabularyCommonTerms')->commonTermExists($kind, $commonTerm);
-                    if (!$commonTermExists)
+                    // The local term is not mapped to a common term. See if a common term now exists.
+                    $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
+                    if ($commonTermRecord)
                     {
-                        // The table is out of date. Change this local term to not mapped.
-                        $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_NONE;
-                        $localTermRecord->common_term = null;
-                        $success = $localTermRecord->save();
-                        if (!$success)
-                            break;
+                        // There is now a common term that is identical to this local term.
+                        $localTermRecord->common_term = $localTerm;
+                        $localTermRecord->common_term_id = $commonTermRecord->common_term_id;
+                        $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_IDENTICAL_TO_COMMON;
+                        $mappingChanged = true;
                     }
                 }
+                else
+                {
+                    // The local term is mapped to a common term. Verify that the common term still exists.
+                    $commonTermRecord = $this->getCommonTermRecord($kind, $localTermRecord->common_term);
+                    if (!$commonTermRecord)
+                    {
+                        // There is no longer a common term that matches this local term's common term.
+                        // See if the there is now a common term that matches the local term.
+                        $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
+                        if ($commonTermRecord)
+                        {
+                            // There is now a common term that is identical to this local term.
+                            $localTermRecord->common_term = $localTerm;
+                            $localTermRecord->common_term_id = $commonTermRecord->common_term_id;
+                            $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_LOCAL_IDENTICAL_TO_COMMON;
+                            $mappingChanged = true;
+                        }
+                        else
+                        {
+                            // Neither the local or common term match a common term. Set this local term to unmapped.
+                            $localTermRecord->common_term = null;
+                            $localTermRecord->common_term_id = 0;
+                            $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_NONE;
+                            $mappingChanged = true;
+                        }
+                    }
+                }
+
+                if ($mappingChanged)
+                {
+                    // The local term's mapping has changed. Update its record in the local terms table.
+                    // This can happen when the common terms table gets updated and some of the terms have changed such
+                    // that they now match a local term, or no longer match a local term's mapping to a common term.
+                    $success = $localTermRecord->save();
+                    if (!$success)
+                        break;
+                }
+                continue;
             }
             else
             {
-                // Add the value as a local term.
-                $localTermRecord = $this->addRecordForLocalTerm($kind, $localTerm);
-                $success = $localTermRecord->save();
+                // The local term does not exist in the local terms table. Add it.
+                $success = $this->addRecordForLocalTerm($kind, $localTerm);
                 if (!$success)
                     break;
             }
@@ -111,6 +155,11 @@ class AvantVocabularyTableBuilder
         }
 
         return $results;
+    }
+
+    protected function getCommonTermRecord($kind, $commonTerm)
+    {
+        return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
     }
 
     public function handleAjaxRequest()
@@ -191,9 +240,6 @@ class AvantVocabularyTableBuilder
 
     protected function rebuildLocalTermsTable()
     {
-//        VocabularyTableFactory::dropVocabularyLocalTermsTable();
-//        VocabularyTableFactory::createVocabularyLocalTermsTable();
-
         $success = $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
         if (!$success)
             return false;

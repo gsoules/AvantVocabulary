@@ -10,9 +10,9 @@ class VocabularyTableFactory
         CREATE TABLE IF NOT EXISTS `{$db->prefix}vocabulary_common_terms` (
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `kind` int(10) unsigned NOT NULL,
-            `identifier` int(10) unsigned NOT NULL,
-            `common_term` varchar(512) DEFAULT NULL,
             `leaf_term` varchar(128) DEFAULT NULL,
+            `common_term` varchar(512) DEFAULT NULL,
+            `common_term_id` int(10) unsigned NOT NULL,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 
@@ -30,6 +30,7 @@ class VocabularyTableFactory
             `local_term` varchar(512) DEFAULT NULL,
             `mapping` int(10) unsigned NOT NULL,
             `common_term` varchar(512) DEFAULT NULL,
+            `common_term_id` int(10) unsigned NOT NULL,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 

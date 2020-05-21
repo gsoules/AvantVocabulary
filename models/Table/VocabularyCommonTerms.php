@@ -14,6 +14,25 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         return $result->count == 1;
     }
 
+    public function getCommonTermRecord($kind, $commonTerm)
+    {
+        $whereKind = AvantVocabulary::getWhereKind($kind);
+
+        $select = $this->getSelect();
+        $select->where("$whereKind AND common_term = '$commonTerm'");
+        $result = $this->fetchObject($select);
+        return $result;
+    }
+
+    public function getCommonTermRecords($kind)
+    {
+        $whereKind = AvantVocabulary::getWhereKind($kind);
+        $select = $this->getSelect();
+        $select->where($whereKind);
+        $results = $this->fetchObjects($select);
+        return $results;
+    }
+
     public function getRowCount()
     {
         $select = $this->getSelect();
