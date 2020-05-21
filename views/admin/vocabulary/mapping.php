@@ -9,15 +9,17 @@ if (AvantCommon::isAjaxRequest())
     // waiting here until it completes (when handleAjaxRequest returns). When ths page returns,  the request's
     // success function will execute in the browser (or its error function if something went wrong).
     $action = isset($_POST['action']) ? $_POST['action'] : '';
+    $flavor = isset($_POST['flavor']) ? $_POST['flavor'] : '';
+    
     if ($action == 'progress')
     {
-        $avantVocabularyTableBuilderProgress->handleAjaxRequest();
+        $avantVocabularyTableBuilderProgress->handleAjaxRequest($flavor);
     }
     else
     {
         // Give the request plenty of time to execute since it can take several minutes.
         ini_set('max_execution_time', 10 * 60);
-        $avantVocabularyTableBuilder->handleAjaxRequest();
+        $avantVocabularyTableBuilder->handleAjaxRequest($flavor);
     }
 
     // Leave so that the code to display the page won't get executed.
@@ -110,7 +112,8 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
         var actionInProgress = false;
         var progressCount = 0;
         var progressTimer;
-        var selectedAction = 'rebuild';
+        var selectedAction = 'build-common';
+        //var selectedAction = 'build-local';
         var url = '<?php echo $url; ?>';
 
         initialize();
@@ -124,7 +127,7 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
         {
             startButton.on("click", function()
             {
-                if (selectedAction === 'rebuild')
+                if (selectedAction === 'build-common')
                 {
                     if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
                         return;
@@ -148,7 +151,8 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
                     method: 'POST',
                     dataType: 'json',
                     data: {
-                        action: 'progress'
+                        action: 'progress',
+                        flavor: selectedAction
                     },
                     success: function (data)
                     {
@@ -190,7 +194,8 @@ $url = WEB_ROOT . '/admin/vocabulary/mapping';
                     method: 'POST',
                     dataType: 'json',
                     data: {
-                        action: selectedAction
+                        action: selectedAction,
+                        flavor: selectedAction
                     },
                     success: function (data)
                     {

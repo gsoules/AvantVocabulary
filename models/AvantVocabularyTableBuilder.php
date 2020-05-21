@@ -11,6 +11,34 @@ class AvantVocabularyTableBuilder
         $this->db = get_db();
     }
 
+    protected function buildCommonTermsTable()
+    {
+        VocabularyTableFactory::dropVocabularyCommonTermsTable();
+        VocabularyTableFactory::createVocabularyCommonTermsTable();
+
+        // Read the vocabulary CSV file
+        $handle = fopen("C:\Users\gsoules\Dropbox\Python\Python-Common-Facets\data\output-nomenclature-sortEn_2020-05-18.csv", 'r');
+        $rowNumber = 0;
+        while (($row = fgetcsv($handle, 0, ',')) !== FALSE)
+        {
+            // Skip the header row;
+            $rowNumber += 1;
+            if ($rowNumber == 1 || empty($row[0]))
+                continue;
+
+            $this->databaseInsertRecordForCommonTerm($row);
+        }
+    }
+
+    protected function buildLocalTermsTable()
+    {
+        $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
+        $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
+        $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
+
+        return self::STATUS_SUCCESS;
+    }
+
     protected function createLocalTerms($elementName, $kind)
     {
         $elementId = ItemMetadata::getElementIdForElementName($elementName);
@@ -167,25 +195,23 @@ class AvantVocabularyTableBuilder
         return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
     }
 
-    public function handleAjaxRequest()
+    public function handleAjaxRequest($flavor)
     {
         // This method is called in response to Ajax requests from the client. For more information, see the comments
         // for this same method in AvantElasticSearchIndexBuilder.
 
         $action = isset($_POST['action']) ? $_POST['action'] : 'NO ACTION PROVIDED';
-        $buildAction = false;
 
         try
         {
             switch ($action)
             {
-                case 'rebuild':
-                    //$this->rebuildCommonTermsTable();
-                    $this->rebuildLocalTermsTable();
-                    $buildAction = true;
+                case 'build-common':
+                    $this->buildCommonTermsTable();
                     break;
 
-                case 'rebuild-local':
+                 case 'build-local':
+                    $this->buildLocalTermsTable();
                     break;
 
                 default:
@@ -198,41 +224,10 @@ class AvantVocabularyTableBuilder
             $response = $e->getMessage();
         }
 
-        if ($buildAction)
-        {
-            $response = "Rebuild is finished";
-        }
+        $response = "Rebuild is now finished";
 
         $response = json_encode($response);
         echo $response;
-    }
-
-    protected function rebuildCommonTermsTable()
-    {
-        VocabularyTableFactory::dropVocabularyCommonTermsTable();
-        VocabularyTableFactory::createVocabularyCommonTermsTable();
-
-        // Read the vocabulary CSV file
-        $handle = fopen("C:\Users\gsoules\Dropbox\Python\Python-Common-Facets\data\output-nomenclature-sortEn_2020-05-18.csv", 'r');
-        $rowNumber = 0;
-        while (($row = fgetcsv($handle, 0, ',')) !== FALSE)
-        {
-            // Skip the header row;
-            $rowNumber += 1;
-            if ($rowNumber == 1 || empty($row[0]))
-                continue;
-
-            $this->databaseInsertRecordForCommonTerm($row);
-        }
-    }
-
-    protected function rebuildLocalTermsTable()
-    {
-        $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
-        $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
-        $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
-
-        return self::STATUS_SUCCESS;
     }
 
     private function reportError($message, $function, $line)
