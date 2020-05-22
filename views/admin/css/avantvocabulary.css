@@ -61,9 +61,9 @@ body.vocabulary-terms-page .ui-autocomplete {
 }
 
 body.vocabulary-terms-page .ui-autocomplete-loading {
-    background: #ffdfd7;
+    background: #d6d6d6;
 }
 
 body.vocabulary-terms-page .ui-menu .ui-menu-item {
-    background-color: #f3ffd7;
+    background-color: #f3f3f3;
 }

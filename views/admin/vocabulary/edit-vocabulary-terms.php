@@ -57,6 +57,7 @@ $suggestions = "[$suggestions]";
 ?>
 
 <input id="vocabulary-term-selector" placeholder="Type a term" />
+<p id="autocomplete-suggestion"></p>
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
     <?php
@@ -134,9 +135,14 @@ $url = WEB_ROOT . '/admin/vocabulary/terms';
         var url = '<?php echo $url; ?>';
 
         var suggestions = <?php echo $suggestions; ?>;
-        jQuery( "#vocabulary-term-selector" ).autocomplete({
+        jQuery("#vocabulary-term-selector" ).autocomplete({
             source: suggestions,
-            disabled: false
+            autoFocus: false,
+            response: function(event, ui) {
+                if (ui.content.length === 0) {
+                    jQuery('#autocomplete-suggestion').html('No matches found.');
+                }
+            },
         });
 
         initialize();
