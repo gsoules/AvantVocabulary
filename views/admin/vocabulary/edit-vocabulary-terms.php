@@ -3,8 +3,27 @@
 $avantVocabularyTableBuilder = new AvantVocabularyTableBuilder();
 $avantVocabularyTableBuilderProgress = new AvantVocabularyTableBuilderProgress();
 
+
 if (AvantCommon::isAjaxRequest())
 {
+    $term = isset($_GET['term']) ? $_GET['term'] : '';
+    if ($term)
+    {
+        $kind = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE;
+        $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecords($kind);
+        $result = array();
+        foreach ($commonTermRecords as $commonTermRecord)
+        {
+            $commonTerm = $commonTermRecord->common_term;
+            if (strpos($commonTerm, $term) !== false)
+            {
+                array_push($result, array("value"=>$commonTermRecord->common_term_id,"label"=>$commonTerm));
+            }
+        }
+        echo json_encode($result);
+        return;
+    }
+
     // This page just got called to handle an asynchronous Ajax request. Execute the request synchronously,
     // waiting here until it completes (when handleAjaxRequest returns). When ths page returns,  the request's
     // success function will execute in the browser (or its error function if something went wrong).
@@ -136,7 +155,8 @@ $url = WEB_ROOT . '/admin/vocabulary/terms';
 
         var suggestions = <?php echo $suggestions; ?>;
         jQuery("#vocabulary-term-selector" ).autocomplete({
-            source: suggestions,
+            // source: suggestions,
+            source: 'http://localhost/omeka-2.6/admin/vocabulary/terms',
             autoFocus: false,
             response: function(event, ui) {
                 if (ui.content.length === 0) {
