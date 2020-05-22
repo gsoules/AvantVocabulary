@@ -49,3 +49,21 @@
 .vocabulary-term-common a {
     color: rgba(38, 103, 196, 0.68);
 }
+
+#vocabulary-term-selector {
+    width: 700px;
+}
+
+body.vocabulary-terms-page .ui-autocomplete {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+body.vocabulary-terms-page .ui-autocomplete-loading {
+    background: #ffdfd7;
+}
+
+body.vocabulary-terms-page .ui-menu .ui-menu-item {
+    background-color: #f3ffd7;
+}

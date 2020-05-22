@@ -26,8 +26,8 @@ if (AvantCommon::isAjaxRequest())
     return;
 }
 
-$pageTitle = __('Vocabulary Mapping');
-echo head(array('title' => $pageTitle, 'bodyclass' => 'mapping'));
+$pageTitle = __('Vocabulary Terms');
+echo head(array('title' => $pageTitle, 'bodyclass' => 'vocabulary-terms-page'));
 
 // Warn if this session is running in the debugger because simultaneous Ajax requests won't work while debugging.
 if (isset($_COOKIE['XDEBUG_SESSION']))
@@ -45,16 +45,18 @@ $kind = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE;
 $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecords($kind);
 $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords($kind);
 
-echo '<select id="test"><option></option></select>';
-
-$ydata = '[';
+$suggestions = '';
 foreach ($commonTermRecords as $commonTermRecord)
 {
     $term = str_replace("'", "\'", $commonTermRecord->common_term);
-    $ydata .= "{id:$commonTermRecord->common_term_id,text:'$term'},\n";
+    if (!empty($suggestions))
+        $suggestions .= ',';
+    $suggestions .= "'$term'";
 }
-$ydata .= ']'
+$suggestions = "[$suggestions]";
 ?>
+
+<input id="vocabulary-term-selector" placeholder="Type a term" />
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
     <?php
@@ -93,7 +95,7 @@ $ydata .= ']'
                 </div>
                 <div class="drawer-contents" style="display:none;">
                     <label><?php echo __('Local Term'); ?></label><input class="local-term" type="text" value="<?php echo $localTermRecord->local_term; ?>">
-                    <label><?php echo __('Common Term'); ?></label><input class="common-term" type="text" value="<?php echo $localTermRecord->common_term; ?>">
+                    <label><?php echo __('Common Term'); ?></label><input id="term-<?php echo $localTermRecord->common_term_id;?>" class="common-term" type="text" value="<?php echo $localTermRecord->common_term; ?>">
                     <div>
                         <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
                         <button type="button" class="action-button remove-item-button red button<?php echo $removeClass; ?>"><?php echo __('Remove'); ?></button>
@@ -125,17 +127,16 @@ $url = WEB_ROOT . '/admin/vocabulary/terms';
         var actionInProgress = false;
         var progressCount = 0;
         var progressTimer;
+
         //var tableName = 'common';
         var tableName = 'local';
+
         var url = '<?php echo $url; ?>';
 
-        var ydata = <?php echo $ydata; ?>;
-        var xdata = [{id:0,text:'enhancement'},{id:1,text:'bug'},{id:2,text:'duplicate'},{id:3,text:'invalid'},{id:4,text:'wontfix'},{id:5,text:'soules'}];
-
-        jQuery("#test").select2({
-            placeholder: 'Make a choice',
-            data: ydata,
-            width: '400px'
+        var suggestions = <?php echo $suggestions; ?>;
+        jQuery( "#vocabulary-term-selector" ).autocomplete({
+            source: suggestions,
+            disabled: false
         });
 
         initialize();
