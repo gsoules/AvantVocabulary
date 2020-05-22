@@ -45,6 +45,15 @@ $kind = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE;
 $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecords($kind);
 $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords($kind);
 
+echo '<select id="test"><option></option></select>';
+
+$ydata = '[';
+foreach ($commonTermRecords as $commonTermRecord)
+{
+    $term = str_replace("'", "\'", $commonTermRecord->common_term);
+    $ydata .= "{id:$commonTermRecord->common_term_id,text:'$term'},\n";
+}
+$ydata .= ']'
 ?>
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
@@ -107,6 +116,7 @@ $url = WEB_ROOT . '/admin/vocabulary/terms';
 ?>
 
 <script type="text/javascript">
+
     jQuery(document).ready(function ()
     {
         var startButton = jQuery("#start-button").button();
@@ -118,6 +128,15 @@ $url = WEB_ROOT . '/admin/vocabulary/terms';
         //var tableName = 'common';
         var tableName = 'local';
         var url = '<?php echo $url; ?>';
+
+        var ydata = <?php echo $ydata; ?>;
+        var xdata = [{id:0,text:'enhancement'},{id:1,text:'bug'},{id:2,text:'duplicate'},{id:3,text:'invalid'},{id:4,text:'wontfix'},{id:5,text:'soules'}];
+
+        jQuery("#test").select2({
+            placeholder: 'Make a choice',
+            data: ydata,
+            width: '400px'
+        });
 
         initialize();
 

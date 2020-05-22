@@ -32,6 +32,8 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
     public function hookAdminHead($args)
     {
         queue_css_file('avantvocabulary');
+        queue_css_file('select2.min');
+        queue_js_file('select2.min');
     }
 
     public function hookConfig()
