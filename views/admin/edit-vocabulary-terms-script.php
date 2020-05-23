@@ -1,4 +1,16 @@
 <script type="text/javascript">
+    //var tableName = 'common';
+    var tableName = 'local';
+
+    var startButton = jQuery("#start-button").button();
+    var statusArea = jQuery("#status-area");
+
+    var actionInProgress = false;
+    var progressCount = 0;
+    var progressTimer;
+
+    var url = '<?php echo $url; ?>';
+
     var activeItemId = 0;
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var nomenclatureLink = "<?php echo AvantVocabulary::getNomenclatureLink(); ?>";
@@ -7,6 +19,11 @@
     mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_NONE; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_NONE_LABEL; ?>';
     mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL_LABEL; ?>';
     mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS_LABEL; ?>';
+
+    jQuery(document).ready(function ()
+    {
+        initialize();
+    });
 
     function addNewItem()
     {
@@ -111,6 +128,41 @@
         jQuery("#vocabulary-term-selector-panel").show();
     }
 
+    function enableSuggestions()
+    {
+        var termSelector = jQuery("#vocabulary-term-selector");
+        var messageArea = jQuery('#vocabulary-term-selector-message');
+
+        jQuery(termSelector).autocomplete(
+            {
+                source: url,
+                delay: 250,
+                minLength: 1,
+                search: function(event, ui)
+                {
+                    var term = jQuery(termSelector).val();
+                    jQuery(messageArea).html('Am searching for "' + term + '"');
+                },
+                response: function(event, ui)
+                {
+                    if (ui.content.length === 0)
+                    {
+                        var term = jQuery(termSelector).val();
+                        jQuery(messageArea).html('No match was found for "' + term + '"');
+                    }
+                    else
+                    {
+                        jQuery(messageArea).html('Type something');
+                    }
+                }
+            });
+    }
+
+    function enableStartButton(enable)
+    {
+        startButton.button("option", {disabled: !enable});
+    }
+
     function getItemValues(item)
     {
         var itemValues =
@@ -122,8 +174,20 @@
         return itemValues;
     }
 
-    function initializeItems()
+    function initialize()
     {
+        enableSuggestions();
+
+        startButton.on("click", function()
+        {
+            if (tableName === 'common')
+            {
+                if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
+                    return;
+            }
+            startMapping();
+        });
+
         removeEventListeners();
 
         var drawerButtons = jQuery('.drawer');
@@ -169,19 +233,11 @@
         });
 
         jQuery('.no-remove').hide();
-    }
 
-    function removeEventListeners()
-    {
-        var drawerButtons = jQuery('.drawer');
-        var updateButtons = jQuery('.update-item-button');
-        var removeButtons = jQuery('.remove-item-button');
-        var chooseButtons = jQuery('.choose-term-button');
-
-        drawerButtons.off('click');
-        updateButtons.off('click');
-        removeButtons.off('click');
-        chooseButtons.off('click');
+        jQuery('.add-item-button').click(function (event)
+        {
+            addNewItem();
+        });
     }
 
     function removeItem(itemId)
@@ -207,6 +263,40 @@
                 error: function (data)
                 {
                     alert('AJAX Error on Remove: ' + data.statusText);
+                }
+            }
+        );
+    }
+
+    function reportProgress()
+    {
+        if (!actionInProgress)
+            return;
+
+        console.log('reportProgress ' + ++progressCount);
+
+        // Call back to the server (this page) to get the status of the action.
+        // The server returns the complete status since the action began, not just what has since transpired.
+        jQuery.ajax(
+            url,
+            {
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'progress',
+                    table_name: tableName
+                },
+                success: function (data)
+                {
+                    showStatus(data);
+                    if (actionInProgress)
+                    {
+                        progressTimer = setTimeout(reportProgress, 1000);
+                    }
+                },
+                error: function (request, status, error)
+                {
+                    alert('AJAX ERROR on reportProgress' + ' >>> ' + JSON.stringify(request));
                 }
             }
         );
@@ -239,6 +329,62 @@
                 }
             }
         );
+    }
+
+    function showStatus(status)
+    {
+        statusArea.html(statusArea.html() + status + '<BR/>');
+    }
+
+    function startMapping()
+    {
+        actionInProgress = true;
+        statusArea.html('');
+
+        enableStartButton(false);
+
+        // Initiate periodic calls back to the server to get the status of the action.
+        progressCount = 0;
+        progressTimer = setTimeout(reportProgress, 1000);
+
+        // Call back to the server (this page) to initiate the action which can take several minutes.
+        // While waiting, the reportProgress function is called on a timer to get the status of the action.
+        jQuery.ajax(
+            url,
+            {
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'build',
+                    table_name: tableName
+                },
+                success: function (data)
+                {
+                    actionInProgress = false;
+                    console.log("DONE");
+                    showStatus(data);
+                    enableStartButton(true);
+                },
+                error: function (request, status, error)
+                {
+                    clearTimeout(progressTimer);
+                    alert('AJAX ERROR on build ' + tableName + ' >>> ' +  JSON.stringify(request));
+                }
+            }
+        );
+    }
+
+    function removeEventListeners()
+    {
+        var drawerButtons = jQuery('.drawer');
+        var updateButtons = jQuery('.update-item-button');
+        var removeButtons = jQuery('.remove-item-button');
+        var chooseButtons = jQuery('.choose-term-button');
+
+        drawerButtons.off('click');
+        updateButtons.off('click');
+        removeButtons.off('click');
+        chooseButtons.off('click');
     }
 
     function updateItem(id)
@@ -280,14 +426,4 @@
         }
         return true;
     }
-
-    jQuery(document).ready(function ()
-    {
-        initializeItems();
-
-        jQuery('.add-item-button').click(function (event)
-        {
-            addNewItem();
-        });
-    });
 </script>
