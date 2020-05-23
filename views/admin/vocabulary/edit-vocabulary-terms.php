@@ -131,32 +131,37 @@ echo get_view()->partial('/edit-vocabulary-mapping-script.php');
 echo foot();
 
 // Form the URL for this page which is the same page that satisfies the Ajax requests.
-$url = WEB_ROOT . '/admin/vocabulary/terms';
+$vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
 ?>
 
 <script type="text/javascript">
+    //var tableName = 'common';
+    var tableName = 'local';
+
+    var startButton = jQuery("#start-button").button();
+    var statusArea = jQuery("#status-area");
+
+    var actionInProgress = false;
+    var progressCount = 0;
+    var progressTimer;
+
+    var url = '<?php echo $vocabularyTermsPageUrl; ?>';
+
 
     jQuery(document).ready(function ()
     {
-        var startButton = jQuery("#start-button").button();
-        var statusArea = jQuery("#status-area");
+        initialize();
+    });
 
-        var actionInProgress = false;
-        var progressCount = 0;
-        var progressTimer;
-
-        //var tableName = 'common';
-        var tableName = 'local';
-
-        var url = '<?php echo $url; ?>';
-
+    function enableSuggestions()
+    {
         var termSelector = jQuery("#vocabulary-term-selector");
         var messageArea = jQuery('#autocomplete-suggestion');
         var suggestions = <?php echo $suggestions; ?>;
+
         jQuery(termSelector).autocomplete(
         {
-            // source: suggestions,
-            source: 'http://localhost/omeka-2.6/admin/vocabulary/terms',
+            source: url,
             delay: 250,
             minLength: 1,
             search: function(event, ui)
@@ -177,102 +182,102 @@ $url = WEB_ROOT . '/admin/vocabulary/terms';
                 }
             }
         });
+    }
 
-        initialize();
+    function enableStartButton(enable)
+    {
+        startButton.button("option", {disabled: !enable});
+    }
 
-        function enableStartButton(enable)
+    function initialize()
+    {
+        enableSuggestions();
+
+        startButton.on("click", function()
         {
-            startButton.button("option", {disabled: !enable});
-        }
-
-        function initialize()
-        {
-            startButton.on("click", function()
+            if (tableName === 'common')
             {
-                if (tableName === 'common')
+                if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
+                    return;
+            }
+            startMapping();
+        });
+    }
+
+    function reportProgress()
+    {
+        if (!actionInProgress)
+            return;
+
+        console.log('reportProgress ' + ++progressCount);
+
+        // Call back to the server (this page) to get the status of the action.
+        // The server returns the complete status since the action began, not just what has since transpired.
+        jQuery.ajax(
+            url,
+            {
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'progress',
+                    table_name: tableName
+                },
+                success: function (data)
                 {
-                    if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
-                        return;
-                }
-                startMapping();
-            });
-        }
-
-        function reportProgress()
-        {
-            if (!actionInProgress)
-                return;
-
-            console.log('reportProgress ' + ++progressCount);
-
-            // Call back to the server (this page) to get the status of the action.
-            // The server returns the complete status since the action began, not just what has since transpired.
-            jQuery.ajax(
-                url,
-                {
-                    method: 'POST',
-                    dataType: 'json',
-                    data: {
-                        action: 'progress',
-                        table_name: tableName
-                    },
-                    success: function (data)
+                    showStatus(data);
+                    if (actionInProgress)
                     {
-                        showStatus(data);
-                        if (actionInProgress)
-                        {
-                            progressTimer = setTimeout(reportProgress, 1000);
-                        }
-                    },
-                    error: function (request, status, error)
-                    {
-                        alert('AJAX ERROR on reportProgress' + ' >>> ' + JSON.stringify(request));
+                        progressTimer = setTimeout(reportProgress, 1000);
                     }
-                }
-            );
-        }
-
-        function showStatus(status)
-        {
-            statusArea.html(statusArea.html() + status + '<BR/>');
-        }
-
-        function startMapping()
-        {
-            actionInProgress = true;
-            statusArea.html('');
-
-            enableStartButton(false);
-
-            // Initiate periodic calls back to the server to get the status of the action.
-            progressCount = 0;
-            progressTimer = setTimeout(reportProgress, 1000);
-
-            // Call back to the server (this page) to initiate the action which can take several minutes.
-            // While waiting, the reportProgress function is called on a timer to get the status of the action.
-            jQuery.ajax(
-                url,
+                },
+                error: function (request, status, error)
                 {
-                    method: 'POST',
-                    dataType: 'json',
-                    data: {
-                        action: 'build',
-                        table_name: tableName
-                    },
-                    success: function (data)
-                    {
-                        actionInProgress = false;
-                        console.log("DONE");
-                        showStatus(data);
-                        enableStartButton(true);
-                    },
-                    error: function (request, status, error)
-                    {
-                        clearTimeout(progressTimer);
-                        alert('AJAX ERROR on build ' + tableName + ' >>> ' +  JSON.stringify(request));
-                    }
+                    alert('AJAX ERROR on reportProgress' + ' >>> ' + JSON.stringify(request));
                 }
-            );
-        }
-    });
+            }
+        );
+    }
+
+    function showStatus(status)
+    {
+        statusArea.html(statusArea.html() + status + '<BR/>');
+    }
+
+    function startMapping()
+    {
+        actionInProgress = true;
+        statusArea.html('');
+
+        enableStartButton(false);
+
+        // Initiate periodic calls back to the server to get the status of the action.
+        progressCount = 0;
+        progressTimer = setTimeout(reportProgress, 1000);
+
+        // Call back to the server (this page) to initiate the action which can take several minutes.
+        // While waiting, the reportProgress function is called on a timer to get the status of the action.
+        jQuery.ajax(
+            url,
+            {
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'build',
+                    table_name: tableName
+                },
+                success: function (data)
+                {
+                    actionInProgress = false;
+                    console.log("DONE");
+                    showStatus(data);
+                    enableStartButton(true);
+                },
+                error: function (request, status, error)
+                {
+                    clearTimeout(progressTimer);
+                    alert('AJAX ERROR on build ' + tableName + ' >>> ' +  JSON.stringify(request));
+                }
+            }
+        );
+    }
 </script>
