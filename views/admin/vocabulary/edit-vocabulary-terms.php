@@ -72,8 +72,17 @@ foreach ($commonTermRecords as $commonTermRecord)
 $suggestions = "[$suggestions]";
 ?>
 
-<p id="autocomplete-suggestion">Go for it</p>
-<input id="vocabulary-term-selector" placeholder="Type a term" />
+<div id="vocabulary-term-selector-panel" class="modal-popup">
+    <div class="modal-content">
+        <p id="vocabulary-term-selector-message">Go for it</p>
+        <input id="vocabulary-term-selector" placeholder="Type a term" />
+        <div>
+            <button type="button" class="action-button accept-term-button"><?php echo __('OK'); ?></button>
+            <button type="button" class="action-button cancel-term-button"><?php echo __('Cancel'); ?></button>
+        </div>
+
+    </div>
+</div>
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
     <?php
@@ -114,6 +123,7 @@ $suggestions = "[$suggestions]";
                     <label><?php echo __('Local Term'); ?></label><input class="local-term" type="text" value="<?php echo $localTermRecord->local_term; ?>">
                     <label><?php echo __('Common Term'); ?></label><input id="term-<?php echo $localTermRecord->id;?>" class="common-term" type="text" value="<?php echo $localTermRecord->common_term; ?>">
                     <div>
+                        <button type="button" class="action-button choose-term-button"><?php echo __('Choose'); ?></button>
                         <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
                         <button type="button" class="action-button remove-item-button red button<?php echo $removeClass; ?>"><?php echo __('Remove'); ?></button>
                     </div>
@@ -124,6 +134,9 @@ $suggestions = "[$suggestions]";
     }
     ?>
 </ul>
+
+<button type="button" class="action-button add-item-button"><?php echo __('Add a New Term'); ?></button>
+
 <?php
 
 echo get_view()->partial('/edit-vocabulary-mapping-script.php');
@@ -156,8 +169,7 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
     function enableSuggestions()
     {
         var termSelector = jQuery("#vocabulary-term-selector");
-        var messageArea = jQuery('#autocomplete-suggestion');
-        var suggestions = <?php echo $suggestions; ?>;
+        var messageArea = jQuery('#vocabulary-term-selector-message');
 
         jQuery(termSelector).autocomplete(
         {
@@ -202,6 +214,20 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
             }
             startMapping();
         });
+
+        var acceptButton = jQuery('.accept-term-button');
+        var cancelButton = jQuery('.cancel-term-button');
+
+        acceptButton.click(function (event)
+        {
+            jQuery('.modal-popup').hide();
+        });
+
+        cancelButton.click(function (event)
+        {
+            jQuery('.modal-popup').hide();
+        });
+
     }
 
     function reportProgress()

@@ -105,6 +105,11 @@
         item.find('.update-item-button').fadeTo(0, 1.0);
     }
 
+    function chooseTerm(itemId)
+    {
+        jQuery("#vocabulary-term-selector-panel").show();
+    }
+
     function getItemValues(item)
     {
         var itemValues =
@@ -123,6 +128,7 @@
         var drawerButtons = jQuery('.drawer');
         var updateButtons = jQuery('.update-item-button');
         var removeButtons = jQuery('.remove-item-button');
+        var chooseButtons = jQuery('.choose-term-button');
 
         drawerButtons.click(function (event)
         {
@@ -141,6 +147,11 @@
             removeItem(jQuery(this).parents('li').attr('id'));
         });
 
+        chooseButtons.click(function (event)
+        {
+            chooseTerm(jQuery(this).parents('li').attr('id'));
+        });
+
         jQuery('.no-remove').hide();
     }
 
@@ -149,10 +160,12 @@
         var drawerButtons = jQuery('.drawer');
         var updateButtons = jQuery('.update-item-button');
         var removeButtons = jQuery('.remove-item-button');
+        var chooseButtons = jQuery('.choose-term-button');
 
         drawerButtons.off('click');
         updateButtons.off('click');
         removeButtons.off('click');
+        chooseButtons.off('click');
     }
 
     function removeItem(itemId)

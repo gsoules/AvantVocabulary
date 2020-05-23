@@ -68,6 +68,27 @@ body.vocabulary-terms-page .ui-menu .ui-menu-item {
     background-color: #f3f3f3;
 }
 
+.modal-popup {
+    display: none;
+    position: fixed;
+    z-index: 20;
+    top: 50%;
+    left: 50%;
+    width: 800px;
+    height: 600px;
+    transform: translate(-50%, -50%);
+    overflow: auto;
+    background-color: rgb(225, 238, 241); /* Fallback color */
+    xbackground-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
 
 @media screen and (max-width: 1200px) {
     #vocabulary-term-selector {
