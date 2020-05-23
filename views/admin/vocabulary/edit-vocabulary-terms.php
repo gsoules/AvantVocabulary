@@ -3,9 +3,12 @@
 $avantVocabularyTableBuilder = new AvantVocabularyTableBuilder();
 $avantVocabularyTableBuilderProgress = new AvantVocabularyTableBuilderProgress();
 
-
 if (AvantCommon::isAjaxRequest())
 {
+    // This page just got called to handle an asynchronous Ajax request. Execute the request synchronously,
+    // waiting here until it completes (when handleAjaxRequest returns). When ths page returns,  the request's
+    // success function will execute in the browser (or its error function if something went wrong).
+
     $term = isset($_GET['term']) ? $_GET['term'] : '';
     if ($term)
     {
@@ -21,9 +24,6 @@ if (AvantCommon::isAjaxRequest())
         return;
     }
 
-    // This page just got called to handle an asynchronous Ajax request. Execute the request synchronously,
-    // waiting here until it completes (when handleAjaxRequest returns). When ths page returns,  the request's
-    // success function will execute in the browser (or its error function if something went wrong).
     $action = isset($_POST['action']) ? $_POST['action'] : '';
     $tableName = isset($_POST['table_name']) ? $_POST['table_name'] : '';
 
@@ -112,7 +112,7 @@ $suggestions = "[$suggestions]";
                 </div>
                 <div class="drawer-contents" style="display:none;">
                     <label><?php echo __('Local Term'); ?></label><input class="local-term" type="text" value="<?php echo $localTermRecord->local_term; ?>">
-                    <label><?php echo __('Common Term'); ?></label><input id="term-<?php echo $localTermRecord->common_term_id;?>" class="common-term" type="text" value="<?php echo $localTermRecord->common_term; ?>">
+                    <label><?php echo __('Common Term'); ?></label><input id="term-<?php echo $localTermRecord->id;?>" class="common-term" type="text" value="<?php echo $localTermRecord->common_term; ?>">
                     <div>
                         <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
                         <button type="button" class="action-button remove-item-button red button<?php echo $removeClass; ?>"><?php echo __('Remove'); ?></button>
