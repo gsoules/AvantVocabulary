@@ -10,15 +10,12 @@ if (AvantCommon::isAjaxRequest())
     if ($term)
     {
         $kind = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE;
-        $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecords($kind);
+        $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermSuggestions($kind, $term);
         $result = array();
         foreach ($commonTermRecords as $commonTermRecord)
         {
             $commonTerm = $commonTermRecord->common_term;
-            if (strpos($commonTerm, $term) !== false)
-            {
-                array_push($result, array("value"=>$commonTermRecord->common_term_id,"label"=>$commonTerm));
-            }
+            $result[] = array("value"=>$commonTermRecord->common_term_id,"label"=>$commonTerm);
         }
         echo json_encode($result);
         return;
@@ -75,8 +72,8 @@ foreach ($commonTermRecords as $commonTermRecord)
 $suggestions = "[$suggestions]";
 ?>
 
+<p id="autocomplete-suggestion">Go for it</p>
 <input id="vocabulary-term-selector" placeholder="Type a term" />
-<p id="autocomplete-suggestion"></p>
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
     <?php
@@ -153,16 +150,32 @@ $url = WEB_ROOT . '/admin/vocabulary/terms';
 
         var url = '<?php echo $url; ?>';
 
+        var termSelector = jQuery("#vocabulary-term-selector");
+        var messageArea = jQuery('#autocomplete-suggestion');
         var suggestions = <?php echo $suggestions; ?>;
-        jQuery("#vocabulary-term-selector" ).autocomplete({
+        jQuery(termSelector).autocomplete(
+        {
             // source: suggestions,
             source: 'http://localhost/omeka-2.6/admin/vocabulary/terms',
-            autoFocus: false,
-            response: function(event, ui) {
-                if (ui.content.length === 0) {
-                    jQuery('#autocomplete-suggestion').html('No matches found.');
-                }
+            delay: 250,
+            minLength: 1,
+            search: function(event, ui)
+            {
+                var term = jQuery(termSelector).val();
+                jQuery(messageArea).html('Am searching for "' + term + '"');
             },
+            response: function(event, ui)
+            {
+                if (ui.content.length === 0)
+                {
+                    var term = jQuery(termSelector).val();
+                    jQuery(messageArea).html('No match was found for "' + term + '"');
+                }
+                else
+                {
+                    jQuery(messageArea).html('Type something');
+                }
+            }
         });
 
         initialize();

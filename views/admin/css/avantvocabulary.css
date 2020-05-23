@@ -67,3 +67,10 @@ body.vocabulary-terms-page .ui-autocomplete-loading {
 body.vocabulary-terms-page .ui-menu .ui-menu-item {
     background-color: #f3f3f3;
 }
+
+
+@media screen and (max-width: 1200px) {
+    #vocabulary-term-selector {
+        width: 400px;
+    }
+}

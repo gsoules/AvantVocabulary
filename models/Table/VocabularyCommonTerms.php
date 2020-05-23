@@ -32,6 +32,25 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         return $result;
     }
 
+    public function getCommonTermSuggestions($kind, $term)
+    {
+        $whereKind = AvantVocabulary::getWhereKind($kind);
+        $query = $this->getQueryForLike($term);
+
+        try
+        {
+            $select = $this->getSelect();
+            $select->where("$whereKind AND $query");
+            $result = $this->fetchObjects($select);
+        }
+        catch (Exception $e)
+        {
+            $result = null;
+        }
+
+        return $result;
+    }
+
     public function getCommonTermRecords($kind)
     {
         $whereKind = AvantVocabulary::getWhereKind($kind);
@@ -39,6 +58,26 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         $select->where($whereKind);
         $results = $this->fetchObjects($select);
         return $results;
+    }
+
+    protected function getKeywords($term)
+    {
+        return array_map('trim', explode(' ', strtolower($term)));
+    }
+
+    protected function getQueryForLike($term)
+    {
+        $keywords = $this->getKeywords($term);
+        $query = '';
+        foreach ($keywords as $word)
+        {
+            if (!empty($query))
+            {
+                $query .= ' AND ';
+            }
+            $query .= "common_term LIKE '%$word%'";
+        }
+        return $query;
     }
 
     public function getRowCount()
