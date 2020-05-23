@@ -1,5 +1,5 @@
 <script type="text/javascript">
-
+    var activeItemId = 0;
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var nomenclatureLink = "<?php echo AvantVocabulary::getNomenclatureLink(); ?>";
 
@@ -107,6 +107,7 @@
 
     function chooseTerm(itemId)
     {
+        activeItemId = itemId;
         jQuery("#vocabulary-term-selector-panel").show();
     }
 
@@ -130,6 +131,26 @@
         var removeButtons = jQuery('.remove-item-button');
         var chooseButtons = jQuery('.choose-term-button');
 
+        var acceptButton = jQuery('.accept-term-button');
+        var cancelButton = jQuery('.cancel-term-button');
+
+        acceptButton.click(function (event)
+        {
+            var selection = jQuery("#vocabulary-term-selector").val();
+            jQuery('#term-' + activeItemId).text(selection);
+            jQuery('.modal-popup').hide();
+        });
+
+        cancelButton.click(function (event)
+        {
+            jQuery('.modal-popup').hide();
+        });
+
+        chooseButtons.click(function (event)
+        {
+            chooseTerm(jQuery(this).parents('li').attr('id'));
+        });
+
         drawerButtons.click(function (event)
         {
             event.preventDefault();
@@ -137,19 +158,14 @@
             jQuery(this).toggleClass('opened');
         });
 
-        updateButtons.click(function (event)
-        {
-            updateItem(jQuery(this).parents('li').attr('id'));
-        });
-
         removeButtons.click(function (event)
         {
             removeItem(jQuery(this).parents('li').attr('id'));
         });
 
-        chooseButtons.click(function (event)
+        updateButtons.click(function (event)
         {
-            chooseTerm(jQuery(this).parents('li').attr('id'));
+            updateItem(jQuery(this).parents('li').attr('id'));
         });
 
         jQuery('.no-remove').hide();

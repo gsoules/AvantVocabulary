@@ -18,7 +18,7 @@ if (AvantCommon::isAjaxRequest())
         foreach ($commonTermRecords as $commonTermRecord)
         {
             $commonTerm = $commonTermRecord->common_term;
-            $result[] = array("value"=>$commonTermRecord->common_term_id,"label"=>$commonTerm);
+            $result[] = $commonTerm;
         }
         echo json_encode($result);
         return;
@@ -121,7 +121,7 @@ $suggestions = "[$suggestions]";
                 </div>
                 <div class="drawer-contents" style="display:none;">
                     <label><?php echo __('Local Term'); ?></label><input class="local-term" type="text" value="<?php echo $localTermRecord->local_term; ?>">
-                    <label><?php echo __('Common Term'); ?></label><input id="term-<?php echo $localTermRecord->id;?>" class="common-term" type="text" value="<?php echo $localTermRecord->common_term; ?>">
+                    <label><?php echo __('Common Term'); ?></label><div id="term-<?php echo $localTermRecord->id;?>" class="common-term"><?php echo $localTermRecord->common_term; ?></div>
                     <div>
                         <button type="button" class="action-button choose-term-button"><?php echo __('Choose'); ?></button>
                         <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
@@ -214,20 +214,6 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
             }
             startMapping();
         });
-
-        var acceptButton = jQuery('.accept-term-button');
-        var cancelButton = jQuery('.cancel-term-button');
-
-        acceptButton.click(function (event)
-        {
-            jQuery('.modal-popup').hide();
-        });
-
-        cancelButton.click(function (event)
-        {
-            jQuery('.modal-popup').hide();
-        });
-
     }
 
     function reportProgress()
