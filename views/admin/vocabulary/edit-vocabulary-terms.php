@@ -139,7 +139,7 @@ $suggestions = "[$suggestions]";
 
 <?php
 
-echo get_view()->partial('/edit-vocabulary-mapping-script.php');
+echo get_view()->partial('/edit-vocabulary-terms-script.php');
 
 echo foot();
 
@@ -159,7 +159,6 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
     var progressTimer;
 
     var url = '<?php echo $vocabularyTermsPageUrl; ?>';
-
 
     jQuery(document).ready(function ()
     {
