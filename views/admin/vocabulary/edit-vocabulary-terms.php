@@ -53,10 +53,6 @@ if (isset($_COOKIE['XDEBUG_SESSION']))
     echo '</div>';
 }
 
-echo "<hr/>";
-echo "<button id='start-button'>Start</button>";
-echo '<div id="status-area"></div>';
-
 $kind = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE;
 $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecords($kind);
 $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords($kind);
@@ -74,6 +70,8 @@ $suggestions = "[$suggestions]";
 // Form the URL for this page which is the same page that satisfies the Ajax requests.
 $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
 ?>
+
+<button type="button" class="action-button add-item-button"><?php echo __('Add a New Term'); ?></button>
 
 <div id="vocabulary-term-selector-panel" class="modal-popup">
     <div class="modal-content">
@@ -98,7 +96,13 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
             // Display the common term as a link to the Nomenclature website page for the term.
             $link = AvantVocabulary::getNomenclatureLink();
             $link = str_replace('{ID}', $identifier, $link);
-            $link = str_replace('{TERM}', $localTermRecord->common_term, $link);
+            $commonTerm = $localTermRecord->common_term;
+            $maxTermLen = 60;
+            if (strlen($commonTerm) > $maxTermLen)
+            {
+                $commonTerm = substr($commonTerm, 0, $maxTermLen) . '...';
+            }
+            $link = str_replace('{TERM}', $commonTerm, $link);
             $commonTerm = $link;
         }
         else
@@ -106,24 +110,38 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
             // This is not a Nomenclature 4.0 term.
             $commonTerm = $localTermRecord->common_term;
         }
+
+        $localTerm = $localTermRecord->local_term;
         $mapping = $localTermRecord->mapping;
+        $mappingText ='';
+
         if ($mapping == AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS)
-            $mappingText = AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS_LABEL;
+        {
+            $mappingText = "&rarr;";
+            $leftTerm = $localTerm;
+            $rightTerm = $commonTerm;
+        }
         elseif ($mapping == AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL)
-            $mappingText = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL_LABEL;
+        {
+            $leftTerm = $commonTerm;
+            $rightTerm = '';
+        }
         else
-            $mappingText = AvantVocabulary::VOCABULARY_MAPPING_NONE_LABEL;
+        {
+            $leftTerm = $localTerm;
+            $rightTerm = '';
+        }
         ?>
         <li id="<?php echo $localTermRecord->id; ?>">
             <div class="main_link ui-sortable-handle">
                 <div class="sortable-item not-sortable vocabulary-term">
-                    <div class="vocabulary-term-local"><?php echo $localTermRecord->local_term; ?></div>
+                    <div class="vocabulary-term-local"><?php echo $leftTerm; ?></div>
                     <div class="vocabulary-term-mapping"><?php echo $mappingText; ?></div>
-                    <span class="vocabulary-term-common"><?php echo $commonTerm; ?></span>
+                    <span class="vocabulary-term-common"><?php echo $rightTerm; ?></span>
                     <span class="drawer"></span>
                 </div>
                 <div class="drawer-contents" style="display:none;">
-                    <label><?php echo __('Local Term'); ?></label><input class="local-term" type="text" value="<?php echo $localTermRecord->local_term; ?>">
+                    <label><?php echo __('Local Term'); ?></label><input class="local-term" type="text" value="<?php echo $localTerm; ?>">
                     <label><?php echo __('Common Term'); ?></label><div id="term-<?php echo $localTermRecord->id;?>" class="common-term"><?php echo $localTermRecord->common_term; ?></div>
                     <div>
                         <button type="button" class="action-button choose-term-button"><?php echo __('Choose'); ?></button>
@@ -138,7 +156,9 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
     ?>
 </ul>
 
-<button type="button" class="action-button add-item-button"><?php echo __('Add a New Term'); ?></button>
+<hr/>
+<button id='start-button'>Rebuild</button>
+<div id="status-area"></div>
 
 <?php echo get_view()->partial('/edit-vocabulary-terms-script.php', array('url' => $vocabularyTermsPageUrl)); ?>
 

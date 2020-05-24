@@ -1,5 +1,5 @@
 #vocabulary-terms-list {
-    margin-top: 18px;
+    margin-top: 8px;
 }
 
 #vocabulary-terms-list .sortable-item {
@@ -26,7 +26,7 @@
 }
 
 .vocabulary-term-mapping {
-    width: 110px;
+    width: 24px;
     font-weight: bold;
     padding-left: 14px;
     display: inline-block;
@@ -42,12 +42,9 @@
     width: 300px;
 }
 
+.vocabulary-term-local a,
 .vocabulary-term-common a {
-    word-break: break-word;
-}
-
-.vocabulary-term-common a {
-    color: rgba(38, 103, 196, 0.68);
+    color: rgb(39, 126, 217);
 }
 
 #vocabulary-term-selector {
