@@ -79,12 +79,11 @@
         jQuery('#' + itemId).remove();
     }
 
-    function afterSaveNewItem(data, description)
+    function afterSaveNewItem(id, itemValues)
     {
         var newItem = jQuery('#new-item');
-        newItem.attr('id', data.itemId);
+        newItem.attr('id', id);
         newItem.find('.drawer-contents').hide();
-        newItem.find('.vocabulary-term-local').first().text('<?php echo __('Rule '); ?>' + data.itemId + ': ' + description);
 
         // Convert the Save button back into the Update button.
         var updateButton = newItem.find('.save-item-button');
@@ -97,6 +96,10 @@
         removeButton.text('<?php echo __('Remove'); ?>');
         removeButton.removeClass('cancel-add-button');
         removeButton.addClass('remove-item-button');
+
+        // Show the header for the newly added item.
+        newItem.find('.vocabulary-term-header').show();
+        formatItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
 
         // Allow the user to add another item.
         jQuery('.add-item-button').prop('disabled', false);
@@ -111,12 +114,9 @@
         {
             var itemValues = getItemValues(item);
             var mapping = data['mapping'];
-            var commonTerm = nomenclatureLink.replace('{ID}', data['common_term_id']);
-            commonTerm = commonTerm.replace('{TERM}', itemValues.commonTerm);
 
-            item.find('.vocabulary-term-local').first().text(itemValues.localTerm);
-            item.find('.vocabulary-term-common').first().html(commonTerm);
-            item.find('.vocabulary-term-mapping').first().text(mappingLabel[mapping]);
+            formatItemTitle(item, itemValues.localTerm, itemValues.commonTerm, 888);
+
             item.find('.drawer-contents').slideUp();
             item.find('.drawer').removeClass('opened');
         }
@@ -168,12 +168,24 @@
         startButton.button("option", {disabled: !enable});
     }
 
+    function formatItemTitle(item, localTerm, commonTerm, commonTermId)
+    {
+        console.log('formatItemTitle ' + '[' +localTerm + '] [ ' + commonTerm + '] [ ' + commonTermId + ']');
+
+        var commonTermLink = nomenclatureLink.replace('{ID}', commonTermId);
+        commonTermLink = commonTermLink.replace('{TERM}', commonTerm);
+
+        item.find('.vocabulary-term-left').first().text(localTerm);
+        item.find('.vocabulary-term-mapping').first().text('<>');
+        item.find('.vocabulary-term-right').first().html(commonTermLink);
+    }
+
     function getItemValues(item)
     {
         var itemValues =
             {
                 localTerm:item.find('.vocabulary-drawer-local-term').val(),
-                commonTerm:item.find('.vocabulary-drawer-common-term').val()
+                commonTerm:item.find('.vocabulary-drawer-common-term').text()
             };
 
         return itemValues;
@@ -326,13 +338,14 @@
                 dataType: 'json',
                 data: {
                     action: <?php echo VocabularyTermsEditor::ADD_VOCABULARY_TERM; ?>,
+                    kind: <?php echo $kind; ?>,
                     mapping:JSON.stringify(itemValues)
                 },
                 success: function (data) {
-                    afterSaveNewItem(data, itemValues.localTerm);
+                    afterSaveNewItem(data.itemId, itemValues);
                 },
-                error: function (data) {
-                    alert('AJAX Error on Save: ' + data.statusText);
+                error: function (request, status, error) {
+                    alert('AJAX ERROR on Save ' +  JSON.stringify(request));
                 }
             }
         );

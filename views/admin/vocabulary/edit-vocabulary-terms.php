@@ -167,6 +167,6 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
 <button id='start-button'>Rebuild</button>
 <div id="status-area"></div>
 
-<?php echo get_view()->partial('/edit-vocabulary-terms-script.php', array('url' => $vocabularyTermsPageUrl)); ?>
+<?php echo get_view()->partial('/edit-vocabulary-terms-script.php', array('kind'=>$kind, 'url'=>$vocabularyTermsPageUrl)); ?>
 
 <?php echo foot(); ?>

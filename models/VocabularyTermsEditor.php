@@ -17,44 +17,47 @@ class VocabularyTermsEditor
 
     protected function addTerm()
     {
-        $vocabularyTerms = $this->getVocabularyTermMapping();
-        $success = $vocabularyTerms->save();
-        $termId = $success ? $vocabularyTerms->id : 0;
-        return json_encode(array('success' => $success, 'itemId' => $termId));
+        $vocabularyTerms = $this->getVocabularyTermMapping(self::ADD_VOCABULARY_TERM);
+        if (!$vocabularyTerms->save())
+            throw new Exception(__FUNCTION__ . ' save failed');
+        $termId = $vocabularyTerms->id;
+        return json_encode(array('success' => true, 'itemId' => $termId));
     }
 
-    public function getVocabularyTermMapping()
+    public function getVocabularyTermMapping($action)
     {
         $data = isset($_POST['mapping']) ? $_POST['mapping'] : '';
         $object = json_decode($data, true);
         $id = isset($object['id']) ? intval($object['id']) : 0;
 
-        $originalLocalTermRecord = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
-
-        $kind = $originalLocalTermRecord->kind;
         $localTerm = $object['localTerm'];
         $commonTerm = $object['commonTerm'];
 
-        if ($originalLocalTermRecord->common_term == $commonTerm)
+        if ($action == self::ADD_VOCABULARY_TERM)
         {
-            // The common term has not changed.
-            $commonTermId = $originalLocalTermRecord->common_term_id;
+            $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
+            $localTermRecord = new VocabularyLocalTerms();
+            $localTermRecord['local_term'] = $localTerm;
+            $localTermRecord['common_term'] = $commonTerm;
         }
         else
         {
-            // The common term has changed. Verify that it's valid.
-            if (empty(trim($commonTerm)))
-            {
-                $commonTermId = 0;
-            }
+            $localTermRecord = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
+            $kind = $localTermRecord->kind;
+        }
+
+        // The common term has changed. Verify that it's valid.
+        if (empty(trim($commonTerm)))
+        {
+            $commonTermId = 0;
+        }
+        else
+        {
+            $commonTermRecord = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
+            if ($commonTermRecord)
+                $commonTermId = $commonTermRecord->common_term_id;
             else
-            {
-                $commonTermRecord = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
-                if ($commonTermRecord)
-                    $commonTermId = $commonTermRecord->common_term_id;
-                else
-                    throw new Exception("\"$commonTerm\" is not a Common Term");
-            }
+                throw new Exception("\"$commonTerm\" is not a Common Term");
         }
 
         if ($commonTerm == $localTerm)
@@ -84,19 +87,26 @@ class VocabularyTermsEditor
 
     public function performAction($action)
     {
-        switch ($action)
+        try
         {
-            case VocabularyTermsEditor::ADD_VOCABULARY_TERM:
-                return $this->addTerm();
+            switch ($action)
+            {
+                case VocabularyTermsEditor::ADD_VOCABULARY_TERM:
+                    return $this->addTerm();
 
-            case VocabularyTermsEditor::REMOVE_VOCABULARY_TERM:
-                return $this->removeTerm();
+                case VocabularyTermsEditor::REMOVE_VOCABULARY_TERM:
+                    return $this->removeTerm();
 
-            case VocabularyTermsEditor::UPDATE_VOCABULARY_TERM:
-                return $this->updateTerm();
+                case VocabularyTermsEditor::UPDATE_VOCABULARY_TERM:
+                    return $this->updateTerm();
 
-            default:
-                return false;
+                default:
+                    return false;
+            }
+        }
+        catch (Exception $e)
+        {
+            return false;
         }
     }
 
@@ -123,7 +133,7 @@ class VocabularyTermsEditor
         $commonTermId = 0;
         try
         {
-            $vocabularyTerms = $this->getVocabularyTermMapping();
+            $vocabularyTerms = $this->getVocabularyTermMapping(self::UPDATE_VOCABULARY_TERM);
             $success = $vocabularyTerms->save();
             $mapping = $vocabularyTerms->mapping;
             $commonTermId = $vocabularyTerms->common_term_id;
