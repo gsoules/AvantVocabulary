@@ -131,6 +131,8 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
             $leftTerm = $localTerm;
             $rightTerm = '';
         }
+
+        $commonTermInDrawer = $commonTerm ? $commonTerm : __('This local term is not mapped to a common term');
         ?>
         <li id="<?php echo $localTermRecord->id; ?>">
             <div class="main_link ui-sortable-handle">
@@ -142,11 +144,11 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
                 </div>
                 <div class="drawer-contents" style="display:none;">
                     <label><?php echo __('Local Term'); ?></label><input class="local-term" type="text" value="<?php echo $localTerm; ?>">
-                    <label><?php echo __('Common Term'); ?></label><div id="term-<?php echo $localTermRecord->id;?>" class="common-term"><?php echo $localTermRecord->common_term; ?></div>
-                    <div>
-                        <button type="button" class="action-button choose-term-button"><?php echo __('Choose'); ?></button>
+                    <label><?php echo __('Common Term'); ?></label><div id="term-<?php echo $localTermRecord->id;?>" class="common-term"><?php echo $commonTermInDrawer; ?></div>
+                    <div class="vocabulary-drawer-buttons" >
+                        <button type="button" class="action-button choose-term-button"><?php echo __('Choose Common Term'); ?></button>
                         <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
-                        <button type="button" class="action-button remove-item-button red button<?php echo $removeClass; ?>"><?php echo __('Remove'); ?></button>
+                        <button type="button" class="action-button remove-item-button red<?php echo $removeClass; ?>"><?php echo __('Remove'); ?></button>
                     </div>
                 </div>
             </div>

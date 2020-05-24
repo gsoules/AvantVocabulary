@@ -14,11 +14,20 @@
 }
 
 #vocabulary-terms-list .drawer-contents input[type=text] {
-    width: 650px;
+    width: 70%;
 }
 
 #vocabulary-terms-list .drawer-contents label {
     padding-bottom: 2px;
+}
+
+.vocabulary-drawer-buttons {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.vocabulary-drawer-buttons > button {
+    margin-top: 0;
 }
 
 #vocabulary-terms-list li {
@@ -40,11 +49,6 @@
 .vocabulary-term-local {
     text-align: right;
     width: 300px;
-}
-
-.vocabulary-term-local a,
-.vocabulary-term-common a {
-    color: rgb(39, 126, 217);
 }
 
 #vocabulary-term-selector {
