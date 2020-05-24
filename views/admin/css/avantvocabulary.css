@@ -10,11 +10,11 @@
 
 #vocabulary-terms-list .drawer-contents {
     background: #f7f7f7;
-    border-width: 3px;
+    border-bottom-width: 3px;
 }
 
 #vocabulary-terms-list .drawer-contents input[type=text] {
-    width: 70%;
+    width: 100%;
 }
 
 #vocabulary-terms-list .drawer-contents label {
@@ -23,11 +23,12 @@
 
 .vocabulary-drawer-buttons {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
 }
 
-.vocabulary-drawer-buttons > button {
-    margin-top: 0;
+.vocabulary-drawer-buttons-left > button,
+.vocabulary-drawer-buttons-right > button {
+    margin-top: 8px !important;
 }
 
 #vocabulary-terms-list li {
@@ -41,12 +42,13 @@
     display: inline-block;
 }
 
-.vocabulary-term-local,
-.vocabulary-term-common {
+.vocabulary-term-left,
+.vocabulary-term-right {
     display: inline-block;
+    font-weight: bold;
 }
 
-.vocabulary-term-local {
+.vocabulary-term-left {
     text-align: right;
     width: 300px;
 }
@@ -91,7 +93,12 @@ body.vocabulary-terms-page .ui-menu .ui-menu-item {
     width: 80%; /* Could be more or less, depending on screen size */
 }
 
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 960px) {
+    .vocabulary-term-mapping,
+    .vocabulary-term-right {
+        display: none;
+    }
+
     #vocabulary-term-selector {
         width: 400px;
     }
