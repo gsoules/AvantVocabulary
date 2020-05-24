@@ -133,18 +133,19 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
         }
 
         $commonTermInDrawer = $commonTerm ? $commonTerm : __('This local term is not mapped to a common term');
+        $localTermInDrawer = $mapping != AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL ? $localTerm : '';
         ?>
         <li id="<?php echo $localTermRecord->id; ?>">
             <div class="main_link ui-sortable-handle">
-                <div class="sortable-item not-sortable vocabulary-term">
+                <div class="sortable-item not-sortable vocabulary-term-header">
                     <div class="vocabulary-term-left"><?php echo $leftTerm; ?></div>
                     <div class="vocabulary-term-mapping"><?php echo $mappingText; ?></div>
                     <span class="vocabulary-term-right"><?php echo $rightTerm; ?></span>
                     <span class="drawer"></span>
                 </div>
                 <div class="drawer-contents" style="display:none;">
-                    <label><?php echo __('Local Term'); ?></label><input class="local-term" type="text" value="<?php echo $localTerm; ?>">
-                    <label><?php echo __('Common Term'); ?></label><div id="term-<?php echo $localTermRecord->id;?>" class="common-term"><?php echo $commonTermInDrawer; ?></div>
+                    <label><?php echo __('Local Term'); ?></label><input class="vocabulary-drawer-local-term" type="text" value="<?php echo $localTermInDrawer; ?>">
+                    <label><?php echo __('Common Term'); ?></label><div id="term-<?php echo $localTermRecord->id;?>" class="vocabulary-drawer-common-term"><?php echo $commonTermInDrawer; ?></div>
                     <div class="vocabulary-drawer-buttons" >
                         <div class="vocabulary-drawer-buttons-left">
                             <button type="button" class="action-button choose-term-button"><?php echo __('Choose Common Term'); ?></button>

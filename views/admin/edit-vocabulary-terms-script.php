@@ -27,13 +27,20 @@
 
     function addNewItem()
     {
-        var lastItem = jQuery('ul#vocabulary-terms-list > li:last-child');
-        var newItem = lastItem.clone();
+        var firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
+        var newItem = firstItem.clone();
 
+        // Initialize the header.
         newItem.attr('id', 'new-item');
-        newItem.find('.vocabulary-term-local').first().text('New');
-        newItem.find('.vocabulary-term-common').text('0');
+        newItem.find('.vocabulary-term-left').first().text('Add a New Term');
+        newItem.find('.vocabulary-term-mapping').first().text('');
+        newItem.find('.vocabulary-term-right').text('');
+        newItem.find('.vocabulary-term-header').hide();
         newItem.find('.drawer-contents').show();
+
+        // Empty the new item's controls and append the new item to the beginning of the list.
+        newItem.find('input').val('');
+        newItem.find('.vocabulary-drawer-common-term').text('');
 
         // Convert the Update button into the Save button.
         var saveButton = newItem.find('.update-item-button');
@@ -55,16 +62,14 @@
         cancelButton.click(function (event)
         {
             jQuery('#new-item').remove();
-            jQuery('.add-item-button').show();
+            jQuery('.add-item-button').prop('disabled', false);
         });
 
-        // Empty the new item's controls and append the new item to the end of the list.
-        var inputs = newItem.find('input, select');
-        inputs.val('');
-        lastItem.after(newItem);
+        // Append the new item to the beginning of the list.
+        firstItem.before(newItem);
 
-        // Hide the Add button while the user is adding a new item.
-        jQuery('.add-item-button').hide();
+        // Disable the Add button while the user is adding a new item.
+        jQuery('.add-item-button').prop('disabled', true);
 
         initializeItems();
     }
@@ -93,8 +98,8 @@
         removeButton.removeClass('cancel-add-button');
         removeButton.addClass('remove-item-button');
 
-        // All the user to add another item.
-        jQuery('.add-item-button').show();
+        // Allow the user to add another item.
+        jQuery('.add-item-button').prop('disabled', false);
 
         initializeItems();
     }
@@ -167,27 +172,34 @@
     {
         var itemValues =
             {
-                localTerm:item.find('.local-term').val(),
-                commonTerm:item.find('.common-term').val()
+                localTerm:item.find('.vocabulary-drawer-local-term').val(),
+                commonTerm:item.find('.vocabulary-drawer-common-term').val()
             };
 
         return itemValues;
     }
 
-    function initialize()
-    {
+    function initialize() {
         enableSuggestions();
 
-        startButton.on("click", function()
-        {
-            if (tableName === 'common')
-            {
+        startButton.on("click", function () {
+            if (tableName === 'common') {
                 if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
                     return;
             }
             startMapping();
         });
 
+        jQuery('.add-item-button').click(function (event)
+        {
+            addNewItem();
+        });
+
+        initializeItems();
+    }
+
+    function initializeItems()
+    {
         removeEventListeners();
 
         var drawerButtons = jQuery('.drawer');
@@ -233,11 +245,6 @@
         });
 
         jQuery('.no-remove').hide();
-
-        jQuery('.add-item-button').click(function (event)
-        {
-            addNewItem();
-        });
     }
 
     function removeItem(itemId)
