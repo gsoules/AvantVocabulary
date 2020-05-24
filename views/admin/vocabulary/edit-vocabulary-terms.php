@@ -99,9 +99,14 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
 
         $commonTermInDrawer = $commonTerm ? $commonTerm : '';
         $localTermInDrawer = $mapping != AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL ? $localTerm : '';
+
+        // The HTML below provides the structure for each term. The drawer area provides the local and common term
+        // values. The header is filled in and formatted in JavaScript. It's done there because the JavaScript is also
+        // responsible for creating and modifying the header when the user adds or edits a term. This way, this PHP
+        // code does not need to know how the header is supposed to be formatted.
         ?>
-        <li id="<?php echo $localTermRecord->id; ?>">
-            <div class="vocabulary-term-item ui-sortable-handle">
+        <li id="item-<?php echo $localTermRecord->id; ?>" class="vocabulary-term-item" >
+            <div class="ui-sortable-handle">
                 <div class="sortable-item not-sortable vocabulary-term-header">
                     <div class="vocabulary-term-left"></div>
                     <div class="vocabulary-term-mapping"></div>

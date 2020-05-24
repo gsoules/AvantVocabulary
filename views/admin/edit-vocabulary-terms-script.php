@@ -104,11 +104,7 @@
         var item = jQuery('#' + id);
         if (data['success'])
         {
-            var itemValues = getItemValues(item);
-            var mapping = data['mapping'];
-
-            setItemTitle(item, itemValues.localTerm, itemValues.commonTerm, 888);
-
+            setItemTitle(item);
             item.find('.drawer-contents').slideUp();
             item.find('.drawer').removeClass('opened');
         }
@@ -165,7 +161,12 @@
         var localTerm = item.find('.vocabulary-drawer-local-term');
         var commonTerm = item.find('.vocabulary-drawer-common-term');
 
+        // Get the Id minus the "item-" prefix.
+        var id = item.attr('id');
+        id = id.substr(5);
+
         return {
+            id: id,
             localTerm: localTerm.val(),
             commonTerm: commonTerm.text(),
             commonTermId: commonTerm.attr('data-common-term-id')
@@ -209,7 +210,9 @@
         {
             var selection = jQuery("#vocabulary-term-selector").val();
             console.log('OK ' + selection);
-            jQuery('#term-' + activeItemId).text(selection);
+            var item = jQuery('#' + activeItemId);
+            var commonTerm = item.find('.vocabulary-drawer-common-term');
+            commonTerm.text(selection);
             jQuery('.modal-popup').hide();
         });
 
@@ -335,11 +338,13 @@
         );
     }
 
-    function setItemTitle(item, localTerm, commonTerm, commonTermId)
+    function setItemTitle(item)
     {
-        //console.log('formatItemTitle ' + '[' +localTerm + '] [ ' + commonTerm + '] [ ' + commonTermId + ']');
-
         var itemValues = getItemValues(item);
+
+        localTerm = itemValues.localTerm;
+        commonTerm = itemValues.commonTerm;
+        commonTermId = itemValues.commonTermId;
 
         if (commonTerm && commonTermId > 0 && commonTermId < <?php echo AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID; ?>)
         {
@@ -381,9 +386,7 @@
         jQuery('.vocabulary-term-item').each(function(i)
         {
             var item = jQuery(this);
-            var localTerm = item.find('.vocabulary-drawer-local-term').val();
-            var commonTerm = item.find('.vocabulary-drawer-common-term').html();
-            setItemTitle(item, localTerm, commonTerm, 7777)
+            setItemTitle(item)
         });
     }
 
@@ -447,7 +450,6 @@
     {
         var item = jQuery('#' + id);
         var itemValues = getItemValues(item);
-        itemValues.id = id;
 
         if (!validateItemValues(itemValues))
             return;
