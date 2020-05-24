@@ -12,10 +12,6 @@ class AvantVocabulary
     const VOCABULARY_MAPPING_IDENTICAL = 1;
     const VOCABULARY_MAPPING_SYNONYMOUS = 2;
 
-    const VOCABULARY_MAPPING_NONE_LABEL = 'is not mapped';
-    const VOCABULARY_MAPPING_IDENTICAL_LABEL = 'maps to';
-    const VOCABULARY_MAPPING_SYNONYMOUS_LABEL = 'replaces';
-
     // Common terms with an Id higher than this do not come from Nomenclature 4.0.
     const VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID = 20000;
 

@@ -15,11 +15,6 @@
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var nomenclatureLink = "<?php echo AvantVocabulary::getNomenclatureLink(); ?>";
 
-    var mappingLabel = [];
-    mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_NONE; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_NONE_LABEL; ?>';
-    mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL_LABEL; ?>';
-    mappingLabel[<?php echo AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS; ?>] = '<?php echo AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS_LABEL; ?>';
-
     jQuery(document).ready(function ()
     {
         initialize();
@@ -32,9 +27,6 @@
 
         // Initialize the header.
         newItem.attr('id', 'new-item');
-        newItem.find('.vocabulary-term-left').first().text('Add a New Term');
-        newItem.find('.vocabulary-term-mapping').first().text('');
-        newItem.find('.vocabulary-term-right').text('');
         newItem.find('.vocabulary-term-header').hide();
         newItem.find('.drawer-contents').show();
 
@@ -99,7 +91,7 @@
 
         // Show the header for the newly added item.
         newItem.find('.vocabulary-term-header').show();
-        formatItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
+        setItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
 
         // Allow the user to add another item.
         jQuery('.add-item-button').prop('disabled', false);
@@ -115,7 +107,7 @@
             var itemValues = getItemValues(item);
             var mapping = data['mapping'];
 
-            formatItemTitle(item, itemValues.localTerm, itemValues.commonTerm, 888);
+            setItemTitle(item, itemValues.localTerm, itemValues.commonTerm, 888);
 
             item.find('.drawer-contents').slideUp();
             item.find('.drawer').removeClass('opened');
@@ -168,30 +160,21 @@
         startButton.button("option", {disabled: !enable});
     }
 
-    function formatItemTitle(item, localTerm, commonTerm, commonTermId)
-    {
-        console.log('formatItemTitle ' + '[' +localTerm + '] [ ' + commonTerm + '] [ ' + commonTermId + ']');
-
-        var commonTermLink = nomenclatureLink.replace('{ID}', commonTermId);
-        commonTermLink = commonTermLink.replace('{TERM}', commonTerm);
-
-        item.find('.vocabulary-term-left').first().text(localTerm);
-        item.find('.vocabulary-term-mapping').first().text('<>');
-        item.find('.vocabulary-term-right').first().html(commonTermLink);
-    }
-
     function getItemValues(item)
     {
-        var itemValues =
-            {
-                localTerm:item.find('.vocabulary-drawer-local-term').val(),
-                commonTerm:item.find('.vocabulary-drawer-common-term').text()
-            };
+        var localTerm = item.find('.vocabulary-drawer-local-term');
+        var commonTerm = item.find('.vocabulary-drawer-common-term');
 
-        return itemValues;
+        return {
+            localTerm: localTerm.val(),
+            commonTerm: commonTerm.text(),
+            commonTermId: commonTerm.attr('data-common-term-id')
+        };
     }
 
-    function initialize() {
+    function initialize()
+    {
+        setItemTitles();
         enableSuggestions();
 
         startButton.on("click", function () {
@@ -225,6 +208,7 @@
         acceptButton.click(function (event)
         {
             var selection = jQuery("#vocabulary-term-selector").val();
+            console.log('OK ' + selection);
             jQuery('#term-' + activeItemId).text(selection);
             jQuery('.modal-popup').hide();
         });
@@ -349,6 +333,58 @@
                 }
             }
         );
+    }
+
+    function setItemTitle(item, localTerm, commonTerm, commonTermId)
+    {
+        //console.log('formatItemTitle ' + '[' +localTerm + '] [ ' + commonTerm + '] [ ' + commonTermId + ']');
+
+        var itemValues = getItemValues(item);
+
+        if (commonTerm && commonTermId > 0 && commonTermId < <?php echo AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID; ?>)
+        {
+            maxTermLen = 60;
+            if (commonTerm.length > maxTermLen)
+            {
+                commonTerm = commonTerm.substr(0, maxTermLen) + '...';
+            }
+            var link = nomenclatureLink.replace('{ID}', commonTermId);
+            commonTerm = link.replace('{TERM}', commonTerm);
+        }
+
+        mappingIndicator = '';
+
+        if (localTerm && commonTerm && localTerm !== commonTerm)
+        {
+            mappingIndicator = "&rarr;";
+            leftTerm = localTerm;
+            rightTerm = commonTerm;
+        }
+        else if (localTerm)
+        {
+            leftTerm = localTerm;
+            rightTerm = '';
+        }
+        else
+        {
+            leftTerm = commonTerm;
+            rightTerm = '';
+        }
+
+        item.find('.vocabulary-term-left').html(leftTerm);
+        item.find('.vocabulary-term-mapping').html(mappingIndicator);
+        item.find('.vocabulary-term-right').html(rightTerm);
+    }
+
+    function setItemTitles()
+    {
+        jQuery('.vocabulary-term-item').each(function(i)
+        {
+            var item = jQuery(this);
+            var localTerm = item.find('.vocabulary-drawer-local-term').val();
+            var commonTerm = item.find('.vocabulary-drawer-common-term').html();
+            setItemTitle(item, localTerm, commonTerm, 7777)
+        });
     }
 
     function showStatus(status)

@@ -91,61 +91,26 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
     {
         $removeClass = '';
         $identifier = $localTermRecord->common_term_id;
-        if ($identifier > 0 && $identifier < AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID)
-        {
-            // Display the common term as a link to the Nomenclature website page for the term.
-            $link = AvantVocabulary::getNomenclatureLink();
-            $link = str_replace('{ID}', $identifier, $link);
-            $commonTerm = $localTermRecord->common_term;
-            $maxTermLen = 60;
-            if (strlen($commonTerm) > $maxTermLen)
-            {
-                $commonTerm = substr($commonTerm, 0, $maxTermLen) . '...';
-            }
-            $link = str_replace('{TERM}', $commonTerm, $link);
-            $commonTerm = $link;
-        }
-        else
-        {
-            // This is not a Nomenclature 4.0 term.
-            $commonTerm = $localTermRecord->common_term;
-        }
 
         $localTerm = $localTermRecord->local_term;
+        $commonTerm = $localTermRecord->common_term;
+        $commonTermId = $localTermRecord->common_term_id;
         $mapping = $localTermRecord->mapping;
-        $mappingText ='';
 
-        if ($mapping == AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS)
-        {
-            $mappingText = "&rarr;";
-            $leftTerm = $localTerm;
-            $rightTerm = $commonTerm;
-        }
-        elseif ($mapping == AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL)
-        {
-            $leftTerm = $commonTerm;
-            $rightTerm = '';
-        }
-        else
-        {
-            $leftTerm = $localTerm;
-            $rightTerm = '';
-        }
-
-        $commonTermInDrawer = $commonTerm ? $commonTerm : __('This local term is not mapped to a common term');
+        $commonTermInDrawer = $commonTerm ? $commonTerm : '';
         $localTermInDrawer = $mapping != AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL ? $localTerm : '';
         ?>
         <li id="<?php echo $localTermRecord->id; ?>">
-            <div class="main_link ui-sortable-handle">
+            <div class="vocabulary-term-item ui-sortable-handle">
                 <div class="sortable-item not-sortable vocabulary-term-header">
-                    <div class="vocabulary-term-left"><?php echo $leftTerm; ?></div>
-                    <div class="vocabulary-term-mapping"><?php echo $mappingText; ?></div>
-                    <span class="vocabulary-term-right"><?php echo $rightTerm; ?></span>
+                    <div class="vocabulary-term-left"></div>
+                    <div class="vocabulary-term-mapping"></div>
+                    <div class="vocabulary-term-right"></div>
                     <span class="drawer"></span>
                 </div>
                 <div class="drawer-contents" style="display:none;">
                     <label><?php echo __('Local Term'); ?></label><input class="vocabulary-drawer-local-term" type="text" value="<?php echo $localTermInDrawer; ?>">
-                    <label><?php echo __('Common Term'); ?></label><div id="term-<?php echo $localTermRecord->id;?>" class="vocabulary-drawer-common-term"><?php echo $commonTermInDrawer; ?></div>
+                    <label><?php echo __('Common Term'); ?></label><div data-common-term-id="<?php echo $commonTermId;?>" class="vocabulary-drawer-common-term"><?php echo $commonTermInDrawer; ?></div>
                     <div class="vocabulary-drawer-buttons" >
                         <div class="vocabulary-drawer-buttons-left">
                             <button type="button" class="action-button choose-term-button"><?php echo __('Choose Common Term'); ?></button>
