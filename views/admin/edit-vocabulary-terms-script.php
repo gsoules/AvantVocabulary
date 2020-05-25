@@ -119,7 +119,11 @@
     function chooseTerm(itemId)
     {
         activeItemId = itemId;
+        var termSelector = jQuery("#vocabulary-term-selector");
+        termSelector.val('');
+        termSelector.attr('placeholder', '<?php echo __('Type the words of a term you want to find'); ?>');
         jQuery("#vocabulary-term-selector-panel").show();
+        termSelector.focus();
     }
 
     function enableSuggestions()
@@ -128,28 +132,35 @@
         var messageArea = jQuery('#vocabulary-term-selector-message');
 
         jQuery(termSelector).autocomplete(
+        {
+            source: url + '?kind=' + kind,
+            delay: 250,
+            minLength: 2,
+            search: function(event, ui)
             {
-                source: url + '?kind=' + kind,
-                delay: 250,
-                minLength: 1,
-                search: function(event, ui)
+                var term = termSelector.val();
+                if (term.length <= 1)
+                    messageArea.html('down to 1');
+                else
+                    messageArea.html('Searching for "' + term + '"');
+            },
+            response: function(event, ui)
+            {
+                if (ui.content.length === 0)
                 {
-                    var term = jQuery(termSelector).val();
-                    jQuery(messageArea).html('Am searching for "' + term + '"');
-                },
-                response: function(event, ui)
-                {
-                    if (ui.content.length === 0)
-                    {
-                        var term = jQuery(termSelector).val();
-                        jQuery(messageArea).html('No match was found for "' + term + '"');
-                    }
-                    else
-                    {
-                        jQuery(messageArea).html('Type something');
-                    }
+                    var term = termSelector.val();
+                    messageArea.html('No term was found for "' + term + '"');
                 }
-            });
+                else
+                {
+                    var howMany = '1 result';
+                    if (ui.content.length > 1)
+                        howMany = ui.content.length + ' results';
+
+                    messageArea.html(howMany + '<br/>Choose from the list or keep typing to narrow down the results');
+                }
+            }
+        });
     }
 
     function enableStartButton(enable)

@@ -62,12 +62,16 @@
     width: 300px;
 }
 
+#vocabulary-term-selector-panel {
+    height: 50%;
+}
+
 #vocabulary-term-selector {
-    width: 700px;
+    width: 100%;
 }
 
 body.vocabulary-terms-page .ui-autocomplete {
-    max-height: 600px;
+    max-height: 50%;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -119,9 +123,5 @@ body.vocabulary-terms-page .ui-menu .ui-menu-item {
     .vocabulary-term-mapping,
     .vocabulary-term-right {
         display: none;
-    }
-
-    #vocabulary-term-selector {
-        width: 400px;
     }
 }

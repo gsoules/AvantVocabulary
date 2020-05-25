@@ -118,8 +118,8 @@ if (!$isValidKind)
 
 <div id="vocabulary-term-selector-panel" class="modal-popup">
     <div class="modal-content">
-        <p id="vocabulary-term-selector-message">Go for it</p>
-        <input id="vocabulary-term-selector" placeholder="Type a term" />
+        <p id="vocabulary-term-selector-message">&nbsp;</p>
+        <input id="vocabulary-term-selector" />
         <div>
             <button type="button" class="action-button accept-term-button"><?php echo __('OK'); ?></button>
             <button type="button" class="action-button cancel-term-button"><?php echo __('Cancel'); ?></button>
