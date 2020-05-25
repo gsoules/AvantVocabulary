@@ -1,3 +1,7 @@
+#add-vocabulary-term-button {
+    float: right;
+}
+
 #vocabulary-terms-list {
     margin-top: 8px;
 }
@@ -19,6 +23,11 @@
 
 #vocabulary-terms-list .drawer-contents label {
     padding-bottom: 2px;
+}
+
+.vocabulary-controls {
+    display: flex;
+    justify-content: space-between;
 }
 
 .vocabulary-drawer-buttons {
@@ -91,6 +100,19 @@ body.vocabulary-terms-page .ui-menu .ui-menu-item {
     padding: 20px;
     border: 1px solid #888;
     width: 80%; /* Could be more or less, depending on screen size */
+}
+
+.vocabulary-chooser {
+    margin-top: 6px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.vocabulary-chooser-label {
+    margin-top: 2px;
+    font-size: 18px;
+    font-weight: bold;
+    padding-right: 4px;
 }
 
 @media screen and (max-width: 960px) {

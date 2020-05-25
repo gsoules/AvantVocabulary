@@ -55,14 +55,14 @@
         cancelButton.click(function (event)
         {
             jQuery('#new-item').remove();
-            jQuery('.add-item-button').prop('disabled', false);
+            jQuery('#add-vocabulary-term-button').prop('disabled', false);
         });
 
         // Append the new item to the beginning of the list.
         firstItem.before(newItem);
 
         // Disable the Add button while the user is adding a new item.
-        jQuery('.add-item-button').prop('disabled', true);
+        jQuery('#add-vocabulary-term-button').prop('disabled', true);
 
         initializeItems();
     }
@@ -95,7 +95,7 @@
         setItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
 
         // Allow the user to add another item.
-        jQuery('.add-item-button').prop('disabled', false);
+        jQuery('#add-vocabulary-term-button').prop('disabled', false);
 
         initializeItems();
     }
@@ -244,7 +244,7 @@
             window.location.href = url + '?kind=' + selection;
         });
 
-        jQuery('.add-item-button').click(function (event)
+        jQuery('#add-vocabulary-term-button').click(function (event)
         {
             addNewItem();
         });

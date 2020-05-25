@@ -16,6 +16,7 @@ if (AvantCommon::isAjaxRequest())
     $term = isset($_GET['term']) ? $_GET['term'] : '';
     if ($term)
     {
+        // The user choose a Common Vocabulary term from the autocomplete selector.
         $kind = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE;
         $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermSuggestions($kind, $term);
         $result = array();
@@ -49,27 +50,52 @@ if (AvantCommon::isAjaxRequest())
     return;
 }
 
-$pageTitle = __('Vocabulary Terms');
+$pageTitle = __('Vocabulary Editor');
 echo head(array('title' => $pageTitle, 'bodyclass' => 'vocabulary-terms-page'));
 
-echo "<SELECT id='vocabulary-chooser'>";
-echo "<OPTION value='0'>Select a vocabulary</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>Type</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "'>Subject</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>Place</OPTION>";
-echo "</SELECT>";
-
+// Get the vocabulary kind from the URL.
 $kind = isset($_GET['kind']) ? intval($_GET['kind']) : 0;
-
 $isValidKind =
     $kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE ||
     $kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT ||
     $kind == AvantVocabulary::VOCABULARY_TERM_KIND_PLACE;
 
+$kindName = '';
+if ($isValidKind)
+{
+    if ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE)
+        $kindName = __('Type');
+    elseif ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT)
+        $kindName = __('Subject');
+    elseif ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_PLACE)
+        $kindName = __('Place');
+}
+
+echo "<div class='vocabulary-controls'>";
+
+echo "<div>";
+echo "<label class='vocabulary-chooser-label'>Vocabulary: </label>";
+echo "<SELECT id='vocabulary-chooser' class='vocabulary-chooser'>";
+echo "<OPTION value='0'>Select a vocabulary</OPTION>";
+echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>Type</OPTION>";
+echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "'>Subject</OPTION>";
+echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>Place</OPTION>";
+echo "</SELECT>";
+echo "</div>";
+
+if ($isValidKind)
+{
+    echo "<div>";
+    echo "<button id='add-vocabulary-term-button' type='button' class='action-button'>" . __('Add a new %s term', $kindName) . "</button>";
+    echo "</div>";
+}
+echo "</div>";
+
 if (!$isValidKind)
 {
     if ($kind == 0 && current_user()->role == 'super')
     {
+        // When the kind is 0, show the Build button to a super user.
         echo "<hr/>";
         if (isset($_COOKIE['XDEBUG_SESSION']))
         {
@@ -81,30 +107,14 @@ if (!$isValidKind)
         echo "<div id='status-area'></div>";
     }
 
+    // Don't show anything else until the user chooses a vocabulary.
     emitPageJavaScript($kind);
     echo foot();
-
-    // Don't show anything else until the user chooses a vocabulary.
     return;
 }
 
-$commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecords($kind);
-$localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords($kind);
-
-$suggestions = '';
-foreach ($commonTermRecords as $commonTermRecord)
-{
-    $term = str_replace("'", "\'", $commonTermRecord->common_term);
-    if (!empty($suggestions))
-        $suggestions .= ',';
-    $suggestions .= "'$term'";
-}
-$suggestions = "[$suggestions]";
-
 // The HTML that follows displays the choose vocabulary.
 ?>
-
-<button type="button" class="action-button add-item-button"><?php echo __('Add a New Term'); ?></button>
 
 <div id="vocabulary-term-selector-panel" class="modal-popup">
     <div class="modal-content">
@@ -120,6 +130,7 @@ $suggestions = "[$suggestions]";
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
     <?php
+    $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords($kind);
     foreach ($localTermRecords as $localTermRecord)
     {
         $removeClass = '';

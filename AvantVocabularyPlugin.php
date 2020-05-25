@@ -22,7 +22,7 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
         if ($user->role == 'admin' || $user->role == 'super')
         {
             $nav[] = array(
-                'label' => __('Vocabulary'),
+                'label' => __('Vocabulary Editor'),
                 'uri' => url('vocabulary/terms')
             );
         }
