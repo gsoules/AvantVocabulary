@@ -14,10 +14,10 @@ if (AvantCommon::isAjaxRequest())
     // success function will execute in the browser (or its error function if something went wrong).
 
     $term = isset($_GET['term']) ? $_GET['term'] : '';
+    $kind = isset($_GET['kind']) ? $_GET['kind'] : 0;
     if ($term)
     {
         // The user choose a Common Vocabulary term from the autocomplete selector.
-        $kind = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE;
         $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermSuggestions($kind, $term);
         $result = array();
         foreach ($commonTermRecords as $commonTermRecord)
@@ -64,11 +64,11 @@ $kindName = '';
 if ($isValidKind)
 {
     if ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE)
-        $kindName = __('Type');
+        $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_LABEL;
     elseif ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT)
-        $kindName = __('Subject');
+        $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL;
     elseif ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_PLACE)
-        $kindName = __('Place');
+        $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL;
 }
 
 echo "<div class='vocabulary-controls'>";
@@ -77,9 +77,9 @@ echo "<div>";
 echo "<label class='vocabulary-chooser-label'>Vocabulary: </label>";
 echo "<SELECT id='vocabulary-chooser' class='vocabulary-chooser'>";
 echo "<OPTION value='0'>Select a vocabulary</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>Type</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "'>Subject</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>Place</OPTION>";
+echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_LABEL . "</OPTION>";
+echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "''>" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL . "</OPTION>";
+echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL . "</OPTION>";
 echo "</SELECT>";
 echo "</div>";
 

@@ -129,7 +129,7 @@
 
         jQuery(termSelector).autocomplete(
             {
-                source: url,
+                source: url + '?kind=' + kind,
                 delay: 250,
                 minLength: 1,
                 search: function(event, ui)
