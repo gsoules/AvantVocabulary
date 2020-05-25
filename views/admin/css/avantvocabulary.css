@@ -80,6 +80,11 @@ body.vocabulary-terms-page .ui-menu .ui-menu-item {
     width:100%;
 }
 
+/*
+This modal dialog CSS comes from:
+https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-with-html-css-and-javascript--cms-33500
+*/
+
 .modal {
     position: fixed;
     top: 0;

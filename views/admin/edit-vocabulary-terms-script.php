@@ -217,12 +217,12 @@
             var item = jQuery('#' + activeItemId);
             var commonTerm = item.find('.vocabulary-drawer-common-term');
             commonTerm.text(selection);
-            document.getElementById('vocabulary-modal').classList.remove('is-visible')
+            closeTermChooserDialog();
         });
 
         cancelButton.click(function (event)
         {
-            document.getElementById('vocabulary-modal').classList.remove('is-visible')
+            closeTermChooserDialog();
         });
 
         chooseButtons.click(function (event)
@@ -276,7 +276,14 @@
 
         jQuery(window).resize(function()
         {
-            document.getElementById('vocabulary-modal').classList.remove('is-visible')
+            var termSelector = jQuery("#vocabulary-term-selector");
+            termSelector.autocomplete('close');
+        });
+
+        window.addEventListener('scroll', function(e)
+        {
+            var termSelector = jQuery("#vocabulary-term-selector");
+            termSelector.autocomplete('close');
         });
     }
 
