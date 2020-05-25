@@ -1,7 +1,11 @@
 <?php
 
-$avantVocabularyTableBuilder = new AvantVocabularyTableBuilder();
-$avantVocabularyTableBuilderProgress = new AvantVocabularyTableBuilderProgress();
+function emitPageJavaScript($kind)
+{
+    $url = WEB_ROOT . '/admin/vocabulary/terms';
+    echo get_view()->partial('/edit-vocabulary-terms-script.php', array('kind' => $kind, 'url' => $url));
+    echo foot();
+}
 
 if (AvantCommon::isAjaxRequest())
 {
@@ -27,6 +31,9 @@ if (AvantCommon::isAjaxRequest())
     $action = isset($_POST['action']) ? $_POST['action'] : '';
     $tableName = isset($_POST['table_name']) ? $_POST['table_name'] : '';
 
+    $avantVocabularyTableBuilder = new AvantVocabularyTableBuilder();
+    $avantVocabularyTableBuilderProgress = new AvantVocabularyTableBuilderProgress();
+
     if ($action == 'progress')
     {
         $avantVocabularyTableBuilderProgress->handleAjaxRequest($tableName);
@@ -45,6 +52,24 @@ if (AvantCommon::isAjaxRequest())
 $pageTitle = __('Vocabulary Terms');
 echo head(array('title' => $pageTitle, 'bodyclass' => 'vocabulary-terms-page'));
 
+$kind = isset($_GET['kind']) ? intval($_GET['kind']) : 0;
+
+echo "<SELECT id='vocabulary-chooser'>";
+echo "<OPTION value='0'>Select a vocabulary</OPTION>";
+echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>Type</OPTION>";
+echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "'>Subject</OPTION>";
+echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>Place</OPTION>";
+echo "</SELECT>";
+
+if ($kind != AvantVocabulary::VOCABULARY_TERM_KIND_TYPE &&
+    $kind != AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT &&
+    $kind != AvantVocabulary::VOCABULARY_TERM_KIND_PLACE)
+{
+    emitPageJavaScript($kind);
+    echo foot();
+    return;
+}
+
 // Warn if this session is running in the debugger because simultaneous Ajax requests won't work while debugging.
 if (isset($_COOKIE['XDEBUG_SESSION']))
 {
@@ -53,7 +78,6 @@ if (isset($_COOKIE['XDEBUG_SESSION']))
     echo '</div>';
 }
 
-$kind = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE;
 $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecords($kind);
 $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords($kind);
 
@@ -66,9 +90,6 @@ foreach ($commonTermRecords as $commonTermRecord)
     $suggestions .= "'$term'";
 }
 $suggestions = "[$suggestions]";
-
-// Form the URL for this page which is the same page that satisfies the Ajax requests.
-$vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
 ?>
 
 <button type="button" class="action-button add-item-button"><?php echo __('Add a New Term'); ?></button>
@@ -137,6 +158,5 @@ $vocabularyTermsPageUrl = WEB_ROOT . '/admin/vocabulary/terms';
 <button id='start-button'>Rebuild</button>
 <div id="status-area"></div>
 
-<?php echo get_view()->partial('/edit-vocabulary-terms-script.php', array('kind'=>$kind, 'url'=>$vocabularyTermsPageUrl)); ?>
-
+<?php emitPageJavaScript($kind); ?>
 <?php echo foot(); ?>

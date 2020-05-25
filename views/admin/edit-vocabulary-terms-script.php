@@ -14,6 +14,7 @@
     var activeItemId = 0;
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var nomenclatureLink = "<?php echo AvantVocabulary::getNomenclatureLink(); ?>";
+    var kind = <?php echo $kind; ?>;
 
     jQuery(document).ready(function ()
     {
@@ -177,20 +178,7 @@
     {
         setItemTitles();
         enableSuggestions();
-
-        startButton.on("click", function () {
-            if (tableName === 'common') {
-                if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
-                    return;
-            }
-            startMapping();
-        });
-
-        jQuery('.add-item-button').click(function (event)
-        {
-            addNewItem();
-        });
-
+        initializePageControls();
         initializeItems();
     }
 
@@ -244,6 +232,30 @@
         });
 
         jQuery('.no-remove').hide();
+    }
+
+    function initializePageControls()
+    {
+        voabularyChooser = jQuery('#vocabulary-chooser');
+        voabularyChooser.val(kind);
+        voabularyChooser.change(function()
+        {
+            var selection = jQuery(this).children("option:selected").val();
+            window.location.href = url + '?kind=' + selection;
+        });
+
+        jQuery('.add-item-button').click(function (event)
+        {
+            addNewItem();
+        });
+
+        startButton.on("click", function () {
+            if (tableName === 'common') {
+                if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
+                    return;
+            }
+            startMapping();
+        });
     }
 
     function removeItem(itemId)
@@ -325,7 +337,7 @@
                 dataType: 'json',
                 data: {
                     action: <?php echo VocabularyTermsEditor::ADD_VOCABULARY_TERM; ?>,
-                    kind: <?php echo $kind; ?>,
+                    kind: kind,
                     mapping:JSON.stringify(itemValues)
                 },
                 success: function (data) {
