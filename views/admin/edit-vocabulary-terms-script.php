@@ -116,13 +116,18 @@
         item.find('.update-item-button').fadeTo(0, 1.0);
     }
 
+    function closeTermChooserDialog()
+    {
+        document.getElementById('vocabulary-modal').classList.remove('is-visible')
+    }
+
     function chooseTerm(itemId)
     {
         activeItemId = itemId;
         var termSelector = jQuery("#vocabulary-term-selector");
         termSelector.val('');
         termSelector.attr('placeholder', '<?php echo __('Type the words of a term you want to find'); ?>');
-        jQuery("#vocabulary-term-selector-panel").show();
+        document.getElementById('vocabulary-modal').classList.add('is-visible')
         termSelector.focus();
     }
 
@@ -212,12 +217,12 @@
             var item = jQuery('#' + activeItemId);
             var commonTerm = item.find('.vocabulary-drawer-common-term');
             commonTerm.text(selection);
-            jQuery('.modal-popup').hide();
+            document.getElementById('vocabulary-modal').classList.remove('is-visible')
         });
 
         cancelButton.click(function (event)
         {
-            jQuery('.modal-popup').hide();
+            document.getElementById('vocabulary-modal').classList.remove('is-visible')
         });
 
         chooseButtons.click(function (event)
@@ -260,12 +265,18 @@
             addNewItem();
         });
 
-        startButton.on("click", function () {
+        startButton.on("click", function ()
+        {
             if (tableName === 'common') {
                 if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
                     return;
             }
             startMapping();
+        });
+
+        jQuery(window).resize(function()
+        {
+            document.getElementById('vocabulary-modal').classList.remove('is-visible')
         });
     }
 

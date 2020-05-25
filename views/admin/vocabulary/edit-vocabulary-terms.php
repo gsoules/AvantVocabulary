@@ -116,15 +116,23 @@ if (!$isValidKind)
 // The HTML that follows displays the choose vocabulary.
 ?>
 
-<div id="vocabulary-term-selector-panel" class="modal-popup">
-    <div class="modal-content">
-        <p id="vocabulary-term-selector-message">&nbsp;</p>
-        <input id="vocabulary-term-selector" />
-        <div>
-            <button type="button" class="action-button accept-term-button"><?php echo __('OK'); ?></button>
-            <button type="button" class="action-button cancel-term-button"><?php echo __('Cancel'); ?></button>
+<div id="vocabulary-modal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            this is the header
         </div>
-
+        <section class="modal-content">
+            <p id="vocabulary-term-selector-message">&nbsp;message-area</p>
+            <input id="vocabulary-term-selector" />
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo repellendus reprehenderit accusamus totam ratione! Nesciunt, nemo dolorum recusandae ad ex nam similique dolorem ab perspiciatis qui. Facere, dignissimos. Nemo, ea.</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo repellendus reprehenderit accusamus totam ratione! Nesciunt, nemo dolorum recusandae ad ex nam similique dolorem ab perspiciatis qui. Facere, dignissimos. Nemo, ea.</p>
+        </section>
+        <div class="modal-footer">
+            <div>
+                <button type="button" class="action-button accept-term-button"><?php echo __('OK'); ?></button>
+                <button type="button" class="action-button cancel-term-button"><?php echo __('Cancel'); ?></button>
+            </div>
+        </div>
     </div>
 </div>
 
