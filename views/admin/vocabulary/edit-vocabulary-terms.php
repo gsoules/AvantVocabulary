@@ -52,8 +52,6 @@ if (AvantCommon::isAjaxRequest())
 $pageTitle = __('Vocabulary Terms');
 echo head(array('title' => $pageTitle, 'bodyclass' => 'vocabulary-terms-page'));
 
-$kind = isset($_GET['kind']) ? intval($_GET['kind']) : 0;
-
 echo "<SELECT id='vocabulary-chooser'>";
 echo "<OPTION value='0'>Select a vocabulary</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>Type</OPTION>";
@@ -61,21 +59,33 @@ echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "'>Subj
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>Place</OPTION>";
 echo "</SELECT>";
 
-if ($kind != AvantVocabulary::VOCABULARY_TERM_KIND_TYPE &&
-    $kind != AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT &&
-    $kind != AvantVocabulary::VOCABULARY_TERM_KIND_PLACE)
+$kind = isset($_GET['kind']) ? intval($_GET['kind']) : 0;
+
+$isValidKind =
+    $kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE ||
+    $kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT ||
+    $kind == AvantVocabulary::VOCABULARY_TERM_KIND_PLACE;
+
+if (!$isValidKind)
 {
+    if ($kind == 0 && current_user()->role == 'super')
+    {
+        echo "<hr/>";
+        if (isset($_COOKIE['XDEBUG_SESSION']))
+        {
+            echo '<div class="health-report-error">XDEBUG_SESSION in progress. Build status will not be reported in real-time.<br/>';
+            echo '<a href="http://localhost/omeka-2.6/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
+            echo '</div>';
+        }
+        echo "<button id='start-button'>Rebuild</button>";
+        echo "<div id='status-area'></div>";
+    }
+
     emitPageJavaScript($kind);
     echo foot();
-    return;
-}
 
-// Warn if this session is running in the debugger because simultaneous Ajax requests won't work while debugging.
-if (isset($_COOKIE['XDEBUG_SESSION']))
-{
-    echo '<div class="health-report-error">XDEBUG_SESSION in progress. Build status will not be reported in real-time.<br/>';
-    echo '<a href="http://localhost/omeka-2.6/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
-    echo '</div>';
+    // Don't show anything else until the user chooses a vocabulary.
+    return;
 }
 
 $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecords($kind);
@@ -90,6 +100,8 @@ foreach ($commonTermRecords as $commonTermRecord)
     $suggestions .= "'$term'";
 }
 $suggestions = "[$suggestions]";
+
+// The HTML that follows displays the choose vocabulary.
 ?>
 
 <button type="button" class="action-button add-item-button"><?php echo __('Add a New Term'); ?></button>
@@ -153,10 +165,6 @@ $suggestions = "[$suggestions]";
     }
     ?>
 </ul>
-
-<hr/>
-<button id='start-button'>Rebuild</button>
-<div id="status-area"></div>
 
 <?php emitPageJavaScript($kind); ?>
 <?php echo foot(); ?>

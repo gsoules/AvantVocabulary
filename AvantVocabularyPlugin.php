@@ -19,7 +19,7 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
     public function filterAdminNavigationMain($nav)
     {
         $user = current_user();
-        if ($user->role == 'super')
+        if ($user->role == 'admin' || $user->role == 'super')
         {
             $nav[] = array(
                 'label' => __('Vocabulary'),
