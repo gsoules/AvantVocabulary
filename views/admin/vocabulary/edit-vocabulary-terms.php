@@ -118,14 +118,11 @@ if (!$isValidKind)
 
 <div id="vocabulary-modal" class="modal">
     <div class="modal-dialog">
-        <div class="modal-header">
-            this is the header
-        </div>
+        <div class="modal-header"><?php echo __('Choose a %s from the Common Vocabulary', $kindName); ?></div>
         <section class="modal-content">
-            <p id="vocabulary-term-selector-message">&nbsp;message-area</p>
+            <div>Tips go here</div>
+            <div id="vocabulary-term-selector-message">&nbsp;message-area</div>
             <input id="vocabulary-term-selector" />
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo repellendus reprehenderit accusamus totam ratione! Nesciunt, nemo dolorum recusandae ad ex nam similique dolorem ab perspiciatis qui. Facere, dignissimos. Nemo, ea.</p>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo repellendus reprehenderit accusamus totam ratione! Nesciunt, nemo dolorum recusandae ad ex nam similique dolorem ab perspiciatis qui. Facere, dignissimos. Nemo, ea.</p>
         </section>
         <div class="modal-footer">
             <div>
