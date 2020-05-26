@@ -64,7 +64,7 @@
 
 body.vocabulary-terms-page .ui-autocomplete {
     max-height: 1000%;
-    overflow-y: auto;
+    overflow-y: visible;
     overflow-x: hidden;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;

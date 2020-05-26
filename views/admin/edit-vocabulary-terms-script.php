@@ -21,6 +21,7 @@
 
     var termChooserDialogInput = jQuery("#vocabulary-term-input");
     var termChooserDialogMessage = jQuery('#vocabulary-term-message');
+    var termChooserResultsCount = 0;
 
     jQuery(document).ready(function ()
     {
@@ -148,8 +149,8 @@
             },
             response: function(event, ui)
             {
-                var howMany = ui.content.length;
-                if (howMany === 0)
+                termChooserResultsCount = ui.content.length;
+                if (termChooserResultsCount === 0)
                 {
                     var term = termChooserDialogInput.val();
                     termChooserDialogMessage.html('No ' + kindName + ' contains "' + term + '"');
@@ -157,10 +158,10 @@
                 else
                 {
                     var resultMessage = '1 result';
-                    if (howMany > 1)
-                        resultMessage = howMany.toLocaleString() + ' results';
+                    if (termChooserResultsCount > 1)
+                        resultMessage = termChooserResultsCount.toLocaleString() + ' results';
 
-                    if (howMany <= 10)
+                    if (termChooserResultsCount <= 10)
                         termChooserDialogMessage.html(resultMessage);
                     else
                         termChooserDialogMessage.html(resultMessage + '. To narrow down the list, type more letters or words.');
@@ -172,7 +173,13 @@
             },
             close: function(event, ui)
             {
-                termChooserDialogShowDefaultMessage();
+                // The menu of suggestions closes automatically when the user clicks outside the input
+                // box or presses the escape key. Show the default message only when there are results.
+                // If there are no results, leave the messages saying no results found for the input.
+                if (termChooserResultsCount > 0)
+                {
+                    termChooserDialogShowDefaultMessage();
+                }
             }
         });
     }
