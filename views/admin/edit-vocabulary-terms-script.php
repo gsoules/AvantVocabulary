@@ -141,6 +141,7 @@
             source: url + '?kind=' + kind,
             delay: 250,
             minLength: 2,
+            appendTo: '#vocabulary-modal-dialog',
             search: function(event, ui)
             {
                 var term = termSelector.val();
@@ -162,7 +163,7 @@
                     if (ui.content.length > 1)
                         howMany = ui.content.length + ' results';
 
-                    messageArea.html(howMany + '<br/>Choose from the list or keep typing to narrow down the results');
+                    messageArea.html(howMany + ':: Choose from the list or keep typing to narrow down the results');
                 }
             }
         });
@@ -274,17 +275,17 @@
             startMapping();
         });
 
-        jQuery(window).resize(function()
-        {
-            var termSelector = jQuery("#vocabulary-term-selector");
-            termSelector.autocomplete('close');
-        });
-
-        window.addEventListener('scroll', function(e)
-        {
-            var termSelector = jQuery("#vocabulary-term-selector");
-            termSelector.autocomplete('close');
-        });
+        // jQuery(window).resize(function()
+        // {
+        //     var termSelector = jQuery("#vocabulary-term-selector");
+        //     termSelector.autocomplete('close');
+        // });
+        //
+        // window.addEventListener('scroll', function(e)
+        // {
+        //     var termSelector = jQuery("#vocabulary-term-selector");
+        //     termSelector.autocomplete('close');
+        // });
     }
 
     function removeItem(itemId)

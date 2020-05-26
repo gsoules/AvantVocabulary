@@ -117,7 +117,7 @@ if (!$isValidKind)
 ?>
 
 <div id="vocabulary-modal" class="modal">
-    <div class="modal-dialog">
+    <div id="vocabulary-modal-dialog" class="modal-dialog">
         <div class="modal-header"><?php echo __('Choose a %s from the Common Vocabulary', $kindName); ?></div>
         <section class="modal-content">
             <div>Tips go here</div>
