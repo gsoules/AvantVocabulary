@@ -21,6 +21,14 @@
         initialize();
     });
 
+    function acceptTerm(term)
+    {
+        var item = jQuery('#' + activeItemId);
+        var commonTerm = item.find('.vocabulary-drawer-common-term');
+        commonTerm.text(term);
+        closeTermChooserDialog();
+    }
+
     function addNewItem()
     {
         var firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
@@ -121,16 +129,6 @@
         document.getElementById('vocabulary-modal').classList.remove('is-visible')
     }
 
-    function chooseTerm(itemId)
-    {
-        activeItemId = itemId;
-        var termSelector = jQuery("#vocabulary-term-selector");
-        termSelector.val('');
-        termSelector.attr('placeholder', '<?php echo __('Type the words of a term you want to find'); ?>');
-        document.getElementById('vocabulary-modal').classList.add('is-visible')
-        termSelector.focus();
-    }
-
     function enableSuggestions()
     {
         var termSelector = jQuery("#vocabulary-term-selector");
@@ -165,7 +163,11 @@
 
                     messageArea.html(howMany + ':: Choose from the list or keep typing to narrow down the results');
                 }
-            }
+            },
+            select: function(event, ui)
+            {
+                acceptTerm(ui.item.value);
+            },
         });
     }
 
@@ -208,18 +210,7 @@
         var removeButtons = jQuery('.remove-item-button');
         var chooseButtons = jQuery('.choose-term-button');
 
-        var acceptButton = jQuery('.accept-term-button');
         var cancelButton = jQuery('.cancel-term-button');
-
-        acceptButton.click(function (event)
-        {
-            var selection = jQuery("#vocabulary-term-selector").val();
-            console.log('OK ' + selection);
-            var item = jQuery('#' + activeItemId);
-            var commonTerm = item.find('.vocabulary-drawer-common-term');
-            commonTerm.text(selection);
-            closeTermChooserDialog();
-        });
 
         cancelButton.click(function (event)
         {
@@ -228,7 +219,7 @@
 
         chooseButtons.click(function (event)
         {
-            chooseTerm(jQuery(this).parents('li').attr('id'));
+            openTermChooserDialog(jQuery(this).parents('li').attr('id'));
         });
 
         drawerButtons.click(function (event)
@@ -274,18 +265,20 @@
             }
             startMapping();
         });
+    }
 
-        // jQuery(window).resize(function()
-        // {
-        //     var termSelector = jQuery("#vocabulary-term-selector");
-        //     termSelector.autocomplete('close');
-        // });
-        //
-        // window.addEventListener('scroll', function(e)
-        // {
-        //     var termSelector = jQuery("#vocabulary-term-selector");
-        //     termSelector.autocomplete('close');
-        // });
+    function openTermChooserDialog(itemId)
+    {
+        activeItemId = itemId;
+        var termSelector = jQuery("#vocabulary-term-selector");
+        termSelector.attr('placeholder', '<?php echo __('Type the words of a term you want to find'); ?>');
+        document.getElementById('vocabulary-modal').classList.add('is-visible')
+
+        // Give the dialog time to display before attempting to set the focus to the input fields.
+        window.setTimeout(function ()
+        {
+            document.getElementById('vocabulary-term-selector').focus();
+        }, 100);
     }
 
     function removeItem(itemId)

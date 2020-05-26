@@ -126,7 +126,6 @@ if (!$isValidKind)
         </section>
         <div class="modal-footer">
             <div>
-                <button type="button" class="action-button accept-term-button"><?php echo __('OK'); ?></button>
                 <button type="button" class="action-button cancel-term-button"><?php echo __('Cancel'); ?></button>
             </div>
         </div>

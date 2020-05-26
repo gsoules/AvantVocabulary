@@ -79,6 +79,10 @@ body.vocabulary-terms-page .ui-menu .ui-menu-item {
     background-color: #f3f3f3;
 }
 
+body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
+    background: rgba(0, 156, 255, 0.16);
+}
+
 #vocabulary-term-selector {
     width:100%;
 }
@@ -98,12 +102,12 @@ https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-wit
     align-items: center;
     justify-content: center;
     padding: 1rem;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.4);
     cursor: pointer;
     visibility: hidden;
     opacity: 0;
     transition: all 0.35s ease-in;
-    z-index: 11;
+    z-index: 200;
 }
 
 .modal-dialog {
@@ -114,6 +118,7 @@ https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-wit
     background: #fff;
     overflow: auto;
     cursor: default;
+    padding-bottom: 80px;
 }
 
 .modal-dialog > * {
