@@ -1,9 +1,10 @@
 <?php
 
-function emitPageJavaScript($kind, $kindName)
+function emitPageJavaScript($kind, $kindName, $commonTermCount)
 {
     $url = WEB_ROOT . '/admin/vocabulary/terms';
-    echo get_view()->partial('/edit-vocabulary-terms-script.php', array('kind' => $kind, 'kindName' => $kindName, 'url' => $url));
+    $args = array('kind'=>$kind, 'kindName'=>$kindName, 'commonTermCount'=>$commonTermCount, 'url'=>$url);
+    echo get_view()->partial('/edit-vocabulary-terms-script.php', $args);
     echo foot();
 }
 
@@ -108,10 +109,12 @@ if (!$isValidKind)
     }
 
     // Don't show anything else until the user chooses a vocabulary.
-    emitPageJavaScript($kind, $kindName);
+    emitPageJavaScript($kind, $kindName, 0);
     echo foot();
     return;
 }
+
+$commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
 
 // The HTML that follows displays the choose vocabulary.
 ?>
@@ -178,5 +181,5 @@ if (!$isValidKind)
     ?>
 </ul>
 
-<?php emitPageJavaScript($kind, $kindName); ?>
+<?php emitPageJavaScript($kind, $kindName, $commonTermCount); ?>
 <?php echo foot(); ?>

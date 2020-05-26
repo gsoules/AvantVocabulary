@@ -1,6 +1,7 @@
 <script type="text/javascript">
     var activeItemId = 0;
     var actionInProgress = false;
+    var commonTermCount = <?php echo $commonTermCount; ?>;
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var kind = <?php echo $kind; ?>;
     var kindName = '<?php echo $kindName; ?>';
@@ -125,6 +126,10 @@
 
     function enableSuggestions()
     {
+        // Show the term count with commas as a thousands separator.
+        commonTermCount = commonTermCount.toLocaleString();
+
+        // Set up the autocomplete control.
         jQuery(termChooserDialogInput).autocomplete(
         {
             source: url + '?kind=' + kind,
@@ -134,10 +139,8 @@
             search: function(event, ui)
             {
                 var term = termChooserDialogInput.val();
-                if (term.length <= 1)
-                    termChooserDialogMessage.html('down to 1');
-                else
-                    termChooserDialogMessage.html('Searching for "' + term + '"');
+                let message = 'Searching for "'  + term + '" among ' + commonTermCount + ' ' + kindName + ' terms. Please wait...';
+                termChooserDialogSetMessage(message);
             },
             response: function(event, ui)
             {
@@ -145,7 +148,7 @@
                 if (termChooserResultsCount === 0)
                 {
                     var term = termChooserDialogInput.val();
-                    termChooserDialogMessage.html('No ' + kindName + ' contains "' + term + '"');
+                    termChooserDialogSetMessage('No ' + kindName + ' contains "' + term + '"');
                 }
                 else
                 {
@@ -154,9 +157,9 @@
                         resultMessage = termChooserResultsCount.toLocaleString() + ' results';
 
                     if (termChooserResultsCount <= 10)
-                        termChooserDialogMessage.html(resultMessage);
+                        termChooserDialogSetMessage(resultMessage);
                     else
-                        termChooserDialogMessage.html(resultMessage + '. To narrow down the list, type more letters or words.');
+                        termChooserDialogSetMessage(resultMessage + '. To narrow down the list, type more letters or words.');
                 }
             },
             select: function(event, ui)
@@ -510,12 +513,12 @@
 
     function termChooserDialogShowDefaultMessage()
     {
-        termChooserDialogMessage.html('<?php echo __('Search for a term by typing in the box below'); ?>');
+        termChooserDialogSetMessage('<?php echo __('Search for a term by typing in the box below'); ?>');
     }
 
     function termChooserDialogSetMessage(message)
     {
-        termChooserDialogMessage.html(message);
+        termChooserDialogMessage.text(message);
     }
 
     function updateItem(id)
