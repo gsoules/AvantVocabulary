@@ -131,8 +131,9 @@
 
     function enableSuggestions()
     {
-        var termSelector = jQuery("#vocabulary-term-selector");
-        var messageArea = jQuery('#vocabulary-term-selector-message');
+        var termSelector = jQuery("#vocabulary-term-input");
+        var messageArea = jQuery('#vocabulary-term-message');
+        messageArea.html('<?php echo __('Type in the box below'); ?>');
 
         jQuery(termSelector).autocomplete(
         {
@@ -150,18 +151,22 @@
             },
             response: function(event, ui)
             {
-                if (ui.content.length === 0)
+                var howMany = ui.content.length;
+                if (howMany === 0)
                 {
                     var term = termSelector.val();
                     messageArea.html('No term was found for "' + term + '"');
                 }
                 else
                 {
-                    var howMany = '1 result';
-                    if (ui.content.length > 1)
-                        howMany = ui.content.length + ' results';
+                    var resultMessage = '1 result';
+                    if (howMany > 1)
+                        resultMessage = howMany + ' results';
 
-                    messageArea.html(howMany + ':: Choose from the list or keep typing to narrow down the results');
+                    if (howMany <= 10)
+                        messageArea.html(resultMessage);
+                    else
+                        messageArea.html(resultMessage + '. To narrow down the list, type more words');
                 }
             },
             select: function(event, ui)
@@ -270,14 +275,14 @@
     function openTermChooserDialog(itemId)
     {
         activeItemId = itemId;
-        var termSelector = jQuery("#vocabulary-term-selector");
+        var termSelector = jQuery("#vocabulary-term-input");
         termSelector.attr('placeholder', '<?php echo __('Type the words of a term you want to find'); ?>');
         document.getElementById('vocabulary-modal').classList.add('is-visible')
 
         // Give the dialog time to display before attempting to set the focus to the input fields.
         window.setTimeout(function ()
         {
-            document.getElementById('vocabulary-term-selector').focus();
+            document.getElementById('vocabulary-term-input').focus();
         }, 100);
     }
 

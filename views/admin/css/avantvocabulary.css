@@ -83,8 +83,15 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
     background: rgba(0, 156, 255, 0.16);
 }
 
-#vocabulary-term-selector {
+#vocabulary-term-message {
+    margin-bottom: 12px;
+    color: #0057b5;
+}
+
+#vocabulary-term-input {
     width:100%;
+    padding: 0 0;
+    font-size: 130%;
 }
 
 /*
@@ -118,24 +125,24 @@ https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-wit
     background: #fff;
     overflow: auto;
     cursor: default;
-    padding-bottom: 80px;
 }
 
 .modal-dialog > * {
     padding: 1rem;
 }
 
-.modal-header,
-.modal-footer {
-    background: #efefef;
-}
-
 .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #efefef;
     font-weight: bold;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
-.modal-header .modal-close {
-    font-size: 1.5rem;
+.modal-header-title {
+    font-size: 18px;
 }
 
 .modal div + div {

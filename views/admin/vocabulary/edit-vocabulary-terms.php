@@ -118,17 +118,14 @@ if (!$isValidKind)
 
 <div id="vocabulary-modal" class="modal">
     <div id="vocabulary-modal-dialog" class="modal-dialog">
-        <div class="modal-header"><?php echo __('Choose a %s from the Common Vocabulary', $kindName); ?></div>
-        <section class="modal-content">
-            <div>Tips go here</div>
-            <div id="vocabulary-term-selector-message">&nbsp;message-area</div>
-            <input id="vocabulary-term-selector" />
-        </section>
-        <div class="modal-footer">
-            <div>
-                <button type="button" class="action-button cancel-term-button"><?php echo __('Cancel'); ?></button>
-            </div>
+        <div class="modal-header">
+            <div class="modal-header-title"><?php echo __('Choose a %s from the Common Vocabulary', $kindName); ?></div>
+            <button type="button" class="action-button cancel-term-button"><?php echo __('Cancel'); ?></button>
         </div>
+        <section class="modal-content">
+            <div id="vocabulary-term-message"></div>
+            <input id="vocabulary-term-input" />
+        </section>
     </div>
 </div>
 
