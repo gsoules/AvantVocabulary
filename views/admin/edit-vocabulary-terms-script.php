@@ -170,6 +170,10 @@
             {
                 acceptTerm(ui.item.value);
             },
+            close: function(event, ui)
+            {
+                termChooserDialogShowDefaultMessage();
+            }
         });
     }
 
@@ -469,6 +473,13 @@
         );
     }
 
+    function termChooserDialogCheckInput()
+    {
+        termChooserDialogTimer = setTimeout(termChooserDialogCheckInput, 500);
+        if (termChooserDialogInput.val().length <= 1)
+            termChooserDialogShowDefaultMessage();
+    }
+
     function termChooserDialogClose()
     {
         clearTimeout(termChooserDialogTimer);
@@ -493,11 +504,9 @@
         termChooserDialogTimer = setTimeout(termChooserDialogCheckInput, 500);
     }
 
-    function termChooserDialogCheckInput()
+    function termChooserDialogShowDefaultMessage()
     {
-        termChooserDialogTimer = setTimeout(termChooserDialogCheckInput, 500);
-        if (termChooserDialogInput.val().length <= 1)
-            termChooserDialogMessage.html('<?php echo __('Search for a term by typing in the box below'); ?>');
+        termChooserDialogMessage.html('<?php echo __('Search for a term by typing in the box below'); ?>');
     }
 
     function updateItem(id)
