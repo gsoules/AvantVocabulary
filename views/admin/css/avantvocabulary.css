@@ -85,13 +85,16 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
 
 #vocabulary-term-message {
     margin-bottom: 12px;
+    font-size: 110%;
     color: #0057b5;
 }
 
 #vocabulary-term-input {
     width:100%;
-    padding: 0 0;
     font-size: 130%;
+    padding: 10px 10px;
+    margin: 5px 0;
+    box-sizing: border-box;
 }
 
 /*
