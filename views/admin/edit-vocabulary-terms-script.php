@@ -9,6 +9,8 @@
     var progressCount = 0;
     var progressTimer;
 
+    var termChooserDialogTimer;
+
     var url = '<?php echo $url; ?>';
 
     var activeItemId = 0;
@@ -16,6 +18,9 @@
     var nomenclatureLink = "<?php echo AvantVocabulary::getNomenclatureLink(); ?>";
     var kind = <?php echo $kind; ?>;
     var kindName = '<?php echo $kindName; ?>';
+
+    var termChooserDialogInput = jQuery("#vocabulary-term-input");
+    var termChooserDialogMessage = jQuery('#vocabulary-term-message');
 
     jQuery(document).ready(function ()
     {
@@ -27,7 +32,7 @@
         var item = jQuery('#' + activeItemId);
         var commonTerm = item.find('.vocabulary-drawer-common-term');
         commonTerm.text(term);
-        closeTermChooserDialog();
+        termChooserDialogClose();
     }
 
     function addNewItem()
@@ -125,11 +130,6 @@
         item.find('.update-item-button').fadeTo(0, 1.0);
     }
 
-    function closeTermChooserDialog()
-    {
-        document.getElementById('vocabulary-modal').classList.remove('is-visible')
-    }
-
     function enableSuggestions()
     {
         var termSelector = jQuery("#vocabulary-term-input");
@@ -219,12 +219,12 @@
 
         cancelButton.click(function (event)
         {
-            closeTermChooserDialog();
+            termChooserDialogClose();
         });
 
         chooseButtons.click(function (event)
         {
-            openTermChooserDialog(jQuery(this).parents('li').attr('id'));
+            termChooserDialogOpen(jQuery(this).parents('li').attr('id'));
         });
 
         drawerButtons.click(function (event)
@@ -272,24 +272,17 @@
         });
     }
 
-    function openTermChooserDialog(itemId)
+    function removeEventListeners()
     {
-        activeItemId = itemId;
+        var drawerButtons = jQuery('.drawer');
+        var updateButtons = jQuery('.update-item-button');
+        var removeButtons = jQuery('.remove-item-button');
+        var chooseButtons = jQuery('.choose-term-button');
 
-        var messageArea = jQuery('#vocabulary-term-message');
-        var termSelector = jQuery("#vocabulary-term-input");
-
-        messageArea.html('<?php echo __('Search for a term by typing in the box below'); ?>');
-        termSelector.val('');
-        termSelector.attr('placeholder', '<?php echo __('Enter words here'); ?>');
-
-        document.getElementById('vocabulary-modal').classList.add('is-visible')
-
-        // Give the dialog time to display before attempting to set the focus to the input fields.
-        window.setTimeout(function ()
-        {
-            document.getElementById('vocabulary-term-input').focus();
-        }, 100);
+        drawerButtons.off('click');
+        updateButtons.off('click');
+        removeButtons.off('click');
+        chooseButtons.off('click');
     }
 
     function removeItem(itemId)
@@ -479,17 +472,38 @@
         );
     }
 
-    function removeEventListeners()
+    function termChooserDialogClose()
     {
-        var drawerButtons = jQuery('.drawer');
-        var updateButtons = jQuery('.update-item-button');
-        var removeButtons = jQuery('.remove-item-button');
-        var chooseButtons = jQuery('.choose-term-button');
+        clearTimeout(termChooserDialogTimer);
+        document.getElementById('vocabulary-modal').classList.remove('is-visible')
+    }
 
-        drawerButtons.off('click');
-        updateButtons.off('click');
-        removeButtons.off('click');
-        chooseButtons.off('click');
+    function termChooserDialogOpen(itemId)
+    {
+        activeItemId = itemId;
+
+        var messageArea = jQuery('#vocabulary-term-message');
+        var termSelector = jQuery("#vocabulary-term-input");
+
+        termSelector.val('');
+        termSelector.attr('placeholder', '<?php echo __('Enter words here'); ?>');
+
+        document.getElementById('vocabulary-modal').classList.add('is-visible')
+
+        // Give the dialog time to display before attempting to set the focus to the input fields.
+        window.setTimeout(function ()
+        {
+            document.getElementById('vocabulary-term-input').focus();
+        }, 100);
+
+        termChooserDialogTimer = setTimeout(termChooserDialogCheckInput, 500);
+    }
+
+    function termChooserDialogCheckInput()
+    {
+        termChooserDialogTimer = setTimeout(termChooserDialogCheckInput, 500);
+        if (termChooserDialogInput.val().length <= 1)
+            termChooserDialogMessage.html('<?php echo __('Search for a term by typing in the box below'); ?>');
     }
 
     function updateItem(id)
