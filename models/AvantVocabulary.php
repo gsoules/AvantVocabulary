@@ -34,17 +34,6 @@ class AvantVocabulary
         return $commonTerm;
     }
 
-    public static function getNomenclatureLink()
-    {
-        // Create a template for link to the Nomenclature 4.0 specification. The caller of this method must replace
-        // {ID} and {TERM} with the common term identifier and name. It's like this, instead of taking parameters,
-        // so that it can be used in the Ajax Javascript that needs to create the same link as PHP creates.
-        $url = "https://www.nomenclature.info/parcourir-browse.app?lang=en&id={ID}&wo=N&ws=INT";
-        $altText = __('View the Nomenclature 4.0 specification for term {ID}');
-        $link = "<a href='$url' target='_blank' title='$altText'>{TERM}</a>";
-        return $link;
-    }
-
     public static function getWhereKind($kind)
     {
         // This method treats kind as a bit mask. If either the Type or the Subject bit is set, it creates

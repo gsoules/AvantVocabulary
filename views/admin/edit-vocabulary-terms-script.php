@@ -1,27 +1,19 @@
 <script type="text/javascript">
-    //var tableName = 'common';
-    var tableName = 'local';
-
-    var startButton = jQuery("#start-button").button();
-    var statusArea = jQuery("#status-area");
-
-    var actionInProgress = false;
-    var progressCount = 0;
-    var progressTimer;
-
-    var termChooserDialogTimer;
-
-    var url = '<?php echo $url; ?>';
-
     var activeItemId = 0;
+    var actionInProgress = false;
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
-    var nomenclatureLink = "<?php echo AvantVocabulary::getNomenclatureLink(); ?>";
     var kind = <?php echo $kind; ?>;
     var kindName = '<?php echo $kindName; ?>';
-
+    var progressCount = 0;
+    var progressTimer;
+    var startButton = jQuery("#start-button").button();
+    var statusArea = jQuery("#status-area");
+    var tableName = 'local';
     var termChooserDialogInput = jQuery("#vocabulary-term-input");
     var termChooserDialogMessage = jQuery('#vocabulary-term-message');
+    var termChooserDialogTimer;
     var termChooserResultsCount = 0;
+    var url = '<?php echo $url; ?>';
 
     jQuery(document).ready(function ()
     {
@@ -400,8 +392,11 @@
             {
                 commonTerm = commonTerm.substr(0, maxTermLen) + '...';
             }
-            var link = nomenclatureLink.replace('{ID}', commonTermId);
-            commonTerm = link.replace('{TERM}', commonTerm);
+
+            // Replace the common term text with a link to that term on the Nomenclature website.
+            let href = 'https://www.nomenclature.info/parcourir-browse.app?lang=en&id=' + commonTermId +'&wo=N&ws=INT';
+            let altText = '<?php echo __('View the Nomenclature 4.0 specification for term '); ?>' + commonTermId;
+            commonTerm = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + commonTerm + "</a>";
         }
 
         mappingIndicator = '';
