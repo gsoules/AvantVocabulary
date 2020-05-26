@@ -15,6 +15,7 @@
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var nomenclatureLink = "<?php echo AvantVocabulary::getNomenclatureLink(); ?>";
     var kind = <?php echo $kind; ?>;
+    var kindName = '<?php echo $kindName; ?>';
 
     jQuery(document).ready(function ()
     {
@@ -133,7 +134,6 @@
     {
         var termSelector = jQuery("#vocabulary-term-input");
         var messageArea = jQuery('#vocabulary-term-message');
-        messageArea.html('<?php echo __('Type in the box below'); ?>');
 
         jQuery(termSelector).autocomplete(
         {
@@ -155,18 +155,18 @@
                 if (howMany === 0)
                 {
                     var term = termSelector.val();
-                    messageArea.html('No term was found for "' + term + '"');
+                    messageArea.html('No ' + kindName + ' contains "' + term + '"');
                 }
                 else
                 {
                     var resultMessage = '1 result';
                     if (howMany > 1)
-                        resultMessage = howMany + ' results';
+                        resultMessage = howMany.toLocaleString() + ' results';
 
                     if (howMany <= 10)
                         messageArea.html(resultMessage);
                     else
-                        messageArea.html(resultMessage + '. To narrow down the list, type more words');
+                        messageArea.html(resultMessage + '. To narrow down the list, type more letters or words.');
                 }
             },
             select: function(event, ui)
@@ -275,8 +275,14 @@
     function openTermChooserDialog(itemId)
     {
         activeItemId = itemId;
+
+        var messageArea = jQuery('#vocabulary-term-message');
         var termSelector = jQuery("#vocabulary-term-input");
-        termSelector.attr('placeholder', '<?php echo __('Type the words of a term you want to find'); ?>');
+
+        messageArea.html('<?php echo __('Search for a term by typing in the box below'); ?>');
+        termSelector.val('');
+        termSelector.attr('placeholder', '<?php echo __('Enter words here'); ?>');
+
         document.getElementById('vocabulary-modal').classList.add('is-visible')
 
         // Give the dialog time to display before attempting to set the focus to the input fields.

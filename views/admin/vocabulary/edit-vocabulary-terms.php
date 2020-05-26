@@ -1,9 +1,9 @@
 <?php
 
-function emitPageJavaScript($kind)
+function emitPageJavaScript($kind, $kindName)
 {
     $url = WEB_ROOT . '/admin/vocabulary/terms';
-    echo get_view()->partial('/edit-vocabulary-terms-script.php', array('kind' => $kind, 'url' => $url));
+    echo get_view()->partial('/edit-vocabulary-terms-script.php', array('kind' => $kind, 'kindName' => $kindName, 'url' => $url));
     echo foot();
 }
 
@@ -108,7 +108,7 @@ if (!$isValidKind)
     }
 
     // Don't show anything else until the user chooses a vocabulary.
-    emitPageJavaScript($kind);
+    emitPageJavaScript($kind, $kindName);
     echo foot();
     return;
 }
@@ -119,7 +119,7 @@ if (!$isValidKind)
 <div id="vocabulary-modal" class="modal">
     <div id="vocabulary-modal-dialog" class="modal-dialog">
         <div class="modal-header">
-            <div class="modal-header-title"><?php echo __('Choose a %s from the Common Vocabulary', $kindName); ?></div>
+            <div class="modal-header-title"><?php echo __('Search for a %s in the Common Vocabulary', $kindName); ?></div>
             <button type="button" class="action-button cancel-term-button"><?php echo __('Cancel'); ?></button>
         </div>
         <section class="modal-content">
@@ -178,5 +178,5 @@ if (!$isValidKind)
     ?>
 </ul>
 
-<?php emitPageJavaScript($kind); ?>
+<?php emitPageJavaScript($kind, $kindName); ?>
 <?php echo foot(); ?>
