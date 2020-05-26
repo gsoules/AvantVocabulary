@@ -1,5 +1,6 @@
 :root {
-    --selected-term: rgba(0, 156, 255, 0.16);
+    --selected-term: #d8cfb6;
+    --term-link: #9d5b41;
 }
 
 #add-vocabulary-term-button {
@@ -70,7 +71,7 @@
 .vocabulary-term-left a:visited,
 .vocabulary-term-right a,
 .vocabulary-term-right a:visited {
-    color:#0057b5;
+    color: var(--term-link)
 }
 
 .vocabulary-term-left {
@@ -103,7 +104,7 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
     margin-bottom: 12px;
     padding-left: 4px;
     font-size: 110%;
-    color: #0057b5;
+    color: var(--term-link);
 }
 
 #vocabulary-term-input {
