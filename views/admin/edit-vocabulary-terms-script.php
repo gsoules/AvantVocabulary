@@ -215,16 +215,16 @@
         var removeButtons = jQuery('.remove-item-button');
         var chooseButtons = jQuery('.choose-term-button');
 
-        var cancelButton = jQuery('.cancel-term-button');
-
-        cancelButton.click(function (event)
-        {
-            termChooserDialogClose();
-        });
+        var closeButton = jQuery('.close-chooser-dialog-button');
 
         chooseButtons.click(function (event)
         {
-            termChooserDialogOpen(jQuery(this).parents('li').attr('id'));
+            termChooserDialogOpen(jQuery(this).parents('li'));
+        });
+
+        closeButton.click(function (event)
+        {
+            termChooserDialogClose();
         });
 
         drawerButtons.click(function (event)
@@ -387,13 +387,12 @@
 
         if (commonTerm && commonTermId > 0 && commonTermId < <?php echo AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID; ?>)
         {
+            // The common term is from Nomenclature. Display it as a link to that term on the Nomenclature website.
+            // If it's really long, truncate it so that it won't wrap. The full term can be seen in the drawer.
             maxTermLen = 60;
             if (commonTerm.length > maxTermLen)
-            {
                 commonTerm = commonTerm.substr(0, maxTermLen) + '...';
-            }
 
-            // Replace the common term text with a link to that term on the Nomenclature website.
             let href = 'https://www.nomenclature.info/parcourir-browse.app?lang=en&id=' + commonTermId +'&wo=N&ws=INT';
             let altText = '<?php echo __('View the Nomenclature 4.0 specification for term '); ?>' + commonTermId;
             commonTerm = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + commonTerm + "</a>";
@@ -488,27 +487,35 @@
         document.getElementById('vocabulary-modal').classList.remove('is-visible')
     }
 
-    function termChooserDialogOpen(itemId)
+    function termChooserDialogOpen(item)
     {
-        activeItemId = itemId;
+        activeItemId = item.attr('id');
+        let itemValues = getItemValues(item);
 
-        termChooserDialogInput.val('');
+        if (itemValues.commonTerm.length)
+            termChooserDialogSetMessage('<?php echo __('Search for other terms by editing the text in the box below'); ?>')
+
+        termChooserDialogInput.val(itemValues.commonTerm);
         termChooserDialogInput.attr('placeholder', '<?php echo __('Enter words here'); ?>');
 
         document.getElementById('vocabulary-modal').classList.add('is-visible')
 
-        // Give the dialog time to display before attempting to set the focus to the input fields.
-        window.setTimeout(function ()
-        {
-            document.getElementById('vocabulary-term-input').focus();
-        }, 100);
+        // Give the dialog time to display before attempting to set the focus to the input field.
+        window.setTimeout(function () { document.getElementById('vocabulary-term-input').focus(); }, 100);
 
+        // Start a timer that will assess and act on the content of the input box periodically. This is necessary to
+        // determine when the box has less than the minimum characters since the autocomplete control has no event to tell us.
         termChooserDialogTimer = setTimeout(termChooserDialogCheckInput, 500);
     }
 
     function termChooserDialogShowDefaultMessage()
     {
         termChooserDialogMessage.html('<?php echo __('Search for a term by typing in the box below'); ?>');
+    }
+
+    function termChooserDialogSetMessage(message)
+    {
+        termChooserDialogMessage.html(message);
     }
 
     function updateItem(id)
@@ -542,9 +549,9 @@
 
     function validateItemValues(itemValues)
     {
-        if (itemValues.localTerm.trim().length === 0)
+        if (itemValues.localTerm.trim().length === 0 && itemValues.commonTerm.length === 0)
         {
-            alert('<?php echo __('Local Term must be specified'); ?>');
+            alert('<?php echo __('Either a Local Term or a Common Term or both must be specified'); ?>');
             return false;
         }
         return true;

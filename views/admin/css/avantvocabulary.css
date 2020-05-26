@@ -57,6 +57,13 @@
     font-weight: bold;
 }
 
+.vocabulary-term-left a,
+.vocabulary-term-left a:visited,
+.vocabulary-term-right a,
+.vocabulary-term-right a:visited {
+    color:#0057b5;
+}
+
 .vocabulary-term-left {
     text-align: right;
     width: 300px;
@@ -85,6 +92,7 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
 
 #vocabulary-term-message {
     margin-bottom: 12px;
+    padding-left: 4px;
     font-size: 110%;
     color: #0057b5;
 }
@@ -140,8 +148,8 @@ https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-wit
     justify-content: space-between;
     background: #efefef;
     font-weight: bold;
-    padding-top: 2px;
-    padding-bottom: 2px;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 
 .modal-header-title {

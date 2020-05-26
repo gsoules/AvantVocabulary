@@ -120,7 +120,7 @@ if (!$isValidKind)
     <div id="vocabulary-modal-dialog" class="modal-dialog">
         <div class="modal-header">
             <div class="modal-header-title"><?php echo __('Search for a %s in the Common Vocabulary', $kindName); ?></div>
-            <button type="button" class="action-button cancel-term-button"><?php echo __('Cancel'); ?></button>
+            <button type="button" class="action-button close-chooser-dialog-button"><?php echo __('Close'); ?></button>
         </div>
         <section class="modal-content">
             <div id="vocabulary-term-message"></div>
