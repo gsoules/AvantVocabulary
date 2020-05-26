@@ -1,3 +1,7 @@
+:root {
+    --selected-term: rgba(0, 156, 255, 0.16);
+}
+
 #add-vocabulary-term-button {
     float: right;
 }
@@ -14,6 +18,7 @@
 
 #vocabulary-terms-list .drawer-contents {
     background: #f7f7f7;
+    border: 2px solid var(--selected-term);
     border-bottom-width: 3px;
 }
 
@@ -42,6 +47,10 @@
 
 #vocabulary-terms-list li {
     margin-bottom: 6px;
+}
+
+.vocabulary-term-header.selected {
+    background-color: var(--selected-term) !important;
 }
 
 .vocabulary-term-mapping {
@@ -87,7 +96,7 @@ body.vocabulary-terms-page .ui-menu .ui-menu-item {
 }
 
 body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
-    background: rgba(0, 156, 255, 0.16);
+    background: var(--selected-term);
 }
 
 #vocabulary-term-message {

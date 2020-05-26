@@ -31,6 +31,8 @@
 
     function addNewItem()
     {
+        closeAllDrawers();
+
         var firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
         var newItem = firstItem.clone();
 
@@ -209,6 +211,22 @@
         initializeItems();
     }
 
+    function closeAllDrawers()
+    {
+        var drawerButtons = jQuery('.drawer-contents');
+        drawerButtons.each(function(i)
+        {
+            jQuery(this).hide();
+        });
+
+        var drawerHeaders = jQuery('.drawer');
+        drawerHeaders.each(function(i)
+        {
+            jQuery(this).parent().removeClass('selected');
+            jQuery(this).removeClass('opened');
+        });
+    }
+
     function initializeItems()
     {
         removeEventListeners();
@@ -232,9 +250,33 @@
 
         drawerButtons.click(function (event)
         {
-            event.preventDefault();
-            jQuery(this).parent().next().toggle();
-            jQuery(this).toggleClass('opened');
+            // Remember if this drawer is open or closed.
+            let isOpen = jQuery(this).hasClass('opened');
+
+            if (!isOpen)
+            {
+                // Only one drawer is allowed to be open at a time.
+                // Before opening this drawer, make sure no other drawer is open.
+                closeAllDrawers();
+            }
+
+            // Toggle the state of the drawer's open indicator (arrow at far right)
+            // Toggle the open/close state of the drawer itself.
+            let openIndicator = jQuery(this);
+            let drawer = openIndicator.parent().next();
+            let header = openIndicator.parent();
+            if (isOpen)
+            {
+                header.removeClass('selected');
+                openIndicator.removeClass('opened');
+                drawer.hide();
+            }
+            else
+            {
+                header.addClass('selected');
+                openIndicator.addClass('opened');
+                drawer.show();
+            }
         });
 
         removeButtons.click(function (event)
