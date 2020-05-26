@@ -46,7 +46,7 @@ class AvantVocabularyTableBuilder
         // Get the set of unique text values for this elements.
         $results = $this->fetchUniqueLocalTerms($elementId);
 
-        foreach ($results as $result)
+        foreach ($results as $index => $result)
         {
             // Check if this local term is already in the local terms table.
             $localTerm = $result['text'];
@@ -112,7 +112,7 @@ class AvantVocabularyTableBuilder
             else
             {
                 // The local term does not exist in the local terms table. Add it.
-                $this->databaseInsertRecordForLocalTerm($kind, $localTerm);
+                $this->databaseInsertRecordForLocalTerm($kind, $localTerm, $index + 1);
             }
         }
 
@@ -131,9 +131,10 @@ class AvantVocabularyTableBuilder
             throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
     }
 
-    protected function databaseInsertRecordForLocalTerm($kind, $localTerm)
+    protected function databaseInsertRecordForLocalTerm($kind, $localTerm, $order)
     {
         $localTermRecord = new VocabularyLocalTerms();
+        $localTermRecord['order'] = $order;
         $localTermRecord['kind'] = $kind;
         $localTermRecord['local_term'] = $localTerm;
 
@@ -200,6 +201,9 @@ class AvantVocabularyTableBuilder
         // This method is called in response to Ajax requests from the client. For more information, see the comments
         // for this same method in AvantElasticSearchIndexBuilder.
 
+        $success = true;
+        $error = '';
+
         try
         {
             switch ($tableName)
@@ -213,18 +217,17 @@ class AvantVocabularyTableBuilder
                     break;
 
                 default:
-                    $response = 'Unexpected table name: ' . $tableName;
+                    $error = 'Unexpected table name: ' . $tableName;
+                    $success = false;
             }
         }
         catch (Exception $e)
         {
-            $buildAction = false;
-            $response = $e->getMessage();
+            $error = $e->getMessage();
+            $success = false;
         }
 
-        $response = "Build of $tableName finished";
-
-        $response = json_encode($response);
+        $response = json_encode(array('success' => $success, 'error'=>$error));
         echo $response;
     }
 

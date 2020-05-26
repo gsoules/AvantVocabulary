@@ -126,6 +126,11 @@
         item.find('.update-item-button').fadeTo(0, 1.0);
     }
 
+    function afterUpdateItemOrder()
+    {
+        setEditorMessage('<?php echo __('Order updated'); ?>')
+    }
+
     function enableSuggestions()
     {
         // Show the term count with commas as a thousands separator.
@@ -289,7 +294,43 @@
             updateItem(jQuery(this).parents('li').attr('id'));
         });
 
+        jQuery('#vocabulary-terms-list').sortable({
+            listType: 'ul',
+            handle: '.main_link',
+            items: 'li',
+            revert: 200,
+            toleranceElement: '> div',
+            placeholder: 'ui-sortable-highlight',
+            forcePlaceholderSize: true,
+            containment: 'document',
+
+            start: function(event, ui)
+            {
+                jQuery(ui.item).data("startindex", ui.item.index());
+                setEditorMessage('<?php echo __('Moving an item'); ?>');
+            },
+            stop: function(event, ui)
+            {
+                moveItem(ui.item);
+            }
+        });
+
+
         jQuery('.no-remove').hide();
+    }
+
+    function moveItem(item)
+    {
+        var startIndex = item.data("startindex") + 1;
+        var newIndex = item.index() + 1;
+        if (newIndex !== startIndex)
+        {
+            updateItemOrder();
+        }
+        else
+        {
+            setEditorMessage('<?php echo __('Item not moved'); ?>');
+        }
     }
 
     function initializePageControls()
@@ -422,6 +463,11 @@
         );
     }
 
+    function setEditorMessage(message)
+    {
+        jQuery('#vocablary-term-editor-message-area').text(message);
+    }
+
     function setItemTitle(item)
     {
         var itemValues = getItemValues(item);
@@ -506,8 +552,11 @@
                 success: function (data)
                 {
                     actionInProgress = false;
-                    console.log("DONE");
-                    showStatus(data);
+                    let status = 'Build completed';
+                    if (!data['success'])
+                        status = 'Build failed: ' + data['error'];
+                    console.log(status);
+                    showStatus(status);
                     enableStartButton(true);
                 },
                 error: function (request, status, error)
@@ -587,6 +636,41 @@
                 },
                 error: function (data) {
                     alert('AJAX Error on Update: ' + data.statusText);
+                }
+            }
+        );
+    }
+
+    function updateItemOrder()
+    {
+        setEditorMessage('<?php echo __('Updating database...'); ?>')
+
+        var order = jQuery('ul#vocabulary-terms-list > li')
+            .map(function(i, e)
+            {
+                // Get the Id minus the "item-" prefix.
+                let id = e.id;
+                id = id.substr(5);
+                return id;
+            })
+            .get();
+
+        jQuery.ajax(
+            itemEditorUrl,
+            {
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    action: <?php echo VocabularyTermsEditor::UPDATE_VOCABULARY_TERM_ORDER; ?>,
+                    order: order
+                },
+                success: function (data)
+                {
+                    afterUpdateItemOrder();
+                },
+                error: function (data)
+                {
+                    alert('AJAX Error on Update Order: ' + data.statusText);
                 }
             }
         );

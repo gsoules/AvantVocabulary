@@ -1,6 +1,7 @@
 :root {
     --selected-term: #d8cfb6;
     --term-link: #9d5b41;
+    --term-message: #428037;
 }
 
 #add-vocabulary-term-button {
@@ -104,7 +105,11 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
     margin-bottom: 12px;
     padding-left: 4px;
     font-size: 110%;
-    color: var(--term-link);
+    color: var(--term-message);
+}
+
+#vocablary-term-editor-message-area {
+    color: var(--term-message);
 }
 
 #vocabulary-term-input {

@@ -116,8 +116,14 @@ if (!$isValidKind)
 
 $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
 
+$localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords($kind);
+$localTermCount = count($localTermRecords);
+$verb = $localTermCount == 1 ?'term is defined' : 'terms are defined';
+$localTermCountMessage = __('%s %s %s', $localTermCount, $kindName, $verb);
+
 // The HTML that follows displays the choose vocabulary.
 ?>
+<div id="vocablary-term-editor-message-area"><?php echo $localTermCountMessage; ?></div>
 
 <div id="vocabulary-modal" class="modal">
     <div id="vocabulary-modal-dialog" class="modal-dialog">
@@ -134,7 +140,6 @@ $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount(
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
     <?php
-    $localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords($kind);
     foreach ($localTermRecords as $localTermRecord)
     {
         $removeClass = '';
@@ -154,8 +159,8 @@ $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount(
         // code does not need to know how the header is supposed to be formatted.
         ?>
         <li id="item-<?php echo $localTermRecord->id; ?>" class="vocabulary-term-item" >
-            <div class="ui-sortable-handle">
-                <div class="sortable-item not-sortable vocabulary-term-header">
+            <div class="main_link ui-sortable-handle">
+                <div class="sortable-item sortable-item vocabulary-term-header">
                     <div class="vocabulary-term-left"></div>
                     <div class="vocabulary-term-mapping"></div>
                     <div class="vocabulary-term-right"></div>

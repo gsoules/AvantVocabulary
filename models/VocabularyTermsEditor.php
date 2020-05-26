@@ -5,6 +5,7 @@ class VocabularyTermsEditor
     const ADD_VOCABULARY_TERM = 1;
     const REMOVE_VOCABULARY_TERM = 2;
     const UPDATE_VOCABULARY_TERM = 3;
+    const UPDATE_VOCABULARY_TERM_ORDER = 4;
 
     public static function addDefaultTerm($description, $term)
     {
@@ -69,6 +70,7 @@ class VocabularyTermsEditor
 
         $updatedLocalTermRecord = new VocabularyLocalTerms();
         $updatedLocalTermRecord['id'] = $id;
+        $updatedLocalTermRecord['order'] = $localTermRecord->order;
         $updatedLocalTermRecord['kind'] = $kind;
         $updatedLocalTermRecord['local_term'] = $localTerm;
         $updatedLocalTermRecord['mapping'] = $mapping;
@@ -100,6 +102,9 @@ class VocabularyTermsEditor
                 case VocabularyTermsEditor::UPDATE_VOCABULARY_TERM:
                     return $this->updateTerm();
 
+                case VocabularyTermsEditor::UPDATE_VOCABULARY_TERM_ORDER:
+                    return $this->updateTermOrder();
+
                 default:
                     return false;
             }
@@ -115,7 +120,7 @@ class VocabularyTermsEditor
         $vocabularyTermId = isset($_POST['id']) ? $_POST['id'] : '';
 
         $db = get_db();
-        $vocabularyTerms = $db->getTable('VocabularyTerms')->find($vocabularyTermId);
+        $vocabularyTerms = $db->getTable('VocabularyLocalTerms')->find($vocabularyTermId);
         $success = false;
         if (self::getUsageCount($vocabularyTermId) == 0 && $vocabularyTerms)
         {
@@ -145,5 +150,21 @@ class VocabularyTermsEditor
         }
 
         return json_encode(array('success'=>$success, 'mapping'=>$mapping, 'common_term_id'=>$commonTermId, 'error'=>$error));
+    }
+
+    protected function updateTermOrder()
+    {
+        $order = isset($_POST['order']) ? $_POST['order'] : '';
+        foreach ($order as $index => $id)
+        {
+
+            $db = get_db();
+            $localTermRecord = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
+            $localTermRecord['order'] = $index + 1;
+            if (!$localTermRecord->save())
+                throw new Exception(__FUNCTION__ . ' save failed');
+        }
+
+        return json_encode(array('success'=>true));
     }
 }
