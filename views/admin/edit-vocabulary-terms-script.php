@@ -132,10 +132,7 @@
 
     function enableSuggestions()
     {
-        var termSelector = jQuery("#vocabulary-term-input");
-        var messageArea = jQuery('#vocabulary-term-message');
-
-        jQuery(termSelector).autocomplete(
+        jQuery(termChooserDialogInput).autocomplete(
         {
             source: url + '?kind=' + kind,
             delay: 250,
@@ -143,19 +140,19 @@
             appendTo: '#vocabulary-modal-dialog',
             search: function(event, ui)
             {
-                var term = termSelector.val();
+                var term = termChooserDialogInput.val();
                 if (term.length <= 1)
-                    messageArea.html('down to 1');
+                    termChooserDialogMessage.html('down to 1');
                 else
-                    messageArea.html('Searching for "' + term + '"');
+                    termChooserDialogMessage.html('Searching for "' + term + '"');
             },
             response: function(event, ui)
             {
                 var howMany = ui.content.length;
                 if (howMany === 0)
                 {
-                    var term = termSelector.val();
-                    messageArea.html('No ' + kindName + ' contains "' + term + '"');
+                    var term = termChooserDialogInput.val();
+                    termChooserDialogMessage.html('No ' + kindName + ' contains "' + term + '"');
                 }
                 else
                 {
@@ -164,9 +161,9 @@
                         resultMessage = howMany.toLocaleString() + ' results';
 
                     if (howMany <= 10)
-                        messageArea.html(resultMessage);
+                        termChooserDialogMessage.html(resultMessage);
                     else
-                        messageArea.html(resultMessage + '. To narrow down the list, type more letters or words.');
+                        termChooserDialogMessage.html(resultMessage + '. To narrow down the list, type more letters or words.');
                 }
             },
             select: function(event, ui)
@@ -482,11 +479,8 @@
     {
         activeItemId = itemId;
 
-        var messageArea = jQuery('#vocabulary-term-message');
-        var termSelector = jQuery("#vocabulary-term-input");
-
-        termSelector.val('');
-        termSelector.attr('placeholder', '<?php echo __('Enter words here'); ?>');
+        termChooserDialogInput.val('');
+        termChooserDialogInput.attr('placeholder', '<?php echo __('Enter words here'); ?>');
 
         document.getElementById('vocabulary-modal').classList.add('is-visible')
 
