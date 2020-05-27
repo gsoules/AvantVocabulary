@@ -148,6 +148,12 @@
         setEditorMessage('<?php echo __('Order updated'); ?>')
     }
 
+    function cancelItemUpdate()
+    {
+        closeAllDrawers();
+        enableAllItems(true);
+    }
+
     function closeAllDrawers()
     {
         var drawerButtons = jQuery('.drawer-contents');
@@ -289,15 +295,22 @@
 
         var drawerButtons = jQuery('.drawer');
         var updateButtons = jQuery('.update-item-button');
+        var cancelButtons = jQuery('.cancel-update-button');
         var removeButtons = jQuery('.remove-item-button');
         var chooseButtons = jQuery('.choose-term-button');
         var closeButton = jQuery('.close-chooser-dialog-button');
 
         drawerButtons.off('click');
         updateButtons.off('click');
+        cancelButtons.off('click');
         removeButtons.off('click');
         chooseButtons.off('click');
         closeButton.off('click');
+
+        cancelButtons.click(function (event)
+        {
+            cancelItemUpdate();
+        });
 
         chooseButtons.click(function (event)
         {
@@ -487,7 +500,7 @@
     {
         var newItem = jQuery('#item-0');
         var itemValues = getItemValues(newItem);
-        if (!validateItemValues(itemValues))
+        if (!validateItemValues(newItem, itemValues))
             return;
 
         jQuery.ajax(
@@ -670,7 +683,7 @@
         var item = jQuery('#' + id);
         var itemValues = getItemValues(item);
 
-        if (!validateItemValues(itemValues))
+        if (!validateItemValues(item, itemValues))
             return;
 
         item.find('.update-item-button').fadeTo(500, 0.20);
@@ -729,11 +742,11 @@
         );
     }
 
-    function validateItemValues(itemValues)
+    function validateItemValues(item, itemValues)
     {
         if (itemValues.localTerm.trim().length === 0 && itemValues.commonTerm.length === 0)
         {
-            alert('<?php echo __('Either a Local Term or a Common Term or both must be specified'); ?>');
+            showDrawerMessage(item, '<?php echo __('Either a Local Term or a Common Term or both must be specified'); ?>');
             return false;
         }
         return true;

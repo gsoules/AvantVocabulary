@@ -21,6 +21,16 @@ class VocabularyTermsEditor
         $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
         $localTerm = trim($itemValues['localTerm']);
 
+        $commonTerm = $itemValues['commonTerm'];
+        $commonTermId = 0;
+        if ($commonTerm)
+        {
+            $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
+            if (!$commonTermRecord)
+                throw new Exception(__FUNCTION__ . ' get common term record failed');
+            $commonTermId = $commonTermRecord->common_term_id;
+        }
+
         // Check to see if the local term already exists.
         $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $localTerm);
         if ($localTermRecord)
@@ -32,7 +42,8 @@ class VocabularyTermsEditor
         $localTermRecord['id'] = 0;
         $localTermRecord['order'] = 0;
         $localTermRecord['kind'] = $kind;
-        $localTermRecord['local_term'] = $itemValues['localTerm'];
+        $localTermRecord['local_term'] = $localTerm;
+        $localTermRecord['common_term_id'] = $commonTermId;
 
         // Add the new term by updating the new record to insert it into the database.
         if (!$localTermRecord->save())

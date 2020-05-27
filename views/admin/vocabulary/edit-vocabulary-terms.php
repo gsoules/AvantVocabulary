@@ -176,6 +176,7 @@ if ($localTermCount > 0)
                         </div>
                         <div class="vocabulary-drawer-buttons-right">
                             <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
+                            <button type="button" class="action-button cancel-update-button"><?php echo __('Cancel'); ?></button>
                             <button type="button" class="action-button remove-item-button red<?php echo $removeClass; ?>"><?php echo __('Remove'); ?></button>
                         </div>
                     </div>
