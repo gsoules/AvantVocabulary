@@ -7,9 +7,10 @@
     var kindName = '<?php echo $kindName; ?>';
     var progressCount = 0;
     var progressTimer;
-    var startButton = jQuery("#start-button").button();
+    var rebuildCommonTermsButton = jQuery("#rebuild-common-terms-button").button();
+    var rebuildLocalTermsButton = jQuery("#rebuild-local-terms-button").button();
     var statusArea = jQuery("#status-area");
-    var tableName = 'local';
+    var tableName = '';
     var termChooserDialogInput = jQuery("#vocabulary-term-input");
     var termChooserDialogMessage = jQuery('#vocabulary-term-message');
     var termChooserDialogTimer;
@@ -235,9 +236,10 @@
         });
     }
 
-    function enableStartButton(enable)
+    function enableRebuildButtons(enable)
     {
-        startButton.button("option", {disabled: !enable});
+        rebuildCommonTermsButton.button("option", {disabled: !enable});
+        rebuildLocalTermsButton.button("option", {disabled: !enable});
     }
 
     function getItemValues(item)
@@ -387,13 +389,20 @@
             addNewItem();
         });
 
-        startButton.on("click", function ()
+        rebuildCommonTermsButton.on("click", function ()
         {
-            if (tableName === 'common') {
-                if (!confirm('Are you sure you want to rebuild the tables?\n\nThe current tables will be DELETED.'))
-                    return;
-            }
-            startMapping();
+            if (!confirm('Are you sure you want to rebuild the Common Terms table?'))
+                return;
+            tableName = 'common';
+            startRebuild();
+        });
+
+        rebuildLocalTermsButton.on("click", function ()
+        {
+            if (!confirm('Are you sure you want to rebuild the Local Terms table?'))
+                return;
+            tableName = 'local';
+            startRebuild();
         });
     }
 
@@ -551,12 +560,12 @@
         statusArea.html(statusArea.html() + status + '<BR/>');
     }
 
-    function startMapping()
+    function startRebuild()
     {
         actionInProgress = true;
         statusArea.html('');
 
-        enableStartButton(false);
+        enableRebuildButtons(false);
 
         // Initiate periodic calls back to the server to get the status of the action.
         progressCount = 0;
@@ -581,7 +590,7 @@
                         status = 'Build failed: ' + data['error'];
                     console.log(status);
                     showStatus(status);
-                    enableStartButton(true);
+                    enableRebuildButtons(true);
                 },
                 error: function (request, status, error)
                 {

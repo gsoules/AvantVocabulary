@@ -20,7 +20,7 @@ class AvantVocabularyTableBuilderProgress
         if ($tableName == 'common')
         {
             $count = $this->db->getTable('VocabularyCommonTerms')->getRowCount();
-            return "Progress: $count records written";
+            return "$count records written";
         }
         else
         {

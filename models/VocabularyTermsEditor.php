@@ -24,12 +24,9 @@ class VocabularyTermsEditor
         $localTermRecord['order'] = 0;
         $localTermRecord['kind'] = isset($_POST['kind']) ? $_POST['kind'] : 0;;
         $localTermRecord['local_term'] = $itemValues['localTerm'];
-        $localTermRecord['common_term'] = $itemValues['commonTerm'];
-
-        $newLocalTermRecord = $this->validateCommonTerm($localTermRecord);
 
         // Add the new term by updating the new record to insert it into the database.
-        if (!$newLocalTermRecord->save())
+        if (!$localTermRecord->save())
             throw new Exception(__FUNCTION__ . ' save failed');
 
         // Reorder all of the terms so that this new term is the first.
@@ -42,7 +39,7 @@ class VocabularyTermsEditor
                 throw new Exception(__FUNCTION__ . ' save failed');
         }
 
-        return json_encode(array('success'=>true, 'itemId'=>$newLocalTermRecord->id));
+        return json_encode(array('success'=>true, 'itemId'=>$localTermRecord->id));
     }
 
     public static function getUsageCount($vocabularyTermId)
@@ -103,27 +100,22 @@ class VocabularyTermsEditor
         // Get the local term record and update it with the posted local and common terms.
         $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
         $localTermRecord['local_term'] = $itemValues['localTerm'];
-        $localTermRecord['common_term'] = $itemValues['commonTerm'];
+        $localTermRecord['common_term_id'] = $itemValues['commonTermId'];
 
         try
         {
-            $validatedLocalTermRecord = $this->validateCommonTerm($localTermRecord);
-            if (!$validatedLocalTermRecord->save())
+            if (!$localTermRecord->save())
                 throw new Exception(__FUNCTION__ . ' save failed');
-            $commonTerm = $validatedLocalTermRecord->common_term;
-            $commonTermId = $validatedLocalTermRecord->common_term_id;
             $success = true;
             $error = '';
         }
         catch (Exception $e)
         {
-            $commonTermId = 0;
-            $commonTerm = '';
             $success = false;
             $error = $e->getMessage();
         }
 
-        return json_encode(array('success'=>$success, 'common_term'=>$commonTerm, 'common_term_id'=>$commonTermId, 'error'=>$error));
+        return json_encode(array('success'=>$success, 'error'=>$error));
     }
 
     protected function updateTermOrder()
@@ -138,48 +130,5 @@ class VocabularyTermsEditor
         }
 
         return json_encode(array('success'=>true));
-    }
-
-    public function validateCommonTerm($localTermRecord)
-    {
-        $kind = $localTermRecord->kind;
-        $commonTerm = $localTermRecord->common_term;
-
-        $oldCommonTermId = $localTermRecord->common_term_id;
-        $newCommonTermId = $oldCommonTermId;
-
-        if ($commonTerm)
-        {
-            $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
-
-            if ($commonTermRecord)
-            {
-                $newCommonTermId = $commonTermRecord->common_term_id;
-            }
-            else
-            {
-                // The text for this common term must have been changed in the Common Term Vocabulary.
-                // Get the current text based on the common term's Id.
-                $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($oldCommonTermId);
-
-                if ($commonTermRecord)
-                {
-                    $localTermRecord['common_term'] = $commonTermRecord->common_term;
-                }
-                else
-                {
-                    // This should never happen because the common term can only come from the common term chooser.
-                    throw new Exception("\"$commonTerm\" is not a Common Term");
-                }
-            }
-        }
-        else
-        {
-            $newCommonTermId = 0;
-        }
-
-        $localTermRecord['common_term_id'] = $newCommonTermId;
-
-        return $localTermRecord;
     }
 }

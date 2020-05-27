@@ -104,7 +104,9 @@ if (!$isValidKind)
             echo '<a href="http://localhost/omeka-2.6/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
             echo '</div>';
         }
-        echo "<button id='start-button'>Rebuild</button>";
+        echo "<button id='rebuild-common-terms-button'>Rebuild Common Terms</button>";
+        echo "&nbsp;&nbsp;";
+        echo "<button id='rebuild-local-terms-button'>Rebuild Local Terms</button>";
         echo "<div id='status-area'></div>";
     }
 
@@ -116,8 +118,8 @@ if (!$isValidKind)
 
 $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
 
-$localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecordsInOrder($kind);
-$localTermCount = count($localTermRecords);
+$localTermItemRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItemsInOrder($kind);
+$localTermCount = count($localTermItemRecords);
 $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 $message = __('%s %s %s.', $localTermCount, $kindName, $verb);
 if ($localTermCount > 0)
@@ -142,14 +144,14 @@ if ($localTermCount > 0)
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
     <?php
-    foreach ($localTermRecords as $localTermRecord)
+    foreach ($localTermItemRecords as $localTermRecord)
     {
         $removeClass = '';
         $identifier = $localTermRecord->common_term_id;
 
         $localTerm = $localTermRecord->local_term;
-        $commonTerm = $localTermRecord->common_term;
         $commonTermId = $localTermRecord->common_term_id;
+        $commonTerm = $localTermRecord->common_term;
 
         // The HTML below provides the structure for each term. The drawer area provides the local and common term
         // values. The header is filled in and formatted in JavaScript. It's done there because the JavaScript is also
