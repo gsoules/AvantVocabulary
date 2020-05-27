@@ -167,6 +167,7 @@ if ($localTermCount > 0)
                     <span class="drawer"></span>
                 </div>
                 <div class="drawer-contents" style="display:none;">
+                    <div class="drawer-message"></div>
                     <label><?php echo __('Local Term'); ?></label><input class="vocabulary-drawer-local-term" type="text" value="<?php echo $localTerm; ?>">
                     <label><?php echo __('Common Term'); ?></label><div data-common-term-id="<?php echo $commonTermId;?>" class="vocabulary-drawer-common-term"><?php echo $commonTerm; ?></div>
                     <div class="vocabulary-drawer-buttons" >

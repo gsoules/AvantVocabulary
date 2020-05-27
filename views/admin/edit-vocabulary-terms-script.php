@@ -1,6 +1,7 @@
 <script type="text/javascript">
     var activeItemId = 0;
     var actionInProgress = false;
+    var addTermButton = jQuery('#add-vocabulary-term-button');
     var commonTermCount = <?php echo $commonTermCount; ?>;
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var kind = <?php echo $kind; ?>;
@@ -69,15 +70,12 @@
         cancelButton.click(function (event)
         {
             jQuery('#item-0').remove();
-            jQuery('#add-vocabulary-term-button').prop('disabled', false);
+            enableAddTermButton(true);
             enableAllItems(true);
         });
 
         // Prepend the new item to the beginning of the list.
         firstItem.before(newItem);
-
-        // Disable the Add button while the user is adding a new item.
-        jQuery('#add-vocabulary-term-button').prop('disabled', true);
 
         initializeItemControls();
     }
@@ -87,32 +85,40 @@
         jQuery('#' + itemId).remove();
     }
 
-    function afterSaveNewItem(id, itemValues)
+    function afterSaveNewItem(data, itemValues)
     {
         var newItem = jQuery('#item-0');
-        newItem.attr('id', 'item-' + id);
-        newItem.find('.drawer-contents').hide();
 
-        // Convert the Save button back into the Update button.
-        var updateButton = newItem.find('.save-item-button');
-        updateButton.text('<?php echo __('Update'); ?>');
-        updateButton.removeClass('save-item-button');
-        updateButton.addClass('update-item-button');
+        if (data['success'])
+        {
+            newItem.attr('id', 'item-' + data['id']);
+            newItem.find('.drawer-contents').hide();
 
-        // Convert the Cancel button back into the Remove button.
-        var removeButton = newItem.find('.cancel-add-button');
-        removeButton.text('<?php echo __('Remove'); ?>');
-        removeButton.removeClass('cancel-add-button');
-        removeButton.addClass('remove-item-button');
+            // Convert the Save button back into the Update button.
+            var updateButton = newItem.find('.save-item-button');
+            updateButton.text('<?php echo __('Update'); ?>');
+            updateButton.removeClass('save-item-button');
+            updateButton.addClass('update-item-button');
 
-        // Show the header for the newly added item.
-        newItem.find('.vocabulary-term-header').show();
-        setItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
+            // Convert the Cancel button back into the Remove button.
+            var removeButton = newItem.find('.cancel-add-button');
+            removeButton.text('<?php echo __('Remove'); ?>');
+            removeButton.removeClass('cancel-add-button');
+            removeButton.addClass('remove-item-button');
 
-        // Allow the user to add another item.
-        jQuery('#add-vocabulary-term-button').prop('disabled', false);
+            // Show the header for the newly added item.
+            newItem.find('.vocabulary-term-header').show();
+            setItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
 
-        enableAllItems(true);
+            // Allow the user to add another item.
+            enableAddTermButton(true);
+
+            enableAllItems(true);
+        }
+        else
+        {
+            showDrawerMessage(newItem, '<?php echo __('That local term is already defined'); ?>');
+        }
     }
 
     function afterUpdateItem(id, data)
@@ -120,12 +126,6 @@
         var item = jQuery('#' + id);
         if (data['success'])
         {
-            // Update the item's common term Id to the Id for the common term. Also update the common term text to
-            // account for the case where even if the user had not chosen a different common term, the text for that
-            // term was updated in the Common Term Vocabulary. In that case, we want to show the updated text.
-            item.find('.vocabulary-drawer-common-term').text(data['common_term']);
-            item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', data['common_term_id']);
-
             // Update the item's title with the updated local and/or common terms.
             setItemTitle(item);
 
@@ -133,6 +133,8 @@
             item.find('.drawer-contents').slideUp();
             item.find('.drawer').removeClass('opened');
             item.find('.vocabulary-term-header').removeClass('selected');
+
+            enableAllItems(true);
         }
         else
         {
@@ -162,22 +164,33 @@
         });
     }
 
+    function enableAddTermButton(enable)
+    {
+        addTermButton.prop('disabled', !enable);
+    }
+
     function enableAllItems(enable)
     {
+        let cursor = '';
         var headers = jQuery('.drawer');
         headers.each(function(i)
         {
             if (enable)
             {
                 jQuery(this).show();
+                cursor = 'grab';
             }
             else
             {
                 jQuery(this).hide();
+                cursor = 'default';
             }
 
             // Enable or disable dragging of an item to change its order.
             jQuery('#vocabulary-terms-list').sortable('option', 'disabled', !enable);
+            jQuery('.sortable-item').css('cursor', cursor);
+
+            enableAddTermButton(enable);
         });
     }
 
@@ -266,6 +279,7 @@
         enableSuggestions();
         initializePageControls();
         initializeItemControls();
+        enableAllItems(true);
     }
 
     function initializeItemControls()
@@ -305,6 +319,7 @@
                 // Only one drawer is allowed to be open at a time.
                 // Before opening this drawer, make sure no other drawer is open.
                 closeAllDrawers();
+                enableAllItems(false);
             }
 
             // Toggle the state of the drawer's open indicator (arrow at far right)
@@ -384,7 +399,7 @@
             window.location.href = url + '?kind=' + selection;
         });
 
-        jQuery('#add-vocabulary-term-button').click(function (event)
+        addTermButton.click(function (event)
         {
             addNewItem();
         });
@@ -486,7 +501,7 @@
                     mapping:JSON.stringify(itemValues)
                 },
                 success: function (data) {
-                    afterSaveNewItem(data.itemId, itemValues);
+                    afterSaveNewItem(data, itemValues);
                 },
                 error: function (request, status, error) {
                     alert('AJAX ERROR on Save ' +  JSON.stringify(request));
@@ -553,6 +568,11 @@
             var item = jQuery(this);
             setItemTitle(item)
         });
+    }
+
+    function showDrawerMessage(item, message)
+    {
+        item.find('.drawer-message').text(message);
     }
 
     function showStatus(status)

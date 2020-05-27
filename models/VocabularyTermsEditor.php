@@ -18,11 +18,20 @@ class VocabularyTermsEditor
     {
         // This method is called via AJAX. Get the posed data.
         $itemValues = json_decode($_POST['mapping'], true);
+        $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
+        $localTerm = trim($itemValues['localTerm']);
+
+        // Check to see if the local term already exists.
+        $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $localTerm);
+        if ($localTermRecord)
+        {
+            return json_encode(array('success'=>false, 'itemId'=>0));
+        }
 
         $localTermRecord = new VocabularyLocalTerms();
         $localTermRecord['id'] = 0;
         $localTermRecord['order'] = 0;
-        $localTermRecord['kind'] = isset($_POST['kind']) ? $_POST['kind'] : 0;;
+        $localTermRecord['kind'] = $kind;
         $localTermRecord['local_term'] = $itemValues['localTerm'];
 
         // Add the new term by updating the new record to insert it into the database.

@@ -16,7 +16,7 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
     public function getLocalTermRecord($kind, $localTerm)
     {
         $select = $this->getSelect();
-        $select->where("kind = $kind AND local_term = '$localTerm'");
+        $select->where("kind = $kind AND LOWER(`local_term`) = LOWER('$localTerm')");
         $result = $this->fetchObject($select);
         return $result;
     }

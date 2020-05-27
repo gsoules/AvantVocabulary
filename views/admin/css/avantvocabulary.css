@@ -47,6 +47,12 @@
     margin-top: 8px !important;
 }
 
+.drawer-message {
+    color:red;
+    font-weight: bold;
+    padding: 4px 0;
+}
+
 #vocabulary-terms-list li {
     margin-bottom: 6px;
 }
