@@ -2,8 +2,6 @@
 
 class AvantVocabularyTableBuilder
 {
-    const STATUS_SUCCESS = '';
-
     protected $db;
 
     public function __construct()
@@ -35,8 +33,6 @@ class AvantVocabularyTableBuilder
         $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
         $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
         $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
-
-        return self::STATUS_SUCCESS;
     }
 
     protected function createLocalTerms($elementName, $kind)
@@ -115,8 +111,6 @@ class AvantVocabularyTableBuilder
                 $this->databaseInsertRecordForLocalTerm($kind, $localTerm, $index + 1);
             }
         }
-
-        return self::STATUS_SUCCESS;
     }
 
     protected function databaseInsertRecordForCommonTerm($csvFileRow)
@@ -193,7 +187,7 @@ class AvantVocabularyTableBuilder
 
     protected function getCommonTermRecord($kind, $commonTerm)
     {
-        return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
+        return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
     }
 
     public function handleAjaxRequest($tableName)

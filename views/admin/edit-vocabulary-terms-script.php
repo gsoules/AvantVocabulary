@@ -85,7 +85,7 @@
     function afterSaveNewItem(id, itemValues)
     {
         var newItem = jQuery('#new-item');
-        newItem.attr('id', id);
+        newItem.attr('id', 'item-' + id);
         newItem.find('.drawer-contents').hide();
 
         // Convert the Save button back into the Update button.
@@ -115,9 +115,19 @@
         var item = jQuery('#' + id);
         if (data['success'])
         {
+            // Update the item's common term Id to the Id for the common term. Also update the common term text to
+            // account for the case where even if the user had not chosen a different common term, the text for that
+            // term was updated in the Common Term Vocabulary. In that case, we want to show the updated text.
+            item.find('.vocabulary-drawer-common-term').text(data['common_term']);
+            item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', data['common_term_id']);
+
+            // Update the item's title with the updated local and/or common terms.
             setItemTitle(item);
+
+            // Close the drawer.
             item.find('.drawer-contents').slideUp();
             item.find('.drawer').removeClass('opened');
+            item.find('.vocabulary-term-header').removeClass('selected');
         }
         else
         {
@@ -129,6 +139,22 @@
     function afterUpdateItemOrder()
     {
         setEditorMessage('<?php echo __('Order updated'); ?>')
+    }
+
+    function closeAllDrawers()
+    {
+        var drawerButtons = jQuery('.drawer-contents');
+        drawerButtons.each(function(i)
+        {
+            jQuery(this).hide();
+        });
+
+        var drawerHeaders = jQuery('.drawer');
+        drawerHeaders.each(function(i)
+        {
+            jQuery(this).parent().removeClass('selected');
+            jQuery(this).removeClass('opened');
+        });
     }
 
     function enableSuggestions()
@@ -202,6 +228,7 @@
 
         return {
             id: id,
+            kind: kind,
             localTerm: localTerm.val(),
             commonTerm: commonTerm.text(),
             commonTermId: commonTerm.attr('data-common-term-id')
@@ -214,22 +241,6 @@
         enableSuggestions();
         initializePageControls();
         initializeItems();
-    }
-
-    function closeAllDrawers()
-    {
-        var drawerButtons = jQuery('.drawer-contents');
-        drawerButtons.each(function(i)
-        {
-            jQuery(this).hide();
-        });
-
-        var drawerHeaders = jQuery('.drawer');
-        drawerHeaders.each(function(i)
-        {
-            jQuery(this).parent().removeClass('selected');
-            jQuery(this).removeClass('opened');
-        });
     }
 
     function initializeItems()
@@ -472,11 +483,12 @@
     {
         var itemValues = getItemValues(item);
 
-        localTerm = itemValues.localTerm;
-        commonTerm = itemValues.commonTerm;
-        commonTermId = itemValues.commonTermId;
+        let localTerm = itemValues.localTerm;
+        let commonTerm = itemValues.commonTerm;
+        let commonTermId = itemValues.commonTermId;
 
-        if (commonTerm && commonTermId > 0 && commonTermId < <?php echo AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID; ?>)
+        let isNomenclatureTerm = commonTermId < <?php echo AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID; ?>;
+        if (commonTerm && isNomenclatureTerm)
         {
             // The common term is from Nomenclature. Display it as a link to that term on the Nomenclature website.
             // If it's really long, truncate it so that it won't wrap. The full term can be seen in the drawer.
@@ -661,7 +673,7 @@
                 method: 'POST',
                 dataType: 'json',
                 data: {
-                    action: <?php echo VocabularyTermsEditor::UPDATE_VOCABULARY_TERM_ORDER; ?>,
+                    action: <?php echo VocabularyTermsEditor::UPDATE_VOCABULARY_LOCAL_TERMS_ORDER; ?>,
                     order: order
                 },
                 success: function (data)

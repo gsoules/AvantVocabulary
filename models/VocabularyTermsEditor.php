@@ -5,85 +5,49 @@ class VocabularyTermsEditor
     const ADD_VOCABULARY_TERM = 1;
     const REMOVE_VOCABULARY_TERM = 2;
     const UPDATE_VOCABULARY_TERM = 3;
-    const UPDATE_VOCABULARY_TERM_ORDER = 4;
+    const UPDATE_VOCABULARY_LOCAL_TERMS_ORDER = 4;
 
-    public static function addDefaultTerm($description, $term)
+    protected $db;
+
+    public function __construct()
     {
-        $localTermRecord = new VocabularyLocalTerms();
-        $localTermRecord['description'] = $description;
-        $localTermRecord['term'] = $term;
-        $localTermRecord->save();
-        return $localTermRecord['id'];
+        $this->db = get_db();
     }
 
     protected function addTerm()
     {
-        $vocabularyTerms = $this->getVocabularyTermMapping(self::ADD_VOCABULARY_TERM);
-        if (!$vocabularyTerms->save())
-            throw new Exception(__FUNCTION__ . ' save failed');
-        $termId = $vocabularyTerms->id;
-        return json_encode(array('success' => true, 'itemId' => $termId));
-    }
-
-    public function getVocabularyTermMapping($action)
-    {
+        // This method is called via AJAX. Get the posed data.
         $data = isset($_POST['mapping']) ? $_POST['mapping'] : '';
         $object = json_decode($data, true);
-        $id = isset($object['id']) ? intval($object['id']) : 0;
 
-        $localTerm = $object['localTerm'];
-        $commonTerm = $object['commonTerm'];
+        $localTermRecord = new VocabularyLocalTerms();
+        $localTermRecord['id'] = 0;
+        $localTermRecord['order'] = 0;
+        $localTermRecord['kind'] = isset($_POST['kind']) ? $_POST['kind'] : 0;;
+        $localTermRecord['local_term'] = $object['localTerm'];
+        $localTermRecord['common_term'] = $object['commonTerm'];
 
-        if ($action == self::ADD_VOCABULARY_TERM)
-        {
-            $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
-            $localTermRecord = new VocabularyLocalTerms();
-            $localTermRecord['local_term'] = $localTerm;
-            $localTermRecord['common_term'] = $commonTerm;
-        }
-        else
-        {
-            $localTermRecord = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
-            $kind = $localTermRecord->kind;
-        }
+        // Add the new term by updating the new record to insert it into the database.
+        $newLocalTermRecord = $this->validateCommonTerm($localTermRecord);
+        if (!$newLocalTermRecord->save())
+            throw new Exception(__FUNCTION__ . ' save failed');
 
-        // The common term has changed. Verify that it's valid.
-        if (empty(trim($commonTerm)))
+        // Reorder all of the terms so that this new term is the first.
+        $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
+        $localTermRecords = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsInOrder($kind);
+        foreach ($localTermRecords as $index => $localTermRecord)
         {
-            $commonTermId = 0;
-        }
-        else
-        {
-            $commonTermRecord = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecord($kind, $commonTerm);
-            if ($commonTermRecord)
-                $commonTermId = $commonTermRecord->common_term_id;
-            else
-                throw new Exception("\"$commonTerm\" is not a Common Term");
+            $localTermRecord['order'] = $index + 1;
+            if (!$localTermRecord->save())
+                throw new Exception(__FUNCTION__ . ' save failed');
         }
 
-        if ($commonTerm == $localTerm)
-            $mapping = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL;
-        elseif ($commonTermId && $commonTerm != $localTerm)
-            $mapping = AvantVocabulary::VOCABULARY_MAPPING_SYNONYMOUS;
-        else
-            $mapping = AvantVocabulary::VOCABULARY_MAPPING_NONE;
-
-        $updatedLocalTermRecord = new VocabularyLocalTerms();
-        $updatedLocalTermRecord['id'] = $id;
-        $updatedLocalTermRecord['order'] = $localTermRecord->order;
-        $updatedLocalTermRecord['kind'] = $kind;
-        $updatedLocalTermRecord['local_term'] = $localTerm;
-        $updatedLocalTermRecord['mapping'] = $mapping;
-        $updatedLocalTermRecord['common_term'] = $commonTerm;
-        $updatedLocalTermRecord['common_term_id'] = $commonTermId;
-
-        return $updatedLocalTermRecord;
+        return json_encode(array('success'=>true, 'itemId'=>$newLocalTermRecord->id));
     }
 
     public static function getUsageCount($vocabularyTermId)
     {
-        $db = get_db();
-        $count = $db->getTable('VocabularyTypes')->getVocabularyTypeCountByTerm($vocabularyTermId);
+        $count = get_db()->getTable('VocabularyTypes')->getVocabularyTypeCountByTerm($vocabularyTermId);
         return $count;
     }
 
@@ -102,7 +66,7 @@ class VocabularyTermsEditor
                 case VocabularyTermsEditor::UPDATE_VOCABULARY_TERM:
                     return $this->updateTerm();
 
-                case VocabularyTermsEditor::UPDATE_VOCABULARY_TERM_ORDER:
+                case VocabularyTermsEditor::UPDATE_VOCABULARY_LOCAL_TERMS_ORDER:
                     return $this->updateTermOrder();
 
                 default:
@@ -119,8 +83,7 @@ class VocabularyTermsEditor
     {
         $vocabularyTermId = isset($_POST['id']) ? $_POST['id'] : '';
 
-        $db = get_db();
-        $vocabularyTerms = $db->getTable('VocabularyLocalTerms')->find($vocabularyTermId);
+        $vocabularyTerms = $this->db->getTable('VocabularyLocalTerms')->find($vocabularyTermId);
         $success = false;
         if (self::getUsageCount($vocabularyTermId) == 0 && $vocabularyTerms)
         {
@@ -133,23 +96,34 @@ class VocabularyTermsEditor
 
     protected function updateTerm()
     {
-        $error = '';
-        $mapping = '';
-        $commonTermId = 0;
+        // This method is called via AJAX. Get the posted data.
+        $itemValues = json_decode($_POST['mapping'], true);
+        $id = intval($itemValues['id']);
+
+        // Get the local term record and update it with the posted local and common terms.
+        $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
+        $localTermRecord['local_term'] = $itemValues['localTerm'];
+        $localTermRecord['common_term'] = $itemValues['commonTerm'];
+
         try
         {
-            $vocabularyTerms = $this->getVocabularyTermMapping(self::UPDATE_VOCABULARY_TERM);
-            $success = $vocabularyTerms->save();
-            $mapping = $vocabularyTerms->mapping;
-            $commonTermId = $vocabularyTerms->common_term_id;
+            $validatedLocalTermRecord = $this->validateCommonTerm($localTermRecord);
+            if (!$validatedLocalTermRecord->save())
+                throw new Exception(__FUNCTION__ . ' save failed');
+            $commonTerm = $validatedLocalTermRecord->common_term;
+            $commonTermId = $validatedLocalTermRecord->common_term_id;
+            $success = true;
+            $error = '';
         }
         catch (Exception $e)
         {
-            $error = $e->getMessage();
+            $commonTermId = 0;
+            $commonTerm = '';
             $success = false;
+            $error = $e->getMessage();
         }
 
-        return json_encode(array('success'=>$success, 'mapping'=>$mapping, 'common_term_id'=>$commonTermId, 'error'=>$error));
+        return json_encode(array('success'=>$success, 'common_term'=>$commonTerm, 'common_term_id'=>$commonTermId, 'error'=>$error));
     }
 
     protected function updateTermOrder()
@@ -157,14 +131,55 @@ class VocabularyTermsEditor
         $order = isset($_POST['order']) ? $_POST['order'] : '';
         foreach ($order as $index => $id)
         {
-
-            $db = get_db();
-            $localTermRecord = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
+            $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
             $localTermRecord['order'] = $index + 1;
             if (!$localTermRecord->save())
                 throw new Exception(__FUNCTION__ . ' save failed');
         }
 
         return json_encode(array('success'=>true));
+    }
+
+    public function validateCommonTerm($localTermRecord)
+    {
+        $kind = $localTermRecord->kind;
+        $commonTerm = $localTermRecord->common_term;
+
+        $oldCommonTermId = $localTermRecord->common_term_id;
+        $newCommonTermId = $oldCommonTermId;
+
+        if ($commonTerm)
+        {
+            $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
+
+            if ($commonTermRecord)
+            {
+                $newCommonTermId = $commonTermRecord->common_term_id;
+            }
+            else
+            {
+                // The text for this common term must have been changed in the Common Term Vocabulary.
+                // Get the current text based on the common term's Id.
+                $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($oldCommonTermId);
+
+                if ($commonTermRecord)
+                {
+                    $localTermRecord['common_term'] = $commonTermRecord->common_term;
+                }
+                else
+                {
+                    // This should never happen because the common term can only come from the common term chooser.
+                    throw new Exception("\"$commonTerm\" is not a Common Term");
+                }
+            }
+        }
+        else
+        {
+            $newCommonTermId = 0;
+        }
+
+        $localTermRecord['common_term_id'] = $newCommonTermId;
+
+        return $localTermRecord;
     }
 }

@@ -116,14 +116,16 @@ if (!$isValidKind)
 
 $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
 
-$localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecords($kind);
+$localTermRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermRecordsInOrder($kind);
 $localTermCount = count($localTermRecords);
-$verb = $localTermCount == 1 ?'term is defined' : 'terms are defined';
-$localTermCountMessage = __('%s %s %s', $localTermCount, $kindName, $verb);
+$verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
+$message = __('%s %s %s.', $localTermCount, $kindName, $verb);
+if ($localTermCount > 0)
+    $message .= __('&nbsp;&nbsp;&nbsp;To edit a term, click the arrow at far right.&nbsp;&nbsp;&nbsp;Drag terms to reorder them.');
 
 // The HTML that follows displays the choose vocabulary.
 ?>
-<div id="vocablary-term-editor-message-area"><?php echo $localTermCountMessage; ?></div>
+<div id="vocablary-term-editor-message-area"><?php echo $message; ?></div>
 
 <div id="vocabulary-modal" class="modal">
     <div id="vocabulary-modal-dialog" class="modal-dialog">

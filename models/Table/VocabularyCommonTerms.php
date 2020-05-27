@@ -14,7 +14,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         return $result->count;
     }
 
-    public function getCommonTermRecord($kind, $commonTerm)
+    public function getCommonTermRecordByCommonTerm($kind, $commonTerm)
     {
         $whereKind = AvantVocabulary::getWhereKind($kind);
 
@@ -22,6 +22,22 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         {
             $select = $this->getSelect();
             $select->where("$whereKind AND common_term = '$commonTerm'");
+            $result = $this->fetchObject($select);
+        }
+        catch (Exception $e)
+        {
+            $result = null;
+        }
+
+        return $result;
+    }
+
+    public function getCommonTermRecordByCommonTermId($commonTermId)
+    {
+        try
+        {
+            $select = $this->getSelect();
+            $select->where("common_term_id = '$commonTermId'");
             $result = $this->fetchObject($select);
         }
         catch (Exception $e)
