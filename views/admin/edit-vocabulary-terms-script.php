@@ -32,18 +32,21 @@
     function addNewItem()
     {
         closeAllDrawers();
+        enableAllItems(false);
 
+        // Create new item's header and drawer from a copy of the first item.
         var firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
         var newItem = firstItem.clone();
 
-        // Initialize the header.
-        newItem.attr('id', 'new-item');
+        // Set the item's Id to 'item-0' so that we can find it later. Hide the header and show only the drawer.
+        newItem.attr('id', 'item-0');
         newItem.find('.vocabulary-term-header').hide();
         newItem.find('.drawer-contents').show();
 
-        // Empty the new item's controls and append the new item to the beginning of the list.
-        newItem.find('input').val('');
+        // Set the new item's local and common terms to nothing.
+        newItem.find('.vocabulary-drawer-local-term').val('');
         newItem.find('.vocabulary-drawer-common-term').text('');
+        newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', 0);
 
         // Convert the Update button into the Save button.
         var saveButton = newItem.find('.update-item-button');
@@ -64,17 +67,18 @@
         cancelButton.show();
         cancelButton.click(function (event)
         {
-            jQuery('#new-item').remove();
+            jQuery('#item-0').remove();
             jQuery('#add-vocabulary-term-button').prop('disabled', false);
+            enableAllItems(true);
         });
 
-        // Append the new item to the beginning of the list.
+        // Prepend the new item to the beginning of the list.
         firstItem.before(newItem);
 
         // Disable the Add button while the user is adding a new item.
         jQuery('#add-vocabulary-term-button').prop('disabled', true);
 
-        initializeItems();
+        initializeItemControls();
     }
 
     function afterRemoveItem(itemId)
@@ -84,7 +88,7 @@
 
     function afterSaveNewItem(id, itemValues)
     {
-        var newItem = jQuery('#new-item');
+        var newItem = jQuery('#item-0');
         newItem.attr('id', 'item-' + id);
         newItem.find('.drawer-contents').hide();
 
@@ -107,7 +111,7 @@
         // Allow the user to add another item.
         jQuery('#add-vocabulary-term-button').prop('disabled', false);
 
-        initializeItems();
+        enableAllItems(true);
     }
 
     function afterUpdateItem(id, data)
@@ -154,6 +158,25 @@
         {
             jQuery(this).parent().removeClass('selected');
             jQuery(this).removeClass('opened');
+        });
+    }
+
+    function enableAllItems(enable)
+    {
+        var headers = jQuery('.drawer');
+        headers.each(function(i)
+        {
+            if (enable)
+            {
+                jQuery(this).show();
+            }
+            else
+            {
+                jQuery(this).hide();
+            }
+
+            // Enable or disable dragging of an item to change its order.
+            jQuery('#vocabulary-terms-list').sortable('option', 'disabled', !enable);
         });
     }
 
@@ -240,19 +263,25 @@
         setItemTitles();
         enableSuggestions();
         initializePageControls();
-        initializeItems();
+        initializeItemControls();
     }
 
-    function initializeItems()
+    function initializeItemControls()
     {
-        removeEventListeners();
+        // Set up the button and sortable handlers for all the items. This method is also called when adding
+        // a new item rather than having separate logic to set the handlers for just one item.
 
         var drawerButtons = jQuery('.drawer');
         var updateButtons = jQuery('.update-item-button');
         var removeButtons = jQuery('.remove-item-button');
         var chooseButtons = jQuery('.choose-term-button');
-
         var closeButton = jQuery('.close-chooser-dialog-button');
+
+        drawerButtons.off('click');
+        updateButtons.off('click');
+        removeButtons.off('click');
+        chooseButtons.off('click');
+        closeButton.off('click');
 
         chooseButtons.click(function (event)
         {
@@ -326,7 +355,6 @@
             }
         });
 
-
         jQuery('.no-remove').hide();
     }
 
@@ -367,19 +395,6 @@
             }
             startMapping();
         });
-    }
-
-    function removeEventListeners()
-    {
-        var drawerButtons = jQuery('.drawer');
-        var updateButtons = jQuery('.update-item-button');
-        var removeButtons = jQuery('.remove-item-button');
-        var chooseButtons = jQuery('.choose-term-button');
-
-        drawerButtons.off('click');
-        updateButtons.off('click');
-        removeButtons.off('click');
-        chooseButtons.off('click');
     }
 
     function removeItem(itemId)
@@ -446,11 +461,8 @@
 
     function saveNewItem()
     {
-        var position = jQuery('ul#vocabulary-terms-list > li').length;
-        var newItem = jQuery('#new-item');
-
+        var newItem = jQuery('#item-0');
         var itemValues = getItemValues(newItem);
-
         if (!validateItemValues(itemValues))
             return;
 

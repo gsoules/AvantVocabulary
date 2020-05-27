@@ -150,10 +150,6 @@ if ($localTermCount > 0)
         $localTerm = $localTermRecord->local_term;
         $commonTerm = $localTermRecord->common_term;
         $commonTermId = $localTermRecord->common_term_id;
-        $mapping = $localTermRecord->mapping;
-
-        $commonTermInDrawer = $commonTerm ? $commonTerm : '';
-        $localTermInDrawer = $mapping != AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL ? $localTerm : '';
 
         // The HTML below provides the structure for each term. The drawer area provides the local and common term
         // values. The header is filled in and formatted in JavaScript. It's done there because the JavaScript is also
@@ -169,8 +165,8 @@ if ($localTermCount > 0)
                     <span class="drawer"></span>
                 </div>
                 <div class="drawer-contents" style="display:none;">
-                    <label><?php echo __('Local Term'); ?></label><input class="vocabulary-drawer-local-term" type="text" value="<?php echo $localTermInDrawer; ?>">
-                    <label><?php echo __('Common Term'); ?></label><div data-common-term-id="<?php echo $commonTermId;?>" class="vocabulary-drawer-common-term"><?php echo $commonTermInDrawer; ?></div>
+                    <label><?php echo __('Local Term'); ?></label><input class="vocabulary-drawer-local-term" type="text" value="<?php echo $localTerm; ?>">
+                    <label><?php echo __('Common Term'); ?></label><div data-common-term-id="<?php echo $commonTermId;?>" class="vocabulary-drawer-common-term"><?php echo $commonTerm; ?></div>
                     <div class="vocabulary-drawer-buttons" >
                         <div class="vocabulary-drawer-buttons-left">
                             <button type="button" class="action-button choose-term-button"><?php echo __('Choose Common Term'); ?></button>

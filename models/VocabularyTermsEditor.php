@@ -17,18 +17,18 @@ class VocabularyTermsEditor
     protected function addTerm()
     {
         // This method is called via AJAX. Get the posed data.
-        $data = isset($_POST['mapping']) ? $_POST['mapping'] : '';
-        $object = json_decode($data, true);
+        $itemValues = json_decode($_POST['mapping'], true);
 
         $localTermRecord = new VocabularyLocalTerms();
         $localTermRecord['id'] = 0;
         $localTermRecord['order'] = 0;
         $localTermRecord['kind'] = isset($_POST['kind']) ? $_POST['kind'] : 0;;
-        $localTermRecord['local_term'] = $object['localTerm'];
-        $localTermRecord['common_term'] = $object['commonTerm'];
+        $localTermRecord['local_term'] = $itemValues['localTerm'];
+        $localTermRecord['common_term'] = $itemValues['commonTerm'];
+
+        $newLocalTermRecord = $this->validateCommonTerm($localTermRecord);
 
         // Add the new term by updating the new record to insert it into the database.
-        $newLocalTermRecord = $this->validateCommonTerm($localTermRecord);
         if (!$newLocalTermRecord->save())
             throw new Exception(__FUNCTION__ . ' save failed');
 

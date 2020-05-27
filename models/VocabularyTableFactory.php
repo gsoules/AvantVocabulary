@@ -29,7 +29,6 @@ class VocabularyTableFactory
             `order` int(10) unsigned NOT NULL,
             `kind` int(10) unsigned NOT NULL,
             `local_term` varchar(512) DEFAULT NULL,
-            `mapping` int(10) unsigned NOT NULL,
             `common_term` varchar(512) DEFAULT NULL,
             `common_term_id` int(10) unsigned NOT NULL,
             PRIMARY KEY (`id`)
