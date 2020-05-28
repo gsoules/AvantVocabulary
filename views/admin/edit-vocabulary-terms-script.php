@@ -50,6 +50,9 @@
         newItem.find('.vocabulary-drawer-common-term').text('');
         newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', 0);
 
+        // Hide the Remove button.
+        newItem.find('.remove-item-button').hide();
+
         // Convert the Update button into the Save button.
         var saveButton = newItem.find('.update-item-button');
         saveButton.text('<?php echo __('Save'); ?>');
@@ -58,20 +61,6 @@
         saveButton.click(function (event)
         {
             saveNewItem();
-        });
-
-        // Convert the Remove button into the Cancel button.
-        var cancelButton = newItem.find('.remove-item-button');
-        cancelButton.text('<?php echo __('Cancel'); ?>');
-        cancelButton.removeClass('remove-item-button');
-        cancelButton.removeClass('no-remove');
-        cancelButton.addClass('cancel-add-button');
-        cancelButton.show();
-        cancelButton.click(function (event)
-        {
-            jQuery('#item-0').remove();
-            enableAddTermButton(true);
-            enableAllItems(true);
         });
 
         // Prepend the new item to the beginning of the list.
@@ -310,6 +299,10 @@
         cancelButtons.click(function (event)
         {
             cancelItemUpdate();
+
+            // Remove a cancelled new item if it exists.
+            jQuery('#item-0').remove();
+
         });
 
         chooseButtons.click(function (event)
