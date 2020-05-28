@@ -37,6 +37,10 @@
     justify-content: space-between;
 }
 
+.vocabulary-drawer-common-term {
+    height: 28px;
+}
+
 .vocabulary-drawer-buttons {
     display: flex;
     justify-content: space-between;

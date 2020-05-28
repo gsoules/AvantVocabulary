@@ -147,11 +147,7 @@
     {
         if (originalItemValues)
         {
-            console.log('BEFORE:' + item.find('.vocabulary-drawer-common-term').text());
-            let replacement = originalItemValues['commonTerm'];
-            item.find('.vocabulary-drawer-common-term').text(replacement);
-            console.log('AFTER:' + item.find('.vocabulary-drawer-common-term').text());
-
+            item.find('.vocabulary-drawer-local-term').val(originalItemValues['localTerm']);
             item.find('.vocabulary-drawer-common-term').text(originalItemValues['commonTerm']);
             item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', originalItemValues['commonTermId']);
         }
@@ -276,6 +272,8 @@
         let localTerm = item.find('.vocabulary-drawer-local-term').val();
         let commonTerm = item.find('.vocabulary-drawer-common-term').text();
         let commonTermId = item.find('.vocabulary-drawer-common-term').attr('data-common-term-id');
+        let usageCount = item.find('.vocabulary-term-count').text();
+        usageCount = parseInt(usageCount, 10);
 
         // Get the Id minus the "item-" prefix.
         var id = item.attr('id');
@@ -287,7 +285,8 @@
             elementId: elementId,
             localTerm: localTerm,
             commonTerm: commonTerm,
-            commonTermId: commonTermId
+            commonTermId: commonTermId,
+            usageCount: usageCount
         };
     }
 
@@ -473,13 +472,16 @@
     function rememberOriginalValues(item)
     {
         originalItemValues = getItemValues(item);
-        console.log('REMEMBER: ' + originalItemValues['commonTerm']);
     }
 
     function removeCommonTerm(item)
     {
-        item.find('.vocabulary-drawer-common-term').text('');
-        item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', 0);
+        let commonTermField = item.find('.vocabulary-drawer-common-term');
+        commonTermField.fadeOut('slow', function() {
+            commonTermField.text('');
+            commonTermField.attr('data-common-term-id', 0);
+            commonTermField.show();
+        });
     }
 
     function removeItem(item)
@@ -598,6 +600,16 @@
             let href = 'https://www.nomenclature.info/parcourir-browse.app?lang=en&id=' + commonTermId +'&wo=N&ws=INT';
             let altText = '<?php echo __('View the Nomenclature 4.0 specification for term '); ?>' + commonTermId;
             commonTerm = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + commonTerm + "</a>";
+        }
+
+        let usageCount = itemValues.usageCount;
+        if (usageCount)
+        {
+            let href = '../../find?advanced[0][element_id]=' + kindName + '&advanced[0][type]=is+exactly&advanced[0][terms]=' + localTerm;
+            console.log("USAGE: " + usageCount);
+            let altText = '<?php echo __('View the items that use this term'); ?>';
+            usageCountLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + usageCount + "</a>";
+            item.find('.vocabulary-term-count').html(usageCountLink);
         }
 
         mappingIndicator = '';
