@@ -7,6 +7,7 @@
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var kind = <?php echo $kind; ?>;
     var kindName = '<?php echo $kindName; ?>';
+    var originalItemValues;
     var progressCount = 0;
     var progressTimer;
     var rebuildCommonTermsButton = jQuery("#rebuild-common-terms-button").button();
@@ -46,8 +47,9 @@
         newItem.find('.vocabulary-term-header').hide();
         newItem.find('.drawer-contents').show();
 
-        // Set the new item's local and common terms to nothing.
+        // Set the new item's values nothing.
         newItem.find('.vocabulary-drawer-local-term').val('');
+        newItem.find('.vocabulary-term-count').text('0');
         newItem.find('.vocabulary-drawer-common-term').text('');
         newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', 0);
 
@@ -70,11 +72,12 @@
         initializeItemControls();
     }
 
-    function afterRemoveItem(id, data)
+    function afterRemoveItem(item, data)
     {
         if (data['success'])
         {
-            jQuery('#' + id).remove();
+            let itemValues = getItemValues(item);
+            jQuery('#item-' + itemValues['id']).remove();
             enableAllItems(true);
         }
         else
@@ -98,12 +101,6 @@
             updateButton.removeClass('save-item-button');
             updateButton.addClass('update-item-button');
 
-            // Convert the Cancel button back into the Remove button.
-            var removeButton = newItem.find('.cancel-add-button');
-            removeButton.text('<?php echo __('Remove'); ?>');
-            removeButton.removeClass('cancel-add-button');
-            removeButton.addClass('remove-item-button');
-
             // Show the header for the newly added item.
             newItem.find('.vocabulary-term-header').show();
             setItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
@@ -120,9 +117,8 @@
         }
     }
 
-    function afterUpdateItem(id, data)
+    function afterUpdateItem(item, data)
     {
-        var item = jQuery('#' + id);
         if (data['success'])
         {
             // Update the item's title with the updated local and/or common terms.
@@ -147,8 +143,19 @@
         showEditorMessage('<?php echo __('Order updated'); ?>')
     }
 
-    function cancelItemUpdate()
+    function cancelItemUpdate(item)
     {
+        if (originalItemValues)
+        {
+            console.log('BEFORE:' + item.find('.vocabulary-drawer-common-term').text());
+            let replacement = originalItemValues['commonTerm'];
+            item.find('.vocabulary-drawer-common-term').text(replacement);
+            console.log('AFTER:' + item.find('.vocabulary-drawer-common-term').text());
+
+            item.find('.vocabulary-drawer-common-term').text(originalItemValues['commonTerm']);
+            item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', originalItemValues['commonTermId']);
+        }
+
         closeAllDrawers();
         enableAllItems(true);
     }
@@ -266,8 +273,9 @@
 
     function getItemValues(item)
     {
-        var localTerm = item.find('.vocabulary-drawer-local-term');
-        var commonTerm = item.find('.vocabulary-drawer-common-term');
+        let localTerm = item.find('.vocabulary-drawer-local-term').val();
+        let commonTerm = item.find('.vocabulary-drawer-common-term').text();
+        let commonTermId = item.find('.vocabulary-drawer-common-term').attr('data-common-term-id');
 
         // Get the Id minus the "item-" prefix.
         var id = item.attr('id');
@@ -277,10 +285,15 @@
             id: id,
             kind: kind,
             elementId: elementId,
-            localTerm: localTerm.val(),
-            commonTerm: commonTerm.text(),
-            commonTermId: commonTerm.attr('data-common-term-id')
+            localTerm: localTerm,
+            commonTerm: commonTerm,
+            commonTermId: commonTermId
         };
+    }
+
+    function getItemForButton(button)
+    {
+        return jQuery(button).parents('li');
     }
 
     function initialize()
@@ -301,28 +314,35 @@
         var updateButtons = jQuery('.update-item-button');
         var cancelButtons = jQuery('.cancel-update-button');
         var removeButtons = jQuery('.remove-item-button');
-        var chooseButtons = jQuery('.choose-term-button');
+        var chooseCommonTermButtons = jQuery('.choose-common-term-button');
+        var removeCommonTermButtons = jQuery('.remove-common-term-button');
         var closeButton = jQuery('.close-chooser-dialog-button');
 
+        // Remove all the click event handlers.
         drawerButtons.off('click');
         updateButtons.off('click');
         cancelButtons.off('click');
         removeButtons.off('click');
-        chooseButtons.off('click');
+        chooseCommonTermButtons.off('click');
+        removeCommonTermButtons.off('click');
         closeButton.off('click');
+
+        // Add click event handlers.
 
         cancelButtons.click(function (event)
         {
-            cancelItemUpdate();
+            let item = getItemForButton(this);
+            cancelItemUpdate(item);
 
             // Remove a cancelled new item if it exists.
             jQuery('#item-0').remove();
 
         });
 
-        chooseButtons.click(function (event)
+        chooseCommonTermButtons.click(function (event)
         {
-            termChooserDialogOpen(jQuery(this).parents('li'));
+            let item = getItemForButton(this);
+            termChooserDialogOpen(item);
         });
 
         closeButton.click(function (event)
@@ -340,7 +360,10 @@
                 // Only one drawer is allowed to be open at a time.
                 // Before opening this drawer, make sure no other drawer is open.
                 closeAllDrawers();
-                enableAllItems(false);
+                enableAllItems(false)
+
+                let item = getItemForButton(this);
+                rememberOriginalValues(item);
             }
 
             // Toggle the state of the drawer's open indicator (arrow at far right)
@@ -364,12 +387,20 @@
 
         removeButtons.click(function (event)
         {
-            removeItem(jQuery(this).parents('li').attr('id'));
+            let item = getItemForButton(this);
+            removeItem(item);
+        });
+
+        removeCommonTermButtons.click(function (event)
+        {
+            let item = getItemForButton(this);
+            removeCommonTerm(item);
         });
 
         updateButtons.click(function (event)
         {
-            updateItem(jQuery(this).parents('li').attr('id'));
+            let item = getItemForButton(this);
+            updateItem(item);
         });
 
         jQuery('#vocabulary-terms-list').sortable({
@@ -393,8 +424,8 @@
             }
         });
 
-        // Hide the remove button on items that have the 'no-remove-class';
-        jQuery('.no-remove').hide();
+        // Hide buttons that don't apply to an item.
+        jQuery('.hide').hide();
     }
 
     function moveItem(item)
@@ -439,9 +470,20 @@
         });
     }
 
-    function removeItem(id)
+    function rememberOriginalValues(item)
     {
-        let item = jQuery('#' + id);
+        originalItemValues = getItemValues(item);
+        console.log('REMEMBER: ' + originalItemValues['commonTerm']);
+    }
+
+    function removeCommonTerm(item)
+    {
+        item.find('.vocabulary-drawer-common-term').text('');
+        item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', 0);
+    }
+
+    function removeItem(item)
+    {
         let itemValues = getItemValues(item);
 
         let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
@@ -465,7 +507,7 @@
                 },
                 success: function (data)
                 {
-                    afterRemoveItem(id, data);
+                    afterRemoveItem(item, data);
                 },
                 error: function (data)
                 {
@@ -691,10 +733,17 @@
         termChooserDialogMessage.text(message);
     }
 
-    function updateItem(id)
+    function updateItem(item)
     {
-        var item = jQuery('#' + id);
         var itemValues = getItemValues(item);
+
+        let usageCount = item.find('.vocabulary-term-count').text();
+        if (usageCount !== '0')
+        {
+            let warning = '<?php echo __('Are you sure you want to update this term and all the items that use it?'); ?>';
+            if (!confirm(warning))
+                return;
+        }
 
         if (!validateItemValues(item, itemValues))
             return;
@@ -711,7 +760,7 @@
                     itemValues: JSON.stringify(itemValues)
                 },
                 success: function (data) {
-                    afterUpdateItem(id, data);
+                    afterUpdateItem(item, data);
                 },
                 error: function (data) {
                     alert('AJAX Error on Update: ' + data.statusText);

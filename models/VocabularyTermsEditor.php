@@ -22,16 +22,6 @@ class VocabularyTermsEditor
         $localTerm = trim($itemValues['localTerm']);
         $commonTerm = $itemValues['commonTerm'];
 
-        $commonTermId = 0;
-        if ($commonTerm)
-        {
-            // Get the Id for the common term.
-            $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
-            if (!$commonTermRecord)
-                throw new Exception($this->reportError(__FUNCTION__, ' get common term record failed'));
-            $commonTermId = $commonTermRecord->common_term_id;
-        }
-
         // Check to see if the term already exists.
         $term = $localTerm ? $localTerm : $commonTerm;
         $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $term);
@@ -39,6 +29,8 @@ class VocabularyTermsEditor
         {
             return json_encode(array('success'=>false, 'itemId'=>0));
         }
+
+        $commonTermId = $this->getIdForCommonTerm($kind, $commonTerm);
 
         $localTermRecord = new VocabularyLocalTerms();
         $localTermRecord['id'] = 0;
@@ -62,6 +54,20 @@ class VocabularyTermsEditor
         }
 
         return json_encode(array('success'=>true, 'itemId'=>$localTermRecord->id));
+    }
+
+    protected function getIdForCommonTerm($kind, $commonTerm)
+    {
+        $commonTermId = 0;
+        if ($commonTerm)
+        {
+            // Get the Id for the common term.
+            $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
+            if (!$commonTermRecord)
+                throw new Exception($this->reportError(__FUNCTION__, ' get common term record failed'));
+            $commonTermId = $commonTermRecord->common_term_id;
+        }
+        return $commonTermId;
     }
 
     public function getLocalTermUsageCount($elementId, $localTerm)
@@ -158,7 +164,10 @@ class VocabularyTermsEditor
         // Get the local term record and update it with the posted local and common terms.
         $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
         $localTermRecord['local_term'] = $itemValues['localTerm'];
-        $localTermRecord['common_term_id'] = $itemValues['commonTermId'];
+
+        $commonTermId = $this->getIdForCommonTerm($itemValues['kind'], $itemValues['commonTerm']);
+
+        $localTermRecord['common_term_id'] = $commonTermId;
 
         try
         {

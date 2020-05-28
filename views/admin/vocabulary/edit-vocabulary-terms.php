@@ -151,7 +151,7 @@ if ($localTermCount > 0)
 
     foreach ($localTermItemRecords as $localTermRecord)
     {
-        $removeClass = '';
+        $hideClass = '';
         $identifier = $localTermRecord->common_term_id;
 
         $localTerm = $localTermRecord->local_term;
@@ -160,7 +160,8 @@ if ($localTermCount > 0)
 
         $term = $localTerm ? $localTerm : $commonTerm;
         $usageCount = $vocabularyTermsEditor->getLocalTermUsageCount($elementId, $term);
-        $removeClass = $usageCount != 0 ? ' no-remove' : '';
+        $hideRemoveItemButton = $usageCount != 0 ? ' hide' : '';
+        $hideRemoveCommonTermButton = empty($commonTerm) ? ' hide' : '';
 
         // The HTML below provides the structure for each term. The drawer area provides the local and common term
         // values. The header is filled in and formatted in JavaScript. It's done there because the JavaScript is also
@@ -182,12 +183,13 @@ if ($localTermCount > 0)
                     <label><?php echo __('Common Term'); ?></label><div data-common-term-id="<?php echo $commonTermId;?>" class="vocabulary-drawer-common-term"><?php echo $commonTerm; ?></div>
                     <div class="vocabulary-drawer-buttons" >
                         <div class="vocabulary-drawer-buttons-left">
-                            <button type="button" class="action-button choose-term-button"><?php echo __('Choose Common Term'); ?></button>
+                            <button type="button" class="action-button choose-common-term-button"><?php echo __('Choose Common Term'); ?></button>
+                            <button type="button" class="action-button remove-common-term-button<?php echo $hideRemoveCommonTermButton; ?>"><?php echo __('Remove Common Term'); ?></button>
                         </div>
                         <div class="vocabulary-drawer-buttons-right">
                             <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
+                            <button type="button" class="action-button remove-item-button red<?php echo $hideRemoveItemButton; ?>"><?php echo __('Remove'); ?></button>
                             <button type="button" class="action-button cancel-update-button"><?php echo __('Cancel'); ?></button>
-                            <button type="button" class="action-button remove-item-button red<?php echo $removeClass; ?>"><?php echo __('Remove'); ?></button>
                         </div>
                     </div>
                 </div>
