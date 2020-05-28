@@ -86,6 +86,12 @@
     width: 300px;
 }
 
+.vocabulary-term-count {
+    display: inline-block;
+    float: right;
+    padding-right: 60px;
+}
+
 body.vocabulary-terms-page .ui-autocomplete {
     max-height: 1000%;
     overflow-y: visible;

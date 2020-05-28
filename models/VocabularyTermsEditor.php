@@ -17,22 +17,24 @@ class VocabularyTermsEditor
     protected function addTerm()
     {
         // This method is called via AJAX. Get the posed data.
-        $itemValues = json_decode($_POST['mapping'], true);
+        $itemValues = json_decode($_POST['itemValues'], true);
         $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
         $localTerm = trim($itemValues['localTerm']);
-
         $commonTerm = $itemValues['commonTerm'];
+
         $commonTermId = 0;
         if ($commonTerm)
         {
+            // Get the Id for the common term.
             $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
             if (!$commonTermRecord)
-                throw new Exception(__FUNCTION__ . ' get common term record failed');
+                throw new Exception($this->reportError(__FUNCTION__, ' get common term record failed'));
             $commonTermId = $commonTermRecord->common_term_id;
         }
 
-        // Check to see if the local term already exists.
-        $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $localTerm);
+        // Check to see if the term already exists.
+        $term = $localTerm ? $localTerm : $commonTerm;
+        $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $term);
         if ($localTermRecord)
         {
             return json_encode(array('success'=>false, 'itemId'=>0));
@@ -47,7 +49,7 @@ class VocabularyTermsEditor
 
         // Add the new term by updating the new record to insert it into the database.
         if (!$localTermRecord->save())
-            throw new Exception(__FUNCTION__ . ' save failed');
+            throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
 
         // Reorder all of the terms so that this new term is the first.
         $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
@@ -56,20 +58,41 @@ class VocabularyTermsEditor
         {
             $localTermRecord['order'] = $index + 1;
             if (!$localTermRecord->save())
-                throw new Exception(__FUNCTION__ . ' save failed');
+                throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
         }
 
         return json_encode(array('success'=>true, 'itemId'=>$localTermRecord->id));
     }
 
-    public static function getUsageCount($vocabularyTermId)
+    public function getLocalTermUsageCount($elementId, $localTerm)
     {
-        $count = get_db()->getTable('VocabularyTypes')->getVocabularyTypeCountByTerm($vocabularyTermId);
+        try
+        {
+            $table = "{$this->db->prefix}element_texts";
+
+            $sql = "
+                SELECT
+                  COUNT(*)
+                FROM
+                  $table
+                WHERE
+                  element_id = $elementId AND text = '$localTerm'
+            ";
+
+            $count = $this->db->fetchOne($sql);
+        }
+        catch (Exception $e)
+        {
+            $count = -1;
+        }
+
         return $count;
     }
 
     public function performAction($action)
     {
+        $error = '';
+
         try
         {
             switch ($action)
@@ -87,34 +110,49 @@ class VocabularyTermsEditor
                     return $this->updateTermOrder();
 
                 default:
-                    return false;
+                    $error = 'Unexpected action: ' . $action;
             }
         }
         catch (Exception $e)
         {
-            return false;
+            $error = $e->getMessage();
         }
+
+        return json_encode(array('success'=>false, 'error'=>$error));
     }
 
     protected function removeTerm()
     {
-        $vocabularyTermId = isset($_POST['id']) ? $_POST['id'] : '';
+        $itemValues = json_decode($_POST['itemValues'], true);
 
-        $vocabularyTerms = $this->db->getTable('VocabularyLocalTerms')->find($vocabularyTermId);
+        $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->find($itemValues['id']);
+        if (!$localTermRecord)
+            throw new Exception($this->reportError(__FUNCTION__, 'find failed'));
+
         $success = false;
-        if (self::getUsageCount($vocabularyTermId) == 0 && $vocabularyTerms)
+        $elementId = $itemValues['elementId'];
+
+        // Verify that the term is not in use just in case another user saved an Omeka item using
+        // the term while our user was attempting to remove it.
+        $term = $itemValues['localTerm'] ? $itemValues['localTerm'] : $itemValues['commonTerm'];
+        if ($this->getLocalTermUsageCount($elementId, $term) == 0)
         {
-            $vocabularyTerms->delete();
+            $localTermRecord->delete();
             $success = true;
         }
 
         return json_encode(array('success' => $success));
     }
 
+    protected function reportError($methodName, $error)
+    {
+        return "Exception in method $methodName(): $error";
+    }
+
     protected function updateTerm()
     {
         // This method is called via AJAX. Get the posted data.
-        $itemValues = json_decode($_POST['mapping'], true);
+        $itemValues = json_decode($_POST['itemValues'], true);
         $id = intval($itemValues['id']);
 
         // Get the local term record and update it with the posted local and common terms.
@@ -125,7 +163,7 @@ class VocabularyTermsEditor
         try
         {
             if (!$localTermRecord->save())
-                throw new Exception(__FUNCTION__ . ' save failed');
+                throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
             $success = true;
             $error = '';
         }
@@ -146,7 +184,7 @@ class VocabularyTermsEditor
             $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
             $localTermRecord['order'] = $index + 1;
             if (!$localTermRecord->save())
-                throw new Exception(__FUNCTION__ . ' save failed');
+                throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
         }
 
         return json_encode(array('success'=>true));

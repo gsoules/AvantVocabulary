@@ -211,17 +211,17 @@ class AvantVocabularyTableBuilder
                     break;
 
                 default:
-                    $error = 'Unexpected table name: ' . $tableName;
                     $success = false;
+                    $error = 'Unexpected table name: ' . $tableName;
             }
         }
         catch (Exception $e)
         {
-            $error = $e->getMessage();
             $success = false;
+            $error = $e->getMessage();
         }
 
-        $response = json_encode(array('success' => $success, 'error'=>$error));
+        $response = json_encode(array('success'=>$success, 'error'=>$error));
         echo $response;
     }
 

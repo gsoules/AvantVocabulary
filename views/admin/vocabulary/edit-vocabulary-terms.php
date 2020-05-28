@@ -1,9 +1,9 @@
 <?php
 
-function emitPageJavaScript($kind, $kindName, $commonTermCount)
+function emitPageJavaScript($kind, $kindName, $elementId, $commonTermCount)
 {
     $url = WEB_ROOT . '/admin/vocabulary/terms';
-    $args = array('kind'=>$kind, 'kindName'=>$kindName, 'commonTermCount'=>$commonTermCount, 'url'=>$url);
+    $args = array('kind'=>$kind, 'kindName'=>$kindName, 'elementId'=>$elementId, 'commonTermCount'=>$commonTermCount, 'url'=>$url);
     echo get_view()->partial('/edit-vocabulary-terms-script.php', $args);
     echo foot();
 }
@@ -72,6 +72,8 @@ if ($isValidKind)
         $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL;
 }
 
+$elementId = ItemMetadata::getElementIdForElementName($kindName);
+
 echo "<div class='vocabulary-controls'>";
 
 echo "<div>";
@@ -111,7 +113,7 @@ if (!$isValidKind)
     }
 
     // Don't show anything else until the user chooses a vocabulary.
-    emitPageJavaScript($kind, $kindName, 0);
+    emitPageJavaScript($kind, $kindName, $elementId, 0);
     echo foot();
     return;
 }
@@ -144,6 +146,9 @@ if ($localTermCount > 0)
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
     <?php
+    $vocabularyTermsEditor = new VocabularyTermsEditor();
+    $elementId = ItemMetadata::getElementIdForElementName($kindName);
+
     foreach ($localTermItemRecords as $localTermRecord)
     {
         $removeClass = '';
@@ -152,6 +157,10 @@ if ($localTermCount > 0)
         $localTerm = $localTermRecord->local_term;
         $commonTermId = $localTermRecord->common_term_id;
         $commonTerm = $localTermRecord->common_term;
+
+        $term = $localTerm ? $localTerm : $commonTerm;
+        $usageCount = $vocabularyTermsEditor->getLocalTermUsageCount($elementId, $term);
+        $removeClass = $usageCount != 0 ? ' no-remove' : '';
 
         // The HTML below provides the structure for each term. The drawer area provides the local and common term
         // values. The header is filled in and formatted in JavaScript. It's done there because the JavaScript is also
@@ -165,6 +174,7 @@ if ($localTermCount > 0)
                     <div class="vocabulary-term-mapping"></div>
                     <div class="vocabulary-term-right"></div>
                     <span class="drawer"></span>
+                    <div class="vocabulary-term-count"><?php echo $usageCount; ?></div>
                 </div>
                 <div class="drawer-contents" style="display:none;">
                     <div class="drawer-message"></div>
@@ -188,5 +198,5 @@ if ($localTermCount > 0)
     ?>
 </ul>
 
-<?php emitPageJavaScript($kind, $kindName, $commonTermCount); ?>
+<?php emitPageJavaScript($kind, $kindName, $elementId, $commonTermCount); ?>
 <?php echo foot(); ?>
