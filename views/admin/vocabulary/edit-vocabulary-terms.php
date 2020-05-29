@@ -5,7 +5,6 @@ function emitPageJavaScript($kind, $kindName, $elementId, $commonTermCount)
     $url = WEB_ROOT . '/admin/vocabulary/terms';
     $args = array('kind'=>$kind, 'kindName'=>$kindName, 'elementId'=>$elementId, 'commonTermCount'=>$commonTermCount, 'url'=>$url);
     echo get_view()->partial('/edit-vocabulary-terms-script.php', $args);
-    echo foot();
 }
 
 if (AvantCommon::isAjaxRequest())
@@ -78,8 +77,8 @@ echo "<div class='vocabulary-controls'>";
 
 echo "<div>";
 echo "<label class='vocabulary-chooser-label'>Vocabulary: </label>";
-echo "<SELECT id='vocabulary-chooser' class='vocabulary-chooser'>";
-echo "<OPTION value='0'>Select a vocabulary</OPTION>";
+echo "<SELECT required id='vocabulary-chooser' class='vocabulary-chooser'>";
+echo "<OPTION value='0' selected disabled hidden>Select a vocabulary</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_LABEL . "</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "''>" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL . "</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL . "</OPTION>";
@@ -140,6 +139,14 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
         </section>
     </div>
 </div>
+
+<div id="vocabulary-terms-list-header">
+    <div class="vocabulary-term-left">Local Term</div>
+    <div class="vocabulary-term-mapping">Mapping</div>
+    <div class="vocabulary-term-right">Common Term</div>
+    <div class="vocabulary-term-count">Uses</div>
+</div>
+
 
 <ul id="vocabulary-terms-list" class="ui-sortable">
     <?php

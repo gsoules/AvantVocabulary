@@ -3,7 +3,7 @@
     var actionInProgress = false;
     var addTermButton = jQuery('#add-vocabulary-term-button');
     var commonTermCount = <?php echo $commonTermCount; ?>;
-    var defaultMessage = '<?php echo __('To edit a term, click the pencil icon.   Drag terms up or down to reorder them.'); ?>';
+    var defaultMessage = '<?php echo __('To edit a term, click its pencil icon.   Drag terms up or down to reorder them.'); ?>';
     var elementId = <?php echo $elementId; ?>;
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var kind = <?php echo $kind; ?>;
@@ -162,14 +162,14 @@
         let editIcons = jQuery('.vocabulary-term-edit-icon');
         if (enable)
         {
-            editIcons.show();
+            editIcons.css('visibility', 'visible');
 
             // Erase any message from a previous action.
             showEditorMessage(defaultMessage);
         }
         else
         {
-            editIcons.hide();
+            editIcons.css('visibility', 'hidden');
             showEditorMessage(action);
         }
 
@@ -865,7 +865,7 @@
     {
         if (itemValues.localTerm.trim().length === 0 && itemValues.commonTerm.length === 0)
         {
-            showDrawerMessage(item, '<?php echo __('Please type a Local Term, or choose a Common Term, or both'); ?>');
+            showDrawerMessage(item, '<?php echo __('The Local Term and Common Term cannot both be blank'); ?>');
             return false;
         }
         return true;
