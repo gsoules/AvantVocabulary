@@ -31,7 +31,7 @@
         var item = jQuery('#' + activeItemId);
         var commonTerm = item.find('.vocabulary-drawer-common-term');
         commonTerm.text(term);
-        item.find('.remove-common-term-button').prop('disabled', false);
+        item.find('.erase-common-term-button').prop('disabled', false);
         termChooserDialogClose();
     }
 
@@ -93,11 +93,7 @@
             setItemTitle(item);
 
             // Close the drawer.
-            item.find('.drawer-contents').slideUp();
-            item.find('.drawer').removeClass('opened');
-            item.find('.vocabulary-term-header').removeClass('selected');
-
-            enableAllItems(true);
+            openDrawer(item, false);
         }
         else
         {
@@ -120,7 +116,8 @@
             item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', originalItemValues['commonTermId']);
         }
 
-        drawerClose(item);
+        // Close the drawer.
+        openDrawer(item, false);
     }
 
     function checkForItemUpdates()
@@ -129,51 +126,9 @@
         updateTimer = setTimeout(checkForItemUpdates, 500);
     }
 
-    function drawerClose(item)
-    {
-        activeItemId = 0;
-
-        let header = item.find('.vocabulary-term-header');
-        let drawerContents = item.find('.drawer-contents');
-        header.removeClass('selected');
-
-        // Hide the open/close arrow.
-        drawerContents.removeClass('opened');
-
-        // Close the drawer.
-        drawerContents.slideUp();
-
-        // Enable all the other items so the user can open their drawers.
-        enableAllItems(true);
-
-        clearTimeout(updateTimer);
-    }
-
-    function drawerOpenForUpdate(item)
-    {
-        activeItemId = item.attr('id');
-
-        let header = item.find('.vocabulary-term-header');
-        let drawerContents = item.find('.drawer-contents');
-        header.addClass('selected');
-
-        // Hide the open/close arrow.
-        drawerContents.addClass('opened');
-
-        // Open the drawer.
-        drawerContents.show();
-
-        // Disable all the other items so the user cannot open their drawers.
-        enableAllItems(false)
-
-        // Record the drawer's content's in case the user cancels and we have to restore them.
-        rememberOriginalValues(item);
-
-        updateTimer = setTimeout(checkForItemUpdates, 500);
-    }
-
     function enableAddTermButton(enable)
     {
+        console.log('enableAddTermButton: ' + enable);
         addTermButton.prop('disabled', !enable);
     }
 
@@ -182,17 +137,15 @@
         console.log('enableAllItems');
 
         let cursor = '';
-        let headers = jQuery('.drawer');
+        let headers = jQuery('.vocabulary-term-edit-icon');
         headers.each(function(i)
         {
             if (enable)
             {
-                jQuery(this).show();
                 cursor = 'grab';
             }
             else
             {
-                jQuery(this).hide();
                 cursor = 'default';
             }
 
@@ -204,15 +157,7 @@
 
         enableAddTermButton(enable);
 
-        if (enable)
-        {
-            let removeCommonTermButtons = jQuery('.remove-common-term-button');
-            removeCommonTermButtons.each(function(i)
-            {
-                removeCommonTermButtons.prop('disabled', false);
-            });
-        }
-        else
+        if (!enable)
         {
             // Erase any message that is currently displayed.
             showEditorMessage('');
@@ -325,12 +270,12 @@
 
         // Set up the button and sortable handlers for all the items.
 
-        var drawerButtons = jQuery('.drawer');
+        var drawerButtons = jQuery('.vocabulary-term-edit-icon');
         var updateButtons = jQuery('.update-item-button');
         var cancelButtons = jQuery('.cancel-update-button');
         var removeButtons = jQuery('.remove-item-button');
         var chooseCommonTermButtons = jQuery('.choose-common-term-button');
-        var removeCommonTermButtons = jQuery('.remove-common-term-button');
+        var removeCommonTermButtons = jQuery('.erase-common-term-button');
         var closeButton = jQuery('.close-chooser-dialog-button');
 
         // Remove all the click event handlers.
@@ -368,7 +313,7 @@
         drawerButtons.click(function (event)
         {
             let item = getItemForButton(this);
-            drawerOpenForUpdate(item);
+            openDrawer(item, true);
         });
 
         removeButtons.click(function (event)
@@ -459,6 +404,52 @@
         }
     }
 
+    function openDrawer(item, open)
+    {
+        console.log('open drawer: ' + open);
+
+        activeItemId = open ? item.attr('id') : 0;
+
+        let editIcons = jQuery('.vocabulary-term-edit-icon');
+
+        let header = item.find('.vocabulary-term-header');
+        let drawerContents = item.find('.drawer-contents');
+
+        if (open)
+        {
+            // Prevent the user from editing or dragging any items.
+            editIcons.hide();
+            enableAllItems(false);
+
+            // Set the header to its open appearance.
+            header.addClass('selected');
+
+            // Open the drawer.
+            drawerContents.show();
+
+            // Record the drawer's contents in case the user cancels and we have to restore them.
+            rememberOriginalValues(item);
+
+            // Start watching for updates.
+            updateTimer = setTimeout(checkForItemUpdates, 500);
+        }
+        else
+        {
+            // Allow the user to edit or drag items.
+            editIcons.show();
+            enableAllItems(true);
+
+            // Set the header back to its normal appearance.
+            header.removeClass('selected');
+
+            // Close the drawer.
+            drawerContents.slideUp();
+
+            // Stop watching for updates.
+            clearTimeout(updateTimer);
+        }
+    }
+
     function openDrawerForNewItem()
     {
         console.log('addNewItem');
@@ -483,7 +474,7 @@
 
         // Hide buttons that are not needed when adding an item.
         newItem.find('.remove-item-button').hide();
-        newItem.find('.remove-common-term-button').hide();
+        newItem.find('.erase-common-term-button').hide();
 
         // Convert the Update button into the Save button.
         var saveButton = newItem.find('.update-item-button');

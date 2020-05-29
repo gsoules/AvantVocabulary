@@ -96,6 +96,14 @@
     padding-right: 60px;
 }
 
+.vocabulary-term-edit-icon::after {
+    font-family: "FontAwesome";
+    content: "\f044";
+    font-size: 140%;
+    float: right;
+    cursor: pointer;
+}
+
 body.vocabulary-terms-page .ui-autocomplete {
     max-height: 1000%;
     overflow-y: visible;

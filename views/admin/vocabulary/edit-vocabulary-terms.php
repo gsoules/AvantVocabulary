@@ -125,7 +125,7 @@ $localTermCount = count($localTermItemRecords);
 $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 $message = __('%s %s %s.', $localTermCount, $kindName, $verb);
 if ($localTermCount > 0)
-    $message .= __('&nbsp;&nbsp;&nbsp;To edit a term, click the arrow at far right.&nbsp;&nbsp;&nbsp;Drag terms to reorder them.');
+    $message .= __('&nbsp;&nbsp;&nbsp;To edit a term, click the pencil icon at far right.&nbsp;&nbsp;&nbsp;Drag terms to reorder them.');
 
 // The HTML that follows displays the choose vocabulary.
 ?>
@@ -174,7 +174,7 @@ if ($localTermCount > 0)
                     <div class="vocabulary-term-left"></div>
                     <div class="vocabulary-term-mapping"></div>
                     <div class="vocabulary-term-right"></div>
-                    <span class="drawer"></span>
+                    <span class="vocabulary-term-edit-icon"></span>
                     <div class="vocabulary-term-count"><?php echo $usageCount; ?></div>
                 </div>
                 <div class="drawer-contents" style="display:none;">
@@ -184,7 +184,7 @@ if ($localTermCount > 0)
                     <div class="vocabulary-drawer-buttons" >
                         <div class="vocabulary-drawer-buttons-left">
                             <button type="button" class="action-button choose-common-term-button"><?php echo __('Choose Common Term'); ?></button>
-                            <button type="button" class="action-button remove-common-term-button<?php echo $hideRemoveCommonTermButton; ?>"><?php echo __('Erase Common Term'); ?></button>
+                            <button type="button" class="action-button erase-common-term-button<?php echo $hideRemoveCommonTermButton; ?>"><?php echo __('Erase Common Term'); ?></button>
                         </div>
                         <div class="vocabulary-drawer-buttons-right">
                             <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
