@@ -637,18 +637,19 @@
         {
             leftTerm = localTerm;
             rightTerm = commonTermLink;
-            mappingIndicator = "&rarr;";
+            mappingIndicator = '<?php echo __('replaces &nbsp; &rarr;'); ?>';
         }
         else if (localTerm && !commonTerm)
         {
             leftTerm = localTerm;
             rightTerm = '';
-            mappingIndicator = 'unmapped';
+            mappingIndicator = '<?php echo __('is not mapped'); ?>';
         }
         else
         {
             leftTerm = commonTermLink;
             rightTerm = '';
+            mappingIndicator = '<?php echo __('is a common term'); ?>';
         }
 
         item.find('.vocabulary-term-left').html(leftTerm);

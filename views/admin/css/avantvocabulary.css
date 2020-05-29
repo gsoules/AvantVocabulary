@@ -67,8 +67,8 @@
 }
 
 .vocabulary-term-mapping {
-    width: 24px;
-    padding-left: 14px;
+    width: 120px;
+    padding-left: 8px;
     display: inline-block;
 }
 
@@ -217,9 +217,19 @@ https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-wit
     padding-right: 4px;
 }
 
-@media screen and (max-width: 960px) {
-    .vocabulary-term-mapping,
+@media screen and (max-width: 1200px) {
+    .vocabulary-term-mapping {
+        display: none;
+    }
+
     .vocabulary-term-right {
+        padding-left: 12px;
+    }
+}
+
+@media screen and (max-width: 960px) {
+    .vocabulary-term-right,
+    .vocabulary-term-count {
         display: none;
     }
 }
