@@ -31,7 +31,6 @@
         var item = jQuery('#' + activeItemId);
         var commonTerm = item.find('.vocabulary-drawer-common-term');
         commonTerm.text(term);
-        item.find('.erase-common-term-button').prop('disabled', false);
         termChooserDialogClose();
     }
 
@@ -122,7 +121,24 @@
 
     function checkForItemUpdates()
     {
-        console.log('checking for updates');
+        let item = jQuery('#' + activeItemId);
+        let itemValues = getItemValues(item);
+        console.log('checking for updates changed: [' + itemValues['commonTerm'] + ']');
+
+        // Determine whether any values have changed and enable/disable the Update button accordingly.
+        let updateButton = item.find('.update-item-button');
+        let changed = false;
+        if (itemValues['localTerm'] !== originalItemValues['localTerm'])
+            changed = true;
+        else if (itemValues['commonTerm'] !== originalItemValues['commonTerm'])
+            changed = true;
+
+        updateButton.prop('disabled', !changed);
+
+        // Determine whether to show and enable/disable the Erase button.
+        let eraseButton = item.find('.erase-common-term-button');
+        eraseButton.prop('disabled', itemValues['commonTerm'].length === 0);
+
         updateTimer = setTimeout(checkForItemUpdates, 500);
     }
 
@@ -227,8 +243,6 @@
 
     function getItemValues(item)
     {
-        console.log('getItemValues');
-
         let localTerm = item.find('.vocabulary-drawer-local-term').val();
         let commonTerm = item.find('.vocabulary-drawer-common-term').text();
         let commonTermId = item.find('.vocabulary-drawer-common-term').attr('data-common-term-id');
@@ -274,8 +288,8 @@
         var updateButtons = jQuery('.update-item-button');
         var cancelButtons = jQuery('.cancel-update-button');
         var removeButtons = jQuery('.remove-item-button');
-        var chooseCommonTermButtons = jQuery('.choose-common-term-button');
-        var removeCommonTermButtons = jQuery('.erase-common-term-button');
+        var chooseButtons = jQuery('.choose-common-term-button');
+        var eraseButtons = jQuery('.erase-common-term-button');
         var closeButton = jQuery('.close-chooser-dialog-button');
 
         // Remove all the click event handlers.
@@ -283,8 +297,8 @@
         updateButtons.off('click');
         cancelButtons.off('click');
         removeButtons.off('click');
-        chooseCommonTermButtons.off('click');
-        removeCommonTermButtons.off('click');
+        chooseButtons.off('click');
+        eraseButtons.off('click');
         closeButton.off('click');
 
         // Add click event handlers.
@@ -299,7 +313,7 @@
 
         });
 
-        chooseCommonTermButtons.click(function (event)
+        chooseButtons.click(function (event)
         {
             let item = getItemForButton(this);
             termChooserDialogOpen(item);
@@ -322,11 +336,10 @@
             removeItem(item);
         });
 
-        removeCommonTermButtons.click(function (event)
+        eraseButtons.click(function (event)
         {
             let item = getItemForButton(this);
             removeCommonTerm(item);
-            jQuery(this).prop('disabled', true);
         });
 
         updateButtons.click(function (event)
@@ -355,6 +368,10 @@
                 moveItem(ui.item);
             }
         });
+
+        // Disable the Update buttons and Erase buttons. They will get enabled by checkForItemUpdates when appropriate.
+        updateButtons.prop('disabled', true);
+        eraseButtons.prop('disabled', true);
 
         // Hide buttons that don't apply to an item.
         jQuery('.hide').hide();
@@ -431,7 +448,7 @@
             rememberOriginalValues(item);
 
             // Start watching for updates.
-            updateTimer = setTimeout(checkForItemUpdates, 500);
+            updateTimer = setTimeout(checkForItemUpdates, 100);
         }
         else
         {

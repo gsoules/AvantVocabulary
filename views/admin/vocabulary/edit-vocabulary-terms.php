@@ -161,7 +161,6 @@ if ($localTermCount > 0)
         $term = $localTerm ? $localTerm : $commonTerm;
         $usageCount = $vocabularyTermsEditor->getLocalTermUsageCount($elementId, $term);
         $hideRemoveItemButton = $usageCount != 0 ? ' hide' : '';
-        $hideRemoveCommonTermButton = empty($commonTerm) ? ' hide' : '';
 
         // The HTML below provides the structure for each term. The drawer area provides the local and common term
         // values. The header is filled in and formatted in JavaScript. It's done there because the JavaScript is also
@@ -184,7 +183,7 @@ if ($localTermCount > 0)
                     <div class="vocabulary-drawer-buttons" >
                         <div class="vocabulary-drawer-buttons-left">
                             <button type="button" class="action-button choose-common-term-button"><?php echo __('Choose Common Term'); ?></button>
-                            <button type="button" class="action-button erase-common-term-button<?php echo $hideRemoveCommonTermButton; ?>"><?php echo __('Erase Common Term'); ?></button>
+                            <button type="button" class="action-button erase-common-term-button"><?php echo __('Erase Common Term'); ?></button>
                         </div>
                         <div class="vocabulary-drawer-buttons-right">
                             <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
