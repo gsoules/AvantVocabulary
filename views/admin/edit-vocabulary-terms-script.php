@@ -30,6 +30,7 @@
         var item = jQuery('#' + activeItemId);
         var commonTerm = item.find('.vocabulary-drawer-common-term');
         commonTerm.text(term);
+        item.find('.remove-common-term-button').prop('disabled', false);
         termChooserDialogClose();
     }
 
@@ -158,12 +159,14 @@
 
     function closeAllDrawers()
     {
+        // Hide the open/close arrow.
         var drawerButtons = jQuery('.drawer-contents');
         drawerButtons.each(function(i)
         {
             jQuery(this).hide();
         });
 
+        // Close the drawer.
         var drawerHeaders = jQuery('.drawer');
         drawerHeaders.each(function(i)
         {
@@ -180,7 +183,7 @@
     function enableAllItems(enable)
     {
         let cursor = '';
-        var headers = jQuery('.drawer');
+        let headers = jQuery('.drawer');
         headers.each(function(i)
         {
             if (enable)
@@ -198,12 +201,23 @@
             jQuery('#vocabulary-terms-list').sortable('option', 'disabled', !enable);
             jQuery('.sortable-item').css('cursor', cursor);
 
-            enableAddTermButton(enable);
         });
 
-        // Erase any message that is currently displayed.
-        if (!enable)
+        enableAddTermButton(enable);
+
+        if (enable)
+        {
+            let removeCommonTermButtons = jQuery('.remove-common-term-button');
+            removeCommonTermButtons.each(function(i)
+            {
+                removeCommonTermButtons.prop('disabled', false);
+            });
+        }
+        else
+        {
+            // Erase any message that is currently displayed.
             showEditorMessage('');
+        }
     }
 
     function enableSuggestions()
@@ -394,6 +408,7 @@
         {
             let item = getItemForButton(this);
             removeCommonTerm(item);
+            jQuery(this).prop('disabled', true);
         });
 
         updateButtons.click(function (event)
@@ -587,6 +602,7 @@
         let localTerm = itemValues.localTerm;
         let commonTerm = itemValues.commonTerm;
         let commonTermId = itemValues.commonTermId;
+        let commonTermLink = commonTerm;
 
         let isNomenclatureTerm = commonTermId < <?php echo AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID; ?>;
         if (commonTerm && isNomenclatureTerm)
@@ -599,41 +615,42 @@
 
             let href = 'https://www.nomenclature.info/parcourir-browse.app?lang=en&id=' + commonTermId +'&wo=N&ws=INT';
             let altText = '<?php echo __('View the Nomenclature 4.0 specification for term '); ?>' + commonTermId;
-            commonTerm = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + commonTerm + "</a>";
-        }
-
-        let usageCount = itemValues.usageCount;
-        if (usageCount)
-        {
-            let href = '../../find?advanced[0][element_id]=' + kindName + '&advanced[0][type]=is+exactly&advanced[0][terms]=' + localTerm;
-            console.log("USAGE: " + usageCount);
-            let altText = '<?php echo __('View the items that use this term'); ?>';
-            usageCountLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + usageCount + "</a>";
-            item.find('.vocabulary-term-count').html(usageCountLink);
+            commonTermLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + commonTerm + "</a>";
         }
 
         mappingIndicator = '';
 
         if (localTerm && commonTerm && localTerm !== commonTerm)
         {
-            mappingIndicator = "&rarr;";
             leftTerm = localTerm;
-            rightTerm = commonTerm;
+            rightTerm = commonTermLink;
+            mappingIndicator = "&rarr;";
         }
-        else if (localTerm)
+        else if (localTerm && !commonTerm)
         {
             leftTerm = localTerm;
             rightTerm = '';
+            mappingIndicator = 'unmapped';
         }
         else
         {
-            leftTerm = commonTerm;
+            leftTerm = commonTermLink;
             rightTerm = '';
         }
 
         item.find('.vocabulary-term-left').html(leftTerm);
         item.find('.vocabulary-term-mapping').html(mappingIndicator);
         item.find('.vocabulary-term-right').html(rightTerm);
+
+        let usageCount = itemValues.usageCount;
+        if (usageCount !== 0)
+        {
+            // The term is in use. Display it as a link to search results of the items that use it.
+            let href = '../../find?advanced[0][element_id]=' + kindName + '&advanced[0][type]=is+exactly&advanced[0][terms]=' + localTerm;
+            let altText = '<?php echo __('View the items that use this term'); ?>';
+            usageCountLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + usageCount + "</a>";
+            item.find('.vocabulary-term-count').html(usageCountLink);
+        }
     }
 
     function setItemTitles()
