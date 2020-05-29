@@ -30,6 +30,9 @@ class AvantVocabularyTableBuilder
 
     protected function buildLocalTermsTable()
     {
+        VocabularyTableFactory::dropVocabularyLocalTermsTable();
+        VocabularyTableFactory::createVocabularyLocalTermsTable();
+
         $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
         $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
         $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);

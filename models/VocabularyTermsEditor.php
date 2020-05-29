@@ -27,7 +27,7 @@ class VocabularyTermsEditor
         $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $term);
         if ($localTermRecord)
         {
-            return json_encode(array('success'=>false, 'itemId'=>0));
+            return json_encode(array('success'=>false, 'id'=>0));
         }
 
         $commonTermId = $this->getIdForCommonTerm($kind, $commonTerm);
@@ -53,7 +53,7 @@ class VocabularyTermsEditor
                 throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
         }
 
-        return json_encode(array('success'=>true, 'itemId'=>$localTermRecord->id));
+        return json_encode(array('success'=>true, 'id'=>$localTermRecord->id));
     }
 
     protected function getIdForCommonTerm($kind, $commonTerm)
@@ -163,6 +163,8 @@ class VocabularyTermsEditor
 
         // Get the local term record and update it with the posted local and common terms.
         $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
+        if (!$localTermRecord)
+            throw new Exception($this->reportError(__FUNCTION__, ' get local term record failed'));
         $localTermRecord['local_term'] = $itemValues['localTerm'];
 
         $commonTermId = $this->getIdForCommonTerm($itemValues['kind'], $itemValues['commonTerm']);

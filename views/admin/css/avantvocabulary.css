@@ -1,7 +1,7 @@
 :root {
     --selected-term: #d8cfb6;
     --term-link: #9d5b41;
-    --term-message: #376b2e;
+    --vocabulary-editor-message: #376b2e;
 }
 
 #add-vocabulary-term-button {
@@ -52,9 +52,10 @@
 }
 
 .drawer-message {
-    color:red;
+    color: var(--vocabulary-editor-message);
     font-weight: bold;
-    padding: 4px 0;
+    font-size: 110%;
+    padding: 2px 0 12px 0;
 }
 
 #vocabulary-terms-list li {
@@ -120,11 +121,11 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
     margin-bottom: 12px;
     padding-left: 4px;
     font-size: 110%;
-    color: var(--term-message);
+    color: var(--vocabulary-editor-message);
 }
 
 #vocablary-term-editor-message-area {
-    color: var(--term-message);
+    color: var(--vocabulary-editor-message);
     font-size: 115%;
     margin: 4px 0;
 }
