@@ -3,6 +3,7 @@
     var actionInProgress = false;
     var addTermButton = jQuery('#add-vocabulary-term-button');
     var commonTermCount = <?php echo $commonTermCount; ?>;
+    var defaultMessage = '<?php echo __('To edit a term, click the pencil icon.   Drag terms up or down to reorder them.'); ?>';
     var elementId = <?php echo $elementId; ?>;
     var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var kind = <?php echo $kind; ?>;
@@ -38,7 +39,7 @@
     {
         console.log('afterAddNewItem');
 
-        var newItem = jQuery('#item-0');
+        var newItem = jQuery('#' + activeItemId);
 
         if (data['success'])
         {
@@ -46,10 +47,8 @@
             newItem.find('.drawer-contents').hide();
 
             // Convert the Save button back into the Update button.
-            var updateButton = newItem.find('.save-item-button');
+            var updateButton = newItem.find('.update-item-button');
             updateButton.text('<?php echo __('Update'); ?>');
-            updateButton.removeClass('save-item-button');
-            updateButton.addClass('update-item-button');
 
             // Show the header for the newly added item.
             newItem.find('.vocabulary-term-header').show();
@@ -125,12 +124,15 @@
         let itemValues = getItemValues(item);
         console.log('checking for updates changed: [' + itemValues['commonTerm'] + ']');
 
-        // Determine whether any values have changed and enable/disable the Update button accordingly.
+        let originalLocalTerm = originalItemValues ? originalItemValues['localTerm'] : '';
+        let originalCommonTerm = originalItemValues ? originalItemValues['localCommon'] : '';
+
+        // Determine whether any values have changed and enable/disable the Update or Save button accordingly.
         let updateButton = item.find('.update-item-button');
         let changed = false;
-        if (itemValues['localTerm'] !== originalItemValues['localTerm'])
+        if (itemValues['localTerm'] !== originalLocalTerm)
             changed = true;
-        else if (itemValues['commonTerm'] !== originalItemValues['commonTerm'])
+        else if (itemValues['commonTerm'] !== originalCommonTerm)
             changed = true;
 
         updateButton.prop('disabled', !changed);
@@ -148,36 +150,30 @@
         addTermButton.prop('disabled', !enable);
     }
 
-    function enableAllItems(enable)
+    function enableAllItems(enable, action)
     {
-        console.log('enableAllItems');
+        console.log('enableAllItems: ' + enable);
 
-        let cursor = '';
-        let headers = jQuery('.vocabulary-term-edit-icon');
-        headers.each(function(i)
+        // Enable or disable dragging of an item to change its order.
+        jQuery('#vocabulary-terms-list').sortable('option', 'disabled', !enable);
+        let cursor = enable ? 'grab' : 'default';
+        jQuery('.sortable-item').css('cursor', cursor);
+
+        let editIcons = jQuery('.vocabulary-term-edit-icon');
+        if (enable)
         {
-            if (enable)
-            {
-                cursor = 'grab';
-            }
-            else
-            {
-                cursor = 'default';
-            }
+            editIcons.show();
 
-            // Enable or disable dragging of an item to change its order.
-            jQuery('#vocabulary-terms-list').sortable('option', 'disabled', !enable);
-            jQuery('.sortable-item').css('cursor', cursor);
-
-        });
+            // Erase any message from a previous action.
+            showEditorMessage(defaultMessage);
+        }
+        else
+        {
+            editIcons.hide();
+            showEditorMessage(action);
+        }
 
         enableAddTermButton(enable);
-
-        if (!enable)
-        {
-            // Erase any message that is currently displayed.
-            showEditorMessage('');
-        }
     }
 
     function enableSuggestions()
@@ -435,8 +431,7 @@
         if (open)
         {
             // Prevent the user from editing or dragging any items.
-            editIcons.hide();
-            enableAllItems(false);
+            enableAllItems(false, '<?php echo __('Editing a term'); ?>');
 
             // Set the header to its open appearance.
             header.addClass('selected');
@@ -453,7 +448,6 @@
         else
         {
             // Allow the user to edit or drag items.
-            editIcons.show();
             enableAllItems(true);
 
             // Set the header back to its normal appearance.
@@ -471,15 +465,13 @@
     {
         console.log('addNewItem');
 
-        // Disallow editing of another item while adding a new item.
-        enableAllItems(false);
-
         // Create new item's header and drawer from a copy of the first item.
         var firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
         var newItem = firstItem.clone();
 
         // Set the item's Id to 'item-0' so that we can find it later. Hide the header and show only the drawer.
-        newItem.attr('id', 'item-0');
+        activeItemId = 'item-0';
+        newItem.attr('id', activeItemId);
         newItem.find('.vocabulary-term-header').hide();
         newItem.find('.drawer-contents').show();
 
@@ -491,13 +483,10 @@
 
         // Hide buttons that are not needed when adding an item.
         newItem.find('.remove-item-button').hide();
-        newItem.find('.erase-common-term-button').hide();
 
         // Convert the Update button into the Save button.
         var saveButton = newItem.find('.update-item-button');
         saveButton.text('<?php echo __('Save'); ?>');
-        saveButton.removeClass('update-item-button');
-        saveButton.addClass('save-item-button');
         saveButton.click(function (event)
         {
             saveNewItem();
@@ -509,6 +498,12 @@
         // Initialize the buttons for the drawer. This call initializes the drawers for all items, even though
         // only this one needs it, but it's simpler doing it this way than having logic for a single drawer.
         initializeDrawerControls();
+
+        // Disallow editing of another item while adding a new item.
+        enableAllItems(false, '<?php echo __('Adding a new term'); ?>');
+
+        // Start watching for updates.
+        updateTimer = setTimeout(checkForItemUpdates, 100);
 
         showDrawerMessage(newItem, '<?php echo __('Specify a Local and/or Common term'); ?>');
     }
@@ -701,7 +696,7 @@
 
     function showEditorMessage(message)
     {
-        jQuery('#vocablary-term-editor-message-area').text(message);
+        jQuery('#vocabulary-term-editor-message-area').text(message);
     }
 
     function showRebuildStatus(status)

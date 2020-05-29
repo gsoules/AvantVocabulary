@@ -123,13 +123,10 @@ $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount(
 $localTermItemRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItemsInOrder($kind);
 $localTermCount = count($localTermItemRecords);
 $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
-$message = __('%s %s %s.', $localTermCount, $kindName, $verb);
-if ($localTermCount > 0)
-    $message .= __('&nbsp;&nbsp;&nbsp;To edit a term, click the pencil icon at far right.&nbsp;&nbsp;&nbsp;Drag terms to reorder them.');
 
 // The HTML that follows displays the choose vocabulary.
 ?>
-<div id="vocablary-term-editor-message-area"><?php echo $message; ?></div>
+<div id="vocabulary-term-editor-message-area"></div>
 
 <div id="vocabulary-modal" class="modal">
     <div id="vocabulary-modal-dialog" class="modal-dialog">

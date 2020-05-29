@@ -16,12 +16,14 @@
     background: #fefefe;
     padding: 4px 10px 4px 10px;
     font-size: 14px;
+    border: 0;
 }
 
 #vocabulary-terms-list .drawer-contents {
     background: #f7f7f7;
     border: 2px solid var(--selected-term);
     border-bottom-width: 3px;
+    margin-bottom: 3px;
 }
 
 #vocabulary-terms-list .drawer-contents input[type=text] {
@@ -59,11 +61,12 @@
 }
 
 #vocabulary-terms-list li {
-    margin-bottom: 6px;
+    margin-bottom: 0;
 }
 
 .vocabulary-term-header.selected {
     background-color: var(--selected-term) !important;
+    margin-top: 8px;
 }
 
 .vocabulary-term-mapping {
@@ -132,10 +135,11 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
     color: var(--vocabulary-editor-message);
 }
 
-#vocablary-term-editor-message-area {
+#vocabulary-term-editor-message-area {
     color: var(--vocabulary-editor-message);
     font-size: 115%;
     margin: 4px 0;
+    height: 24px;
 }
 
 #vocabulary-term-input {
