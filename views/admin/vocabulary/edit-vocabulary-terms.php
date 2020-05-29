@@ -184,11 +184,11 @@ if ($localTermCount > 0)
                     <div class="vocabulary-drawer-buttons" >
                         <div class="vocabulary-drawer-buttons-left">
                             <button type="button" class="action-button choose-common-term-button"><?php echo __('Choose Common Term'); ?></button>
-                            <button type="button" class="action-button remove-common-term-button<?php echo $hideRemoveCommonTermButton; ?>"><?php echo __('Remove Common Term'); ?></button>
+                            <button type="button" class="action-button remove-common-term-button<?php echo $hideRemoveCommonTermButton; ?>"><?php echo __('Erase Common Term'); ?></button>
                         </div>
                         <div class="vocabulary-drawer-buttons-right">
                             <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
-                            <button type="button" class="action-button remove-item-button red<?php echo $hideRemoveItemButton; ?>"><?php echo __('Remove'); ?></button>
+                            <button type="button" class="action-button remove-item-button red<?php echo $hideRemoveItemButton; ?>"><?php echo __('Remove Term'); ?></button>
                             <button type="button" class="action-button cancel-update-button"><?php echo __('Cancel'); ?></button>
                         </div>
                     </div>

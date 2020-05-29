@@ -18,6 +18,7 @@
     var termChooserDialogMessage = jQuery('#vocabulary-term-message');
     var termChooserDialogTimer;
     var termChooserResultsCount = 0;
+    var updateTimer;
     var url = '<?php echo $url; ?>';
 
     jQuery(document).ready(function ()
@@ -119,19 +120,56 @@
             item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', originalItemValues['commonTermId']);
         }
 
-        closeDrawer(item);
-        enableAllItems(true);
+        drawerClose(item);
     }
 
-    function closeDrawer(item)
+    function checkForItemUpdates()
     {
+        console.log('checking for updates');
+        updateTimer = setTimeout(checkForItemUpdates, 500);
+    }
+
+    function drawerClose(item)
+    {
+        activeItemId = 0;
+
+        let header = item.find('.vocabulary-term-header');
+        let drawerContents = item.find('.drawer-contents');
+        header.removeClass('selected');
+
         // Hide the open/close arrow.
-        item.find('.drawer-contents').hide();
+        drawerContents.removeClass('opened');
 
         // Close the drawer.
-        let drawer = item.find('.drawer');
-        drawer.parent().removeClass('selected');
-        drawer.removeClass('opened');
+        drawerContents.slideUp();
+
+        // Enable all the other items so the user can open their drawers.
+        enableAllItems(true);
+
+        clearTimeout(updateTimer);
+    }
+
+    function drawerOpenForUpdate(item)
+    {
+        activeItemId = item.attr('id');
+
+        let header = item.find('.vocabulary-term-header');
+        let drawerContents = item.find('.drawer-contents');
+        header.addClass('selected');
+
+        // Hide the open/close arrow.
+        drawerContents.addClass('opened');
+
+        // Open the drawer.
+        drawerContents.show();
+
+        // Disable all the other items so the user cannot open their drawers.
+        enableAllItems(false)
+
+        // Record the drawer's content's in case the user cancels and we have to restore them.
+        rememberOriginalValues(item);
+
+        updateTimer = setTimeout(checkForItemUpdates, 500);
     }
 
     function enableAddTermButton(enable)
@@ -329,36 +367,8 @@
 
         drawerButtons.click(function (event)
         {
-            // Remember if this drawer is open or closed.
-            let isOpen = jQuery(this).hasClass('opened');
-
-            if (!isOpen)
-            {
-                // Only one drawer is allowed to be open at a time.
-                // Disable all the other items so their drawers cannot be opened while editing this item.
-                enableAllItems(false)
-
-                let item = getItemForButton(this);
-                rememberOriginalValues(item);
-            }
-
-            // Toggle the state of the drawer's open indicator (arrow at far right)
-            // Toggle the open/close state of the drawer itself.
-            let openIndicator = jQuery(this);
-            let drawer = openIndicator.parent().next();
-            let header = openIndicator.parent();
-            if (isOpen)
-            {
-                header.removeClass('selected');
-                openIndicator.removeClass('opened');
-                drawer.hide();
-            }
-            else
-            {
-                header.addClass('selected');
-                openIndicator.addClass('opened');
-                drawer.show();
-            }
+            let item = getItemForButton(this);
+            drawerOpenForUpdate(item);
         });
 
         removeButtons.click(function (event)
@@ -747,7 +757,6 @@
 
     function termChooserDialogOpen(item)
     {
-        activeItemId = item.attr('id');
         let itemValues = getItemValues(item);
 
         if (itemValues.commonTerm.length)
