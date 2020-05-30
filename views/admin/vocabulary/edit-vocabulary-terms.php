@@ -2,7 +2,7 @@
 
 function emitPageJavaScript($kind, $kindName, $elementId, $commonTermCount)
 {
-    $url = WEB_ROOT . '/admin/vocabulary/terms';
+    $url = WEB_ROOT . '/admin/vocabulary';
     $args = array('kind'=>$kind, 'kindName'=>$kindName, 'elementId'=>$elementId, 'commonTermCount'=>$commonTermCount, 'url'=>$url);
     echo get_view()->partial('/edit-vocabulary-terms-script.php', $args);
 }

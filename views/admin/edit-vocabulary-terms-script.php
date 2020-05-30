@@ -5,7 +5,6 @@
     var commonTermCount = <?php echo $commonTermCount; ?>;
     var defaultMessage = '<?php echo __('To edit a term, click its pencil icon.   Drag terms up or down to reorder them.'); ?>';
     var elementId = <?php echo $elementId; ?>;
-    var itemEditorUrl = '<?php echo url('/vocabulary/update'); ?>';
     var kind = <?php echo $kind; ?>;
     var kindName = '<?php echo $kindName; ?>';
     var originalItemValues;
@@ -20,7 +19,8 @@
     var termChooserDialogTimer;
     var termChooserResultsCount = 0;
     var updateTimer;
-    var url = '<?php echo $url; ?>';
+    var urlForEditorPage = '<?php echo $url; ?>/terms';
+    var urlForTermEditor = '<?php echo $url; ?>/update';
 
     jQuery(document).ready(function ()
     {
@@ -184,7 +184,7 @@
         // Set up the autocomplete control.
         jQuery(termChooserDialogInput).autocomplete(
         {
-            source: url + '?kind=' + kind,
+            source: urlForEditorPage + '?kind=' + kind,
             delay: 250,
             minLength: 2,
             appendTo: '#vocabulary-modal-dialog',
@@ -382,7 +382,7 @@
         voabularyChooser.change(function()
         {
             var selection = jQuery(this).children("option:selected").val();
-            window.location.href = url + '?kind=' + selection;
+            window.location.href = urlForEditorPage + '?kind=' + selection;
         });
 
         addTermButton.click(function (event)
@@ -487,6 +487,7 @@
         // Convert the Update button into the Save button.
         var saveButton = newItem.find('.update-item-button');
         saveButton.text('<?php echo __('Save'); ?>');
+        saveButton.off('click');
         saveButton.click(function (event)
         {
             saveNewItem();
@@ -538,7 +539,7 @@
         item.fadeTo(750, 0.20);
 
         jQuery.ajax(
-            itemEditorUrl,
+            urlForTermEditor,
             {
                 method: 'POST',
                 dataType: 'json',
@@ -568,7 +569,7 @@
         // Call back to the server (this page) to get the status of the action.
         // The server returns the complete status since the action began, not just what has since transpired.
         jQuery.ajax(
-            url,
+            urlForEditorPage,
             {
                 method: 'POST',
                 dataType: 'json',
@@ -602,7 +603,7 @@
             return;
 
         jQuery.ajax(
-            itemEditorUrl,
+            urlForTermEditor,
             {
                 method: 'POST',
                 dataType: 'json',
@@ -718,7 +719,7 @@
         // Call back to the server (this page) to initiate the action which can take several minutes.
         // While waiting, the reportProgress function is called on a timer to get the status of the action.
         jQuery.ajax(
-            url,
+            urlForEditorPage,
             {
                 method: 'POST',
                 dataType: 'json',
@@ -808,7 +809,7 @@
         item.find('.update-item-button').fadeTo(500, 0.20);
 
         jQuery.ajax(
-            itemEditorUrl,
+            urlForTermEditor,
             {
                 method: 'POST',
                 dataType: 'json',
@@ -841,7 +842,7 @@
             .get();
 
         jQuery.ajax(
-            itemEditorUrl,
+            urlForTermEditor,
             {
                 method: 'POST',
                 dataType: 'json',
