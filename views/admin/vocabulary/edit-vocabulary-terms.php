@@ -128,6 +128,7 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 ?>
 <div id="dialog-confirm-remove-term" title="<?php echo __('Remove term'); ?>">
     <h2><?php echo __('Are you sure?'); ?></h2>
+    <p></p>
 </div>
 
 <div id="vocabulary-term-editor-message-area"></div>

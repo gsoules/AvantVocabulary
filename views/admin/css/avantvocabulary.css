@@ -168,11 +168,6 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
     display: none;
 }
 
-button.ui-state-default.orange {
-    background: linear-gradient(to bottom, #ad6345, #7d422a) !important;
-    background: #9e583c !important;
-}
-
 /*
 This modal dialog CSS was adapted from:
 https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-with-html-css-and-javascript--cms-33500

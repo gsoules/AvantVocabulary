@@ -570,9 +570,11 @@
         let itemValues = getItemValues(item);
 
         let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
-        let message = '<?php echo __('Remove "{1}" from the {2} vocabulary?'); ?>';
+        let message = '<?php echo __('This will remove "{1}" from the {2} vocabulary. This action is harmless since no items are using this term.'); ?>';
         message = message.replace('{1}', term);
         message = message.replace('{2}', kindName);
+
+        jQuery("#dialog-confirm-remove-term p").text(message);
 
         jQuery("#dialog-confirm-remove-term").dialog({
             autoOpen: true,
@@ -585,10 +587,6 @@
                     jQuery(this).dialog( "close" );
                     removeItem(item, itemValues);
                 }
-            },
-            open: function () {
-                jQuery(this).parent().find(".ui-dialog-buttonpane .ui-button")
-                    .addClass("orange");
             }
         });
     }
