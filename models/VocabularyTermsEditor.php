@@ -258,9 +258,9 @@ class VocabularyTermsEditor
 
         $select = $this->db->select()
             ->from($this->db->ElementText)
-            ->where('id = ?', $elementTextId);
+            ->where("id = $elementTextId");
 
-        $elementTextRecord = $this->db->getTable('ElementText')->fetchObjects($select);
+        $elementTextRecord = $this->db->getTable('ElementText')->fetchObject($select);
 
         // Update the element text record.
 
