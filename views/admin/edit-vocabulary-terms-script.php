@@ -70,7 +70,7 @@
         let saveButton = newItem.find('.update-item-button');
         saveButton.text('<?php echo __('Save'); ?>');
         saveButton.off('click');
-        saveButton.click(function (event)
+        saveButton.click(function ()
         {
             saveNewItem();
         });
@@ -101,10 +101,10 @@
             let updateButton = newItem.find('.update-item-button');
             updateButton.text('<?php echo __('Update'); ?>');
             updateButton.off('click');
-            updateButton.click(function (event)
+            updateButton.click(function ()
             {
                 let item = getItemForButton(this);
-                updateItem(item);
+                updateItemConfirmation(item);
             });
 
             // Allow the new item to be removed.
@@ -301,6 +301,16 @@
         rebuildLocalTermsButton.button("option", {disabled: !enable});
     }
 
+    function eraseCommonTerm(item)
+    {
+        let commonTermField = item.find('.vocabulary-drawer-common-term');
+        commonTermField.fadeOut('slow', function() {
+            commonTermField.text('');
+            commonTermField.attr('data-common-term-id', 0);
+            commonTermField.show();
+        });
+    }
+
     function getItemValues(item)
     {
         let localTerm = item.find('.vocabulary-drawer-local-term').val();
@@ -399,13 +409,13 @@
         eraseButtons.click(function (event)
         {
             let item = getItemForButton(this);
-            removeCommonTerm(item);
+            eraseCommonTerm(item);
         });
 
         updateButtons.click(function (event)
         {
             let item = getItemForButton(this);
-            updateItem(item);
+            updateItemConfirmation(item);
         });
 
         jQuery('#vocabulary-terms-list').sortable({
@@ -528,16 +538,6 @@
     function rememberOriginalValues(item)
     {
         originalItemValues = getItemValues(item);
-    }
-
-    function removeCommonTerm(item)
-    {
-        let commonTermField = item.find('.vocabulary-drawer-common-term');
-        commonTermField.fadeOut('slow', function() {
-            commonTermField.text('');
-            commonTermField.attr('data-common-term-id', 0);
-            commonTermField.show();
-        });
     }
 
     function removeItem(item, itemValues)
@@ -821,22 +821,9 @@
         termChooserDialogMessage.text(message);
     }
 
-    function updateItem(item)
+    function updateItem(item, itemValues)
     {
         console.log('updateItem');
-
-        let itemValues = getItemValues(item);
-
-        let usageCount = item.find('.vocabulary-term-count').text();
-        if (usageCount !== '0')
-        {
-            let warning = '<?php echo __('Are you sure you want to update this term and all the items that use it?'); ?>';
-            if (!confirm(warning))
-                return;
-        }
-
-        if (!validateItemValues(item, itemValues))
-            return;
 
         item.find('.update-item-button').fadeTo(500, 0.20);
 
@@ -857,6 +844,44 @@
                 }
             }
         );
+    }
+
+    function updateItemConfirmation(item)
+    {
+        let itemValues = getItemValues(item);
+        let usageCount = item.find('.vocabulary-term-count').text();
+
+        console.log('updateItemConfirmation: ' + usageCount);
+
+        if (usageCount === '0')
+        {
+            updateItem(item, itemValues);
+        }
+        else
+        {
+            let affected = usageCount === 1 ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
+            let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
+            let message = '<?php echo __('This will update the {1} using "{2}" as a {3}. These updates can take a while.'); ?>';
+            message = message.replace('{1}', affected);
+            message = message.replace('{2}', term);
+            message = message.replace('{3}', kindName);
+
+            jQuery("#dialog-confirm-update-term p").text(message);
+
+            jQuery("#dialog-confirm-update-term").dialog({
+                autoOpen: true,
+                resizable: false,
+                height: "auto",
+                width: 400,
+                modal: true,
+                buttons: {
+                    '<?php echo __('Update'); ?>': function() {
+                        jQuery(this).dialog( "close" );
+                        updateItem(item, itemValues);
+                    }
+                }
+            });
+        }
     }
 
     function updateItemOrder()
