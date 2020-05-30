@@ -15,7 +15,7 @@
 
     let activeItemId = 0;
     let actionInProgress = false;
-    let originalItemValues;
+    let originalItemValues = null;
     let progressCount = 0;
     let progressTimer;
     let tableName = '';
@@ -76,12 +76,10 @@
         });
 
         // Disallow editing of another item while adding a new item.
-        enableAllItems(false, '<?php echo __('Adding a new term'); ?>');
+        enableAllItems(false, '<?php echo __('Add a new term by providing a Local and/or Common Term name'); ?>');
 
         // Start watching for updates.
         updateTimer = setTimeout(checkForItemUpdates, 100);
-
-        showDrawerMessage(newItem, '<?php echo __('Specify a Local and/or Common term'); ?>');
     }
 
     function afterNewItemSaved(data, itemValues)
@@ -95,6 +93,7 @@
 
         if (data['success'])
         {
+            // Set the item's Id from the Id of the newly inserted database record.
             newItem.attr('id', 'item-' + data['id']);
             newItem.find('.drawer-contents').hide();
 
@@ -108,6 +107,9 @@
                 updateItem(item);
             });
 
+            // Allow the new item to be removed.
+            newItem.find('.remove-item-button').show();
+
             // Show the header for the newly added item.
             newItem.find('.vocabulary-term-header').show();
             setItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
@@ -117,16 +119,22 @@
         }
         else
         {
+            // Report that the add was not accepted which because the new term is the same as an existing term.
             let term = itemValues.localTerm ? itemValues.localTerm : itemValues.commonTerm;
             let message = '<?php echo __('The {1} vocabulary already contains "{2}"'); ?>';
             message = message.replace('{1}', kindName);
             message = message.replace('{2}', term);
-            showDrawerMessage(newItem, message);
+            showDrawerErrorMessage(newItem, message);
         }
     }
 
     function afterRemoveItem(item, data)
     {
+        console.log('afterRemoveItem');
+
+        // Stop watching for updates.
+        clearTimeout(updateTimer);
+        
         if (data['success'])
         {
             let itemValues = getItemValues(item);
@@ -169,6 +177,7 @@
             item.find('.vocabulary-drawer-local-term').val(originalItemValues['localTerm']);
             item.find('.vocabulary-drawer-common-term').text(originalItemValues['commonTerm']);
             item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', originalItemValues['commonTermId']);
+            originalItemValues = null;
         }
 
         // Close the drawer.
@@ -697,7 +706,7 @@
         });
     }
 
-    function showDrawerMessage(item, message)
+    function showDrawerErrorMessage(item, message)
     {
         item.find('.drawer-message').text(message);
     }
@@ -873,7 +882,7 @@
     {
         if (itemValues.localTerm.trim().length === 0 && itemValues.commonTerm.length === 0)
         {
-            showDrawerMessage(item, '<?php echo __('The Local Term and Common Term cannot both be blank'); ?>');
+            showDrawerErrorMessage(item, '<?php echo __('The Local Term and Common Term cannot both be blank'); ?>');
             return false;
         }
         return true;

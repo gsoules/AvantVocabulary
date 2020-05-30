@@ -68,7 +68,7 @@
 }
 
 .drawer-message {
-    color: var(--vocabulary-editor-message);
+    color: red;
     font-weight: bold;
     font-size: 110%;
     padding: 2px 0 12px 0;
