@@ -1,26 +1,27 @@
 <script type="text/javascript">
+    const addTermButton = jQuery('#add-vocabulary-term-button');
+    const commonTermCount = '<?php echo $commonTermCount; ?>';
+    const defaultMessage = '<?php echo __('To edit a term, click its pencil icon.   Drag terms up or down to reorder them.'); ?>';
+    const elementId = <?php echo $elementId; ?>;
+    const kind = <?php echo $kind; ?>;
+    const kindName = '<?php echo $kindName; ?>';
+    const rebuildCommonTermsButton = jQuery("#rebuild-common-terms-button").button();
+    const rebuildLocalTermsButton = jQuery("#rebuild-local-terms-button").button();
+    const statusArea = jQuery("#status-area");
+    const termChooserDialogInput = jQuery("#vocabulary-term-input");
+    const termChooserDialogMessage = jQuery('#vocabulary-term-message');
+    const urlForEditorPage = '<?php echo $url; ?>/terms';
+    const urlForTermEditor = '<?php echo $url; ?>/update';
+
     var activeItemId = 0;
     var actionInProgress = false;
-    var addTermButton = jQuery('#add-vocabulary-term-button');
-    var commonTermCount = <?php echo $commonTermCount; ?>;
-    var defaultMessage = '<?php echo __('To edit a term, click its pencil icon.   Drag terms up or down to reorder them.'); ?>';
-    var elementId = <?php echo $elementId; ?>;
-    var kind = <?php echo $kind; ?>;
-    var kindName = '<?php echo $kindName; ?>';
     var originalItemValues;
     var progressCount = 0;
     var progressTimer;
-    var rebuildCommonTermsButton = jQuery("#rebuild-common-terms-button").button();
-    var rebuildLocalTermsButton = jQuery("#rebuild-local-terms-button").button();
-    var statusArea = jQuery("#status-area");
     var tableName = '';
-    var termChooserDialogInput = jQuery("#vocabulary-term-input");
-    var termChooserDialogMessage = jQuery('#vocabulary-term-message');
     var termChooserDialogTimer;
     var termChooserResultsCount = 0;
     var updateTimer;
-    var urlForEditorPage = '<?php echo $url; ?>/terms';
-    var urlForTermEditor = '<?php echo $url; ?>/update';
 
     jQuery(document).ready(function ()
     {
@@ -85,7 +86,10 @@
 
     function afterNewItemSaved(data, itemValues)
     {
-        console.log('afterAddNewItem');
+        console.log('afterNewItemSaved');
+
+        // Stop watching for updates.
+        clearTimeout(updateTimer);
 
         var newItem = jQuery('#' + activeItemId);
 
@@ -187,7 +191,7 @@
         else if (itemValues['commonTerm'] !== originalCommonTerm)
             localTermChanged = true;
 
-        console.log('checking for updates changed: [' + itemValues['localTerm'] + '] ' + localTermChanged);
+        console.log('checkForItemUpdates: [' + itemValues['localTerm'] + '] [' + originalLocalTerm + '] [' + itemValues['commonTerm'] + '] [' + originalCommonTerm + ']' + localTermChanged);
         updateButton.prop('disabled', !localTermChanged);
 
         // Determine whether to show and enable/disable the Erase button.
@@ -232,9 +236,6 @@
 
     function enableSuggestions()
     {
-        // Show the term count with commas as a thousands separator.
-        commonTermCount = commonTermCount.toLocaleString();
-
         // Set up the autocomplete control.
         jQuery(termChooserDialogInput).autocomplete(
         {
