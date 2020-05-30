@@ -261,8 +261,13 @@ class VocabularyTermsEditor
             ->where("id = $elementTextId");
 
         $elementTextRecord = $this->db->getTable('ElementText')->fetchObject($select);
+        if (!$elementTextRecord)
+            throw new Exception($this->reportError(__FUNCTION__, ' get element text record failed'));
 
-        // Update the element text record.
+        // Update the element text record with the new term.
+        $elementTextRecord['text'] = $newTerm;
+        if (!$elementTextRecord->save())
+            throw new Exception($this->reportError(__FUNCTION__, ' save element text record failed'));
 
         // Reindex the item -- can we just reindex the element text without redoing the entire item?
         $itemId = $elementText['record_id'];
