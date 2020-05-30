@@ -126,6 +126,10 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 
 // The HTML that follows displays the choose vocabulary.
 ?>
+<div id="dialog-confirm-remove-term" title="<?php echo __('Remove term'); ?>">
+    <h2><?php echo __('Are you sure?'); ?></h2>
+</div>
+
 <div id="vocabulary-term-editor-message-area"></div>
 
 <div id="vocabulary-modal" class="modal">

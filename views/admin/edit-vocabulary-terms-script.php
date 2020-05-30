@@ -134,7 +134,7 @@
 
         // Stop watching for updates.
         clearTimeout(updateTimer);
-        
+
         if (data['success'])
         {
             let itemValues = getItemValues(item);
@@ -393,7 +393,7 @@
         removeButtons.click(function (event)
         {
             let item = getItemForButton(this);
-            removeItem(item);
+            removeItemConfirmation(item);
         });
 
         eraseButtons.click(function (event)
@@ -540,18 +540,8 @@
         });
     }
 
-    function removeItem(item)
+    function removeItem(item, itemValues)
     {
-        let itemValues = getItemValues(item);
-
-        let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
-        let message = '<?php echo __('Remove "{1}" from the {2} vocabulary?'); ?>';
-        message = message.replace('{1}', term);
-        message = message.replace('{2}', kindName);
-
-        if (!confirm(message))
-            return;
-
         item.fadeTo(750, 0.20);
 
         jQuery.ajax(
@@ -573,6 +563,34 @@
                 }
             }
         );
+    }
+
+    function removeItemConfirmation(item)
+    {
+        let itemValues = getItemValues(item);
+
+        let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
+        let message = '<?php echo __('Remove "{1}" from the {2} vocabulary?'); ?>';
+        message = message.replace('{1}', term);
+        message = message.replace('{2}', kindName);
+
+        jQuery("#dialog-confirm-remove-term").dialog({
+            autoOpen: true,
+            resizable: false,
+            height: "auto",
+            width: 400,
+            modal: true,
+            buttons: {
+                '<?php echo __('Remove'); ?>': function() {
+                    jQuery(this).dialog( "close" );
+                    removeItem(item, itemValues);
+                }
+            },
+            open: function () {
+                jQuery(this).parent().find(".ui-dialog-buttonpane .ui-button")
+                    .addClass("orange");
+            }
+        });
     }
 
     function reportProgress()
