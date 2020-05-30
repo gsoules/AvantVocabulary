@@ -194,14 +194,14 @@
 
         // Determine whether any values have changed and enable/disable the Update or Save button accordingly.
         let updateButton = item.find('.update-item-button');
-        let localTermChanged = false;
+        let termChanged = false;
         if (itemValues['localTerm'] !== originalLocalTerm)
-            localTermChanged = true;
+            termChanged = true;
         else if (itemValues['commonTerm'] !== originalCommonTerm)
-            localTermChanged = true;
+            termChanged = true;
 
-        console.log('checkForItemUpdates: [' + itemValues['localTerm'] + '] [' + originalLocalTerm + '] [' + itemValues['commonTerm'] + '] [' + originalCommonTerm + ']' + localTermChanged);
-        updateButton.prop('disabled', !localTermChanged);
+        console.log('checkForItemUpdates: [' + itemValues['localTerm'] + '] [' + originalLocalTerm + '] [' + itemValues['commonTerm'] + '] [' + originalCommonTerm + ']' + termChanged);
+        updateButton.prop('disabled', !termChanged);
 
         // Determine whether to show and enable/disable the Erase button.
         let disableEraseButton = itemValues['commonTerm'].length === 0;
@@ -825,7 +825,8 @@
     {
         console.log('updateItem');
 
-        item.find('.update-item-button').fadeTo(500, 0.20);
+        // Disable the Update button so that the user can't click it again during the update.
+        item.find('.update-item-button').prop('disabled', true);
 
         jQuery.ajax(
             urlForTermEditor,
@@ -838,6 +839,7 @@
                 },
                 success: function (data) {
                     afterUpdateItem(item, data);
+
                 },
                 error: function (data) {
                     alert('AJAX Error on Update: ' + data.statusText);
