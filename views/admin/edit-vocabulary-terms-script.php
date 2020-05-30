@@ -35,7 +35,55 @@
         termChooserDialogClose();
     }
 
-    function afterAddNewItem(data, itemValues)
+    function addNewItem()
+    {
+        console.log('addNewItem');
+
+        // Create new item's header and drawer from a copy of the first item.
+        var firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
+        var newItem = firstItem.clone();
+
+        // Set the item's Id to 'item-0' so that we can find it later. Hide the header and show only the drawer.
+        activeItemId = 'item-0';
+        newItem.attr('id', activeItemId);
+        newItem.find('.vocabulary-term-header').hide();
+        newItem.find('.drawer-contents').show();
+
+        // Set the new item's values nothing.
+        newItem.find('.vocabulary-drawer-local-term').val('');
+        newItem.find('.vocabulary-term-count').text('0');
+        newItem.find('.vocabulary-drawer-common-term').text('');
+        newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', 0);
+
+        // Hide buttons that are not needed when adding an item.
+        newItem.find('.remove-item-button').hide();
+
+        // Prepend the new item to the beginning of the list.
+        firstItem.before(newItem);
+
+        // Initialize the buttons for the drawer. This call initializes the drawers for all items, even though
+        // only this one needs it, but it's simpler doing it this way than having logic for a single drawer.
+        initializeDrawerControls();
+
+        // Convert the Update button into the Save button.
+        var saveButton = newItem.find('.update-item-button');
+        saveButton.text('<?php echo __('Save'); ?>');
+        saveButton.off('click');
+        saveButton.click(function (event)
+        {
+            saveNewItem();
+        });
+
+        // Disallow editing of another item while adding a new item.
+        enableAllItems(false, '<?php echo __('Adding a new term'); ?>');
+
+        // Start watching for updates.
+        updateTimer = setTimeout(checkForItemUpdates, 100);
+
+        showDrawerMessage(newItem, '<?php echo __('Specify a Local and/or Common term'); ?>');
+    }
+
+    function afterNewItemSaved(data, itemValues)
     {
         console.log('afterAddNewItem');
 
@@ -49,6 +97,12 @@
             // Convert the Save button back into the Update button.
             var updateButton = newItem.find('.update-item-button');
             updateButton.text('<?php echo __('Update'); ?>');
+            updateButton.off('click');
+            updateButton.click(function (event)
+            {
+                let item = getItemForButton(this);
+                updateItem(item);
+            });
 
             // Show the header for the newly added item.
             newItem.find('.vocabulary-term-header').show();
@@ -97,7 +151,6 @@
         {
             alert(data['error']);
         }
-        item.find('.update-item-button').fadeTo(0, 1.0);
     }
 
     function afterUpdateItemOrder()
@@ -122,24 +175,25 @@
     {
         let item = jQuery('#' + activeItemId);
         let itemValues = getItemValues(item);
-        console.log('checking for updates changed: [' + itemValues['commonTerm'] + ']');
 
         let originalLocalTerm = originalItemValues ? originalItemValues['localTerm'] : '';
-        let originalCommonTerm = originalItemValues ? originalItemValues['localCommon'] : '';
+        let originalCommonTerm = originalItemValues ? originalItemValues['commonTerm'] : '';
 
         // Determine whether any values have changed and enable/disable the Update or Save button accordingly.
         let updateButton = item.find('.update-item-button');
-        let changed = false;
+        let localTermChanged = false;
         if (itemValues['localTerm'] !== originalLocalTerm)
-            changed = true;
+            localTermChanged = true;
         else if (itemValues['commonTerm'] !== originalCommonTerm)
-            changed = true;
+            localTermChanged = true;
 
-        updateButton.prop('disabled', !changed);
+        console.log('checking for updates changed: [' + itemValues['localTerm'] + '] ' + localTermChanged);
+        updateButton.prop('disabled', !localTermChanged);
 
         // Determine whether to show and enable/disable the Erase button.
+        let disableEraseButton = itemValues['commonTerm'].length === 0;
         let eraseButton = item.find('.erase-common-term-button');
-        eraseButton.prop('disabled', itemValues['commonTerm'].length === 0);
+        eraseButton.prop('disabled', disableEraseButton);
 
         updateTimer = setTimeout(checkForItemUpdates, 500);
     }
@@ -387,7 +441,7 @@
 
         addTermButton.click(function (event)
         {
-            openDrawerForNewItem();
+            addNewItem();
         });
 
         rebuildCommonTermsButton.on("click", function ()
@@ -459,54 +513,6 @@
             // Stop watching for updates.
             clearTimeout(updateTimer);
         }
-    }
-
-    function openDrawerForNewItem()
-    {
-        console.log('addNewItem');
-
-        // Create new item's header and drawer from a copy of the first item.
-        var firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
-        var newItem = firstItem.clone();
-
-        // Set the item's Id to 'item-0' so that we can find it later. Hide the header and show only the drawer.
-        activeItemId = 'item-0';
-        newItem.attr('id', activeItemId);
-        newItem.find('.vocabulary-term-header').hide();
-        newItem.find('.drawer-contents').show();
-
-        // Set the new item's values nothing.
-        newItem.find('.vocabulary-drawer-local-term').val('');
-        newItem.find('.vocabulary-term-count').text('0');
-        newItem.find('.vocabulary-drawer-common-term').text('');
-        newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', 0);
-
-        // Hide buttons that are not needed when adding an item.
-        newItem.find('.remove-item-button').hide();
-
-        // Convert the Update button into the Save button.
-        var saveButton = newItem.find('.update-item-button');
-        saveButton.text('<?php echo __('Save'); ?>');
-        saveButton.off('click');
-        saveButton.click(function (event)
-        {
-            saveNewItem();
-        });
-
-        // Prepend the new item to the beginning of the list.
-        firstItem.before(newItem);
-
-        // Initialize the buttons for the drawer. This call initializes the drawers for all items, even though
-        // only this one needs it, but it's simpler doing it this way than having logic for a single drawer.
-        initializeDrawerControls();
-
-        // Disallow editing of another item while adding a new item.
-        enableAllItems(false, '<?php echo __('Adding a new term'); ?>');
-
-        // Start watching for updates.
-        updateTimer = setTimeout(checkForItemUpdates, 100);
-
-        showDrawerMessage(newItem, '<?php echo __('Specify a Local and/or Common term'); ?>');
     }
 
     function rememberOriginalValues(item)
@@ -613,7 +619,7 @@
                     itemValues:JSON.stringify(itemValues)
                 },
                 success: function (data) {
-                    afterAddNewItem(data, itemValues);
+                    afterNewItemSaved(data, itemValues);
                 },
                 error: function (request, status, error) {
                     alert('AJAX ERROR on Save ' +  JSON.stringify(request));
