@@ -252,7 +252,7 @@
             delay: 250,
             minLength: 2,
             appendTo: '#vocabulary-modal-dialog',
-            search: function(event, ui)
+            search: function()
             {
                 let term = termChooserDialogInput.val();
                 let message = 'Searching for "'  + term + '" among ' + commonTermCount + ' ' + kindName + ' terms. Please wait...';
@@ -373,7 +373,7 @@
 
         // Add click event handlers.
 
-        cancelButtons.click(function (event)
+        cancelButtons.click(function(event)
         {
             let item = getItemForButton(this);
             cancelItemUpdate(item);
@@ -383,36 +383,36 @@
 
         });
 
-        chooseButtons.click(function (event)
+        chooseButtons.click(function(event)
         {
             let item = getItemForButton(this);
             termChooserDialogOpen(item);
         });
 
-        closeButton.click(function (event)
+        closeButton.click(function(event)
         {
             termChooserDialogClose();
         });
 
-        drawerButtons.click(function (event)
+        drawerButtons.click(function(event)
         {
             let item = getItemForButton(this);
             openDrawer(item, true);
         });
 
-        removeButtons.click(function (event)
+        removeButtons.click(function(event)
         {
             let item = getItemForButton(this);
             removeItemConfirmation(item);
         });
 
-        eraseButtons.click(function (event)
+        eraseButtons.click(function(event)
         {
             let item = getItemForButton(this);
             eraseCommonTerm(item);
         });
 
-        updateButtons.click(function (event)
+        updateButtons.click(function(event)
         {
             let item = getItemForButton(this);
             updateItemConfirmation(item);
@@ -451,20 +451,20 @@
     {
         console.log('initializePageControls');
 
-        voabularyChooser = jQuery('#vocabulary-chooser');
-        voabularyChooser.val(kind);
-        voabularyChooser.change(function()
+        let vocabularyChooser = jQuery('#vocabulary-chooser');
+        vocabularyChooser.val(kind);
+        vocabularyChooser.change(function()
         {
             let selection = jQuery(this).children("option:selected").val();
             window.location.href = urlForEditorPage + '?kind=' + selection;
         });
 
-        addTermButton.click(function (event)
+        addTermButton.click(function(event)
         {
             addNewItem();
         });
 
-        rebuildCommonTermsButton.on("click", function ()
+        rebuildCommonTermsButton.on("click", function(event)
         {
             if (!confirm('Are you sure you want to rebuild the Common Terms table?'))
                 return;
@@ -472,7 +472,7 @@
             startRebuild();
         });
 
-        rebuildLocalTermsButton.on("click", function ()
+        rebuildLocalTermsButton.on("click", function(event)
         {
             if (!confirm('Are you sure you want to rebuild the Local Terms table?'))
                 return;
@@ -496,8 +496,6 @@
         console.log('open drawer: ' + open);
 
         activeItemId = open ? item.attr('id') : 0;
-
-        let editIcons = jQuery('.vocabulary-term-edit-icon');
 
         let header = item.find('.vocabulary-term-header');
         let drawerContents = item.find('.drawer-contents');
@@ -617,7 +615,7 @@
                         progressTimer = setTimeout(reportProgress, 1000);
                     }
                 },
-                error: function (request, status, error)
+                error: function(request, status, error)
                 {
                     alert('AJAX ERROR on reportProgress' + ' >>> ' + JSON.stringify(request));
                 }
@@ -668,7 +666,7 @@
         {
             // The common term is from Nomenclature. Display it as a link to that term on the Nomenclature website.
             // If it's really long, truncate it so that it won't wrap. The full term can be seen in the drawer.
-            maxTermLen = 60;
+            const maxTermLen = 60;
             if (commonTerm.length > maxTermLen)
                 commonTerm = commonTerm.substr(0, maxTermLen) + '...';
 
@@ -677,7 +675,9 @@
             commonTermLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + commonTerm + "</a>";
         }
 
-        mappingIndicator = '';
+        let leftTerm;
+        let rightTerm
+        let mappingIndicator;
 
         if (localTerm && commonTerm && localTerm !== commonTerm)
         {
@@ -708,7 +708,7 @@
             // The term is in use. Display it as a link to search results of the items that use it.
             let href = '../../find?advanced[0][element_id]=' + kindName + '&advanced[0][type]=is+exactly&advanced[0][terms]=' + localTerm;
             let altText = '<?php echo __('View the items that use this term'); ?>';
-            usageCountLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + usageCount + "</a>";
+            let usageCountLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + usageCount + "</a>";
             item.find('.vocabulary-term-count').html(usageCountLink);
         }
     }
