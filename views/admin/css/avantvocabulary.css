@@ -186,6 +186,39 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
     display: none;
 }
 
+.vocabulary-tree {
+    margin-top: 16px;
+}
+
+.vocabulary-node {
+    font-family: "Courier New";
+    font-size: 16px;
+}
+
+.node-level-1 {
+    padding-left: 0;
+}
+
+.node-level-2 {
+    padding-left: 25px;
+}
+
+.node-level-3 {
+    padding-left: 50px;
+}
+
+.node-level-4 {
+    padding-left: 75px;
+}
+
+.node-level-5 {
+    padding-left: 100px;
+}
+
+.node-level-6 {
+    padding-left: 125px;
+}
+
 /*
 This modal dialog CSS was adapted from:
 https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-with-html-css-and-javascript--cms-33500

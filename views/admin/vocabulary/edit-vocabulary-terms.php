@@ -258,61 +258,35 @@ function explodeTree($array, $delimiter = '_', $baseval = false)
     return $returnArr;
 }
 
-function plotNode($level, $text)
+function plotNode($level, $name)
 {
-    $indent = str_repeat('&nbsp', $level * 10);
-    echo "<div>{$indent}{$text}</div>";
+    echo "<div class='vocabulary-node node-level-{$level}'>$name</div>";
 }
 
-function plotTree($arr, $indent=0, $mother_run=true){
-    if ($mother_run) {
-        // the beginning of plotTree. We're at rootlevel
-        plotNode($indent, "start");
-    }
-
-    foreach ($arr as $k=>$v){
-        // skip the baseval thingy. Not a real node.
-        if ($k == "__base_val") continue;
-        // determine the real value of this node.
-        //$show_val = (is_array($v) ? $v["__base_val"] : $v);
-        $show_val = (is_array($v) ? 'ARRAY' : $v);
-        // show the indents
-        //plotNode($indent, 'INDENT');
-//        if ($indent == 0) {
-//            // this is a root node. no parents
-//            plotNode($indent, "O ");
-//        } elseif (is_array($v)){
-//            // this is a normal node. parents and children
-//            plotNode($indent, "+ ");
-//        } else {
-//            // this is a leaf node. no children
-//            plotNode($indent, "- ");
-//        }
-//
-        // show the actual node
-        plotNode($indent, $k . " (" . $show_val . ")");
-        if (is_array($v)) {
-            // this is what makes it recursive, rerun for childs
-            plotTree($v, ($indent+1), false);
+function plotTree($tree, $indent=0)
+{
+    foreach ($tree as $name => $kids)
+    {
+        if ($name == '__base_val')
+            continue;
+        plotNode($indent + 1, $name);
+        if (is_array($kids))
+        {
+            plotTree($kids, $indent + 1);
         }
-    }
-
-    if ($mother_run) {
-        plotNode($indent, "end");
     }
 }
 $terms = array();
 foreach ($commonTermRecords as $commonTermRecord)
 {
     $commonTerm = $commonTermRecord->common_term;
-    $terms[$commonTerm] = $commonTerm;
-    //echo "<div>$commonTermRecord->common_term</div>";
+    $terms[$commonTerm] = $commonTermRecord->common_term_id;
 }
 
-$tree = explodeTree($terms, ',', false);
+$tree = explodeTree($terms, ',', true);
+echo "<div class='vocabulary-tree'>";
 plotTree($tree);
-
-
+echo "</div>";
 ?>
 
 
