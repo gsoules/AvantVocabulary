@@ -50,6 +50,22 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         return $result;
     }
 
+    public function getCommonTermRecordByCommonTermId($commonTermId)
+    {
+        try
+        {
+            $select = $this->getSelect();
+            $select->where("common_term_id = '$commonTermId'");
+            $result = $this->fetchObjects($select);
+        }
+        catch (Exception $e)
+        {
+            $result = null;
+        }
+
+        return $result;
+    }
+
     public function getCommonTermSuggestions($kind, $term)
     {
         $whereKind = AvantVocabulary::getWhereKind($kind);

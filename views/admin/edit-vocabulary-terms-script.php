@@ -476,7 +476,7 @@
 
         rebuildLocalTermsButton.on("click", function(event)
         {
-            if (!confirm('Are you sure you want to rebuild the Local Terms table?'))
+            if (!confirm('Are you sure you want to rebuild the Local Terms table?\n\nALL UNMAPPED TERMS WILL BE LOST.'))
                 return;
             tableName = 'local';
             startRebuild();
@@ -891,7 +891,7 @@
         {
             let affected = usageCount === 1 ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
             let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
-            let message = '<?php echo __('This will update the {1} using "{2}" as a {3}. These updates can take a while.'); ?>';
+            let message = '<?php echo __('This will update the {1} using "{2}" as the value for the {3} metadata. These updates can take a while.'); ?>';
             message = message.replace('{1}', affected);
             message = message.replace('{2}', term);
             message = message.replace('{3}', kindName);

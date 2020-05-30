@@ -165,16 +165,54 @@ class VocabularyTermsEditor
         $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
         if (!$localTermRecord)
             throw new Exception($this->reportError(__FUNCTION__, ' get local term record failed'));
-        $localTermRecord['local_term'] = $itemValues['localTerm'];
 
-        $commonTermId = $this->getIdForCommonTerm($itemValues['kind'], $itemValues['commonTerm']);
+        $newLocalTerm = $itemValues['localTerm'];
+        $newCommonTermId = $itemValues['commonTermId'];
+        $oldLocalTerm = $localTermRecord->local_term;
+        $oldCommonTermId = $localTermRecord->common_term_id;
 
-        $localTermRecord['common_term_id'] = $commonTermId;
+        // Determine the old term, before the update.
+        if ($oldLocalTerm)
+        {
+            $oldTerm = $oldLocalTerm;
+        }
+        else
+        {
+            $oldCommonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($oldCommonTermId);
+            if (!$oldCommonTermRecord)
+                throw new Exception($this->reportError(__FUNCTION__, ' get old common term record failed'));
+            $oldTerm = $oldCommonTermRecord->common_term;
+        }
+
+        // Determine the new term, after the update.
+        if ($newLocalTerm)
+        {
+            $newTerm = $newLocalTerm;
+        }
+        else
+        {
+            $newCommonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($newCommonTermId);
+            if (!$newCommonTermRecord)
+                throw new Exception($this->reportError(__FUNCTION__, ' get new common term record failed'));
+            $newTerm = $newCommonTermRecord->common_term;
+        }
+
+        $localTermRecord['local_term'] = $newLocalTerm;
+        $localTermRecord['common_term_id'] = $newCommonTermId;
 
         try
         {
             if (!$localTermRecord->save())
                 throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
+
+            // Update every Omeka item that uses this term.
+            $elementId = $itemValues['elementId'];
+            $elementTexts = $this->getElementTestsUsingTerm($elementId, $oldTerm);
+            foreach ($elementTexts as $elementText)
+            {
+                $this->updateItemToUseNewTerm($elementText, $newTerm);
+            }
+
             $success = true;
             $error = '';
         }
@@ -185,6 +223,40 @@ class VocabularyTermsEditor
         }
 
         return json_encode(array('success'=>$success, 'error'=>$error));
+    }
+
+    protected function getElementTestsUsingTerm($elementId, $oldTerm)
+    {
+        $results = array();
+
+        try
+        {
+            $table = "{$this->db->prefix}element_texts";
+
+            $sql = "
+                SELECT
+                  id, record_id
+                FROM
+                  $table
+                WHERE
+                  record_type = 'Item' AND element_id = $elementId AND text = '$oldTerm'
+            ";
+
+            $results = $this->db->query($sql)->fetchAll();
+        }
+        catch (Exception $e)
+        {
+            throw $e;
+        }
+
+        return $results;
+    }
+
+    protected function updateItemToUseNewTerm($elementText, $newTerm)
+    {
+        $elementTextId = $elementText['id'];
+        $itemId = $elementText['record_id'];
+        return;
     }
 
     protected function updateTermOrder()

@@ -184,7 +184,7 @@ class AvantVocabularyTableBuilder
         }
         catch (Exception $e)
         {
-            $itemFieldTexts = array();
+            $results = null;
         }
 
         return $results;
