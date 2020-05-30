@@ -1,5 +1,6 @@
 <script type="text/javascript">
     const addTermButton = jQuery('#add-vocabulary-term-button');
+    const busyIndicator = jQuery('#vocabulary-editor-busy');
     const commonTermCount = '<?php echo $commonTermCount; ?>';
     const defaultMessage = '<?php echo __('To edit a term, click its pencil icon.   Drag terms up or down to reorder them.'); ?>';
     const elementId = <?php echo $elementId; ?>;
@@ -12,6 +13,7 @@
     const termChooserDialogMessage = jQuery('#vocabulary-term-message');
     const urlForEditorPage = '<?php echo $url; ?>/terms';
     const urlForTermEditor = '<?php echo $url; ?>/update';
+
 
     let activeItemId = 0;
     let actionInProgress = false;
@@ -167,7 +169,7 @@
 
     function afterUpdateItemOrder()
     {
-        showEditorMessage('<?php echo __('Order updated'); ?>')
+        showEditorMessage('')
     }
 
     function cancelItemUpdate(item)
@@ -232,7 +234,7 @@
             editIcons.css('visibility', 'visible');
 
             // Erase any message from a previous action.
-            showEditorMessage(defaultMessage);
+            showEditorMessage('');
         }
         else
         {
@@ -431,7 +433,7 @@
             start: function(event, ui)
             {
                 jQuery(ui.item).data("startindex", ui.item.index());
-                showEditorMessage('<?php echo __('Moving an item'); ?>');
+                showEditorMessage('<?php echo __('Moving an item...'); ?>');
             },
             stop: function(event, ui)
             {
@@ -507,6 +509,9 @@
 
             // Set the header to its open appearance.
             header.addClass('selected');
+
+            // Get rid of any leftover message.
+            showDrawerErrorMessage(item, '');
 
             // Open the drawer.
             drawerContents.show();
@@ -627,6 +632,8 @@
     {
         console.log('saveNewItem');
 
+        showBusyIndicator('<?php echo __('Adding new term to the database...'); ?>');
+
         let newItem = jQuery('#item-0');
         let itemValues = getItemValues(newItem);
         if (!validateItemValues(newItem, itemValues))
@@ -643,6 +650,7 @@
                     itemValues:JSON.stringify(itemValues)
                 },
                 success: function (data) {
+                    showBusyIndicator('');
                     afterNewItemSaved(data, itemValues);
                 },
                 error: function (request, status, error) {
@@ -722,13 +730,28 @@
         });
     }
 
+    function showBusyIndicator(message)
+    {
+        if (message.length > 0)
+        {
+            busyIndicator.text(message);
+            busyIndicator.show();
+        }
+        else
+        {
+            busyIndicator.hide();
+        }
+    }
+
+
     function showDrawerErrorMessage(item, message)
     {
         item.find('.drawer-message').text(message);
     }
-
     function showEditorMessage(message)
     {
+        if (message.length === 0)
+            message = defaultMessage;
         jQuery('#vocabulary-term-editor-message-area').text(message);
     }
 
@@ -825,6 +848,8 @@
     {
         console.log('updateItem');
 
+        showBusyIndicator('<?php echo __('Updating items in database...'); ?>');
+
         // Disable the Update button so that the user can't click it again during the update.
         item.find('.update-item-button').prop('disabled', true);
 
@@ -838,8 +863,8 @@
                     itemValues: JSON.stringify(itemValues)
                 },
                 success: function (data) {
+                    showBusyIndicator('');
                     afterUpdateItem(item, data);
-
                 },
                 error: function (data) {
                     alert('AJAX Error on Update: ' + data.statusText);
@@ -852,6 +877,9 @@
     {
         let itemValues = getItemValues(item);
         let usageCount = item.find('.vocabulary-term-count').text();
+
+        if (!validateItemValues(item, itemValues))
+            return;
 
         console.log('updateItemConfirmation: ' + usageCount);
 
@@ -888,7 +916,7 @@
 
     function updateItemOrder()
     {
-        showEditorMessage('<?php echo __('Updating database...'); ?>')
+        showBusyIndicator('<?php echo __('Updating vocabulary term order in database...'); ?>');
 
         let order = jQuery('ul#vocabulary-terms-list > li')
             .map(function(i, e)
@@ -911,6 +939,7 @@
                 },
                 success: function (data)
                 {
+                    showBusyIndicator('');
                     afterUpdateItemOrder();
                 },
                 error: function (data)

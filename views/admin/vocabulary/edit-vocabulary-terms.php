@@ -136,6 +136,7 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
     <p></p>
 </div>
 
+<div id="vocabulary-editor-busy"></div>
 <div id="vocabulary-term-editor-message-area"></div>
 
 <div id="vocabulary-modal" class="modal">
