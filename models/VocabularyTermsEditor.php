@@ -207,7 +207,7 @@ class VocabularyTermsEditor
 
             // Update every Omeka item that uses this term.
             $elementId = $itemValues['elementId'];
-            $elementTexts = $this->getElementTestsUsingTerm($elementId, $oldTerm);
+            $elementTexts = $this->getElementTextUsingTerm($elementId, $oldTerm);
             foreach ($elementTexts as $elementText)
             {
                 $this->updateItemToUseNewTerm($elementText, $newTerm);
@@ -225,7 +225,7 @@ class VocabularyTermsEditor
         return json_encode(array('success'=>$success, 'error'=>$error));
     }
 
-    protected function getElementTestsUsingTerm($elementId, $oldTerm)
+    protected function getElementTextUsingTerm($elementId, $oldTerm)
     {
         $results = array();
 
@@ -255,7 +255,19 @@ class VocabularyTermsEditor
     protected function updateItemToUseNewTerm($elementText, $newTerm)
     {
         $elementTextId = $elementText['id'];
+
+        $select = $this->db->select()
+            ->from($this->db->ElementText)
+            ->where('id = ?', $elementTextId);
+
+        $elementTextRecord = $this->db->getTable('ElementText')->fetchObjects($select);
+
+        // Update the element text record.
+
+        // Reindex the item -- can we just reindex the element text without redoing the entire item?
         $itemId = $elementText['record_id'];
+        $item = ItemMetadata::getItemFromId($itemId);
+
         return;
     }
 
