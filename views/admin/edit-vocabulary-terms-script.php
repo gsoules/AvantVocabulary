@@ -13,15 +13,15 @@
     const urlForEditorPage = '<?php echo $url; ?>/terms';
     const urlForTermEditor = '<?php echo $url; ?>/update';
 
-    var activeItemId = 0;
-    var actionInProgress = false;
-    var originalItemValues;
-    var progressCount = 0;
-    var progressTimer;
-    var tableName = '';
-    var termChooserDialogTimer;
-    var termChooserResultsCount = 0;
-    var updateTimer;
+    let activeItemId = 0;
+    let actionInProgress = false;
+    let originalItemValues;
+    let progressCount = 0;
+    let progressTimer;
+    let tableName = '';
+    let termChooserDialogTimer;
+    let termChooserResultsCount = 0;
+    let updateTimer;
 
     jQuery(document).ready(function ()
     {
@@ -30,8 +30,8 @@
 
     function acceptTerm(term)
     {
-        var item = jQuery('#' + activeItemId);
-        var commonTerm = item.find('.vocabulary-drawer-common-term');
+        let item = jQuery('#' + activeItemId);
+        let commonTerm = item.find('.vocabulary-drawer-common-term');
         commonTerm.text(term);
         termChooserDialogClose();
     }
@@ -41,8 +41,8 @@
         console.log('addNewItem');
 
         // Create new item's header and drawer from a copy of the first item.
-        var firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
-        var newItem = firstItem.clone();
+        let firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
+        let newItem = firstItem.clone();
 
         // Set the item's Id to 'item-0' so that we can find it later. Hide the header and show only the drawer.
         activeItemId = 'item-0';
@@ -67,7 +67,7 @@
         initializeDrawerControls();
 
         // Convert the Update button into the Save button.
-        var saveButton = newItem.find('.update-item-button');
+        let saveButton = newItem.find('.update-item-button');
         saveButton.text('<?php echo __('Save'); ?>');
         saveButton.off('click');
         saveButton.click(function (event)
@@ -91,7 +91,7 @@
         // Stop watching for updates.
         clearTimeout(updateTimer);
 
-        var newItem = jQuery('#' + activeItemId);
+        let newItem = jQuery('#' + activeItemId);
 
         if (data['success'])
         {
@@ -99,7 +99,7 @@
             newItem.find('.drawer-contents').hide();
 
             // Convert the Save button back into the Update button.
-            var updateButton = newItem.find('.update-item-button');
+            let updateButton = newItem.find('.update-item-button');
             updateButton.text('<?php echo __('Update'); ?>');
             updateButton.off('click');
             updateButton.click(function (event)
@@ -245,7 +245,7 @@
             appendTo: '#vocabulary-modal-dialog',
             search: function(event, ui)
             {
-                var term = termChooserDialogInput.val();
+                let term = termChooserDialogInput.val();
                 let message = 'Searching for "'  + term + '" among ' + commonTermCount + ' ' + kindName + ' terms. Please wait...';
                 termChooserDialogSetMessage(message);
             },
@@ -254,12 +254,12 @@
                 termChooserResultsCount = ui.content.length;
                 if (termChooserResultsCount === 0)
                 {
-                    var term = termChooserDialogInput.val();
+                    let term = termChooserDialogInput.val();
                     termChooserDialogSetMessage('No ' + kindName + ' contains "' + term + '"');
                 }
                 else
                 {
-                    var resultMessage = '1 result';
+                    let resultMessage = '1 result';
                     if (termChooserResultsCount > 1)
                         resultMessage = termChooserResultsCount.toLocaleString() + ' results';
 
@@ -301,7 +301,7 @@
         usageCount = parseInt(usageCount, 10);
 
         // Get the Id minus the "item-" prefix.
-        var id = item.attr('id');
+        let id = item.attr('id');
         id = id.substr(5);
 
         return {
@@ -335,13 +335,13 @@
 
         // Set up the button and sortable handlers for all the items.
 
-        var drawerButtons = jQuery('.vocabulary-term-edit-icon');
-        var updateButtons = jQuery('.update-item-button');
-        var cancelButtons = jQuery('.cancel-update-button');
-        var removeButtons = jQuery('.remove-item-button');
-        var chooseButtons = jQuery('.choose-common-term-button');
-        var eraseButtons = jQuery('.erase-common-term-button');
-        var closeButton = jQuery('.close-chooser-dialog-button');
+        let drawerButtons = jQuery('.vocabulary-term-edit-icon');
+        let updateButtons = jQuery('.update-item-button');
+        let cancelButtons = jQuery('.cancel-update-button');
+        let removeButtons = jQuery('.remove-item-button');
+        let chooseButtons = jQuery('.choose-common-term-button');
+        let eraseButtons = jQuery('.erase-common-term-button');
+        let closeButton = jQuery('.close-chooser-dialog-button');
 
         // Remove all the click event handlers.
         drawerButtons.off('click');
@@ -436,7 +436,7 @@
         voabularyChooser.val(kind);
         voabularyChooser.change(function()
         {
-            var selection = jQuery(this).children("option:selected").val();
+            let selection = jQuery(this).children("option:selected").val();
             window.location.href = urlForEditorPage + '?kind=' + selection;
         });
 
@@ -464,8 +464,8 @@
 
     function moveItem(item)
     {
-        var startIndex = item.data("startindex") + 1;
-        var newIndex = item.index() + 1;
+        let startIndex = item.data("startindex") + 1;
+        let newIndex = item.index() + 1;
         if (newIndex !== startIndex)
         {
             updateItemOrder();
@@ -604,8 +604,8 @@
     {
         console.log('saveNewItem');
 
-        var newItem = jQuery('#item-0');
-        var itemValues = getItemValues(newItem);
+        let newItem = jQuery('#item-0');
+        let itemValues = getItemValues(newItem);
         if (!validateItemValues(newItem, itemValues))
             return;
 
@@ -631,7 +631,7 @@
 
     function setItemTitle(item)
     {
-        var itemValues = getItemValues(item);
+        let itemValues = getItemValues(item);
 
         let localTerm = itemValues.localTerm;
         let commonTerm = itemValues.commonTerm;
@@ -692,7 +692,7 @@
     {
         jQuery('.vocabulary-term-item').each(function(i)
         {
-            var item = jQuery(this);
+            let item = jQuery(this);
             setItemTitle(item)
         });
     }
@@ -800,7 +800,7 @@
     {
         console.log('updateItem');
 
-        var itemValues = getItemValues(item);
+        let itemValues = getItemValues(item);
 
         let usageCount = item.find('.vocabulary-term-count').text();
         if (usageCount !== '0')
@@ -838,7 +838,7 @@
     {
         showEditorMessage('<?php echo __('Updating database...'); ?>')
 
-        var order = jQuery('ul#vocabulary-terms-list > li')
+        let order = jQuery('ul#vocabulary-terms-list > li')
             .map(function(i, e)
             {
                 // Get the Id minus the "item-" prefix.

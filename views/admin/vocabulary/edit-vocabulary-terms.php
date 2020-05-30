@@ -118,6 +118,7 @@ if (!$isValidKind)
 }
 
 $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
+$commonTermCount = number_format($commonTermCount, 0, '.', ',');
 
 $localTermItemRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItemsInOrder($kind);
 $localTermCount = count($localTermItemRecords);
