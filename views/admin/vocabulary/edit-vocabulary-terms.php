@@ -10,46 +10,48 @@ function emitPageJavaScript($kind, $kindName, $elementId, $commonTermCount)
 if (AvantCommon::isAjaxRequest())
 {
     // This page just got called to handle an asynchronous Ajax request. Execute the request synchronously,
-    // waiting here until it completes (when handleAjaxRequest returns). When ths page returns,  the request's
-    // success function will execute in the browser (or its error function if something went wrong).
+    // waiting here until it completes (when handleAjaxRequest returns). When ths page returns, the request's
+    // 'success' handler function will execute or its 'error' handler function if something went wrong).
 
+    // Determine if this request is for common term suggestions.
     $term = isset($_GET['term']) ? $_GET['term'] : '';
     $kind = isset($_GET['kind']) ? $_GET['kind'] : 0;
     if ($term)
     {
-        // The user choose a Common Vocabulary term from the autocomplete selector.
-        $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermSuggestions($kind, $term);
+        // The user typed a term into the chooser dialog. Get the suggestions for that term.
+        $suggestedCommonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getCommonTermSuggestions($kind, $term);
         $result = array();
-        foreach ($commonTermRecords as $commonTermRecord)
+        foreach ($suggestedCommonTermRecords as $commonTermRecord)
         {
             $commonTerm = $commonTermRecord->common_term;
             $result[] = $commonTerm;
         }
+        // Return the results and then leave so that the code to display the Vocabulary Editor will not execute.
         echo json_encode($result);
         return;
     }
 
+    // Determine if this request is to rebuild a vocabulary table.
     $action = isset($_POST['action']) ? $_POST['action'] : '';
     $tableName = isset($_POST['table_name']) ? $_POST['table_name'] : '';
-
-    $avantVocabularyTableBuilder = new AvantVocabularyTableBuilder();
-    $avantVocabularyTableBuilderProgress = new AvantVocabularyTableBuilderProgress();
-
     if ($action == 'progress')
     {
+        $avantVocabularyTableBuilderProgress = new AvantVocabularyTableBuilderProgress();
         $avantVocabularyTableBuilderProgress->handleAjaxRequest($tableName);
     }
     else
     {
         // Give the request plenty of time to execute since it can take several minutes.
         ini_set('max_execution_time', 10 * 60);
+
+        $avantVocabularyTableBuilder = new AvantVocabularyTableBuilder();
         $avantVocabularyTableBuilder->handleAjaxRequest($tableName);
     }
-
-    // Leave so that the code to display the page won't get executed.
+    // Leave so that the code to display the Vocabulary Editor will not execute.
     return;
 }
 
+// If execution reaches here, the page is not responding to an Ajax request. Display the Vocabulary Editor.
 $pageTitle = __('Vocabulary Editor');
 echo head(array('title' => $pageTitle, 'bodyclass' => 'vocabulary-terms-page'));
 
@@ -123,6 +125,8 @@ $commonTermCount = number_format($commonTermCount, 0, '.', ',');
 $localTermItemRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItemsInOrder($kind);
 $localTermCount = count($localTermItemRecords);
 $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
+
+$commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getAllCommonTermRecordsForKind($kind);
 
 // The HTML that follows displays the choose vocabulary.
 ?>
@@ -214,6 +218,103 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
     }
     ?>
 </ul>
+
+<?php
+
+// The tree functions were adapted from https://kvz.io/convert-anything-to-tree-structures-in-php.html
+function explodeTree($array, $delimiter = '_', $baseval = false)
+{
+    if(!is_array($array)) return false;
+    $splitRE   = '/' . preg_quote($delimiter, '/') . '/';
+    $returnArr = array();
+    foreach ($array as $key => $val) {
+        // Get parent parts and the current leaf
+        $parts	= preg_split($splitRE, $key, -1, PREG_SPLIT_NO_EMPTY);
+        $leafPart = array_pop($parts);
+
+        // Build parent structure
+        // Might be slow for really deep and large structures
+        $parentArr = &$returnArr;
+        foreach ($parts as $part) {
+            if (!isset($parentArr[$part])) {
+                $parentArr[$part] = array();
+            } elseif (!is_array($parentArr[$part])) {
+                if ($baseval) {
+                    $parentArr[$part] = array('__base_val' => $parentArr[$part]);
+                } else {
+                    $parentArr[$part] = array();
+                }
+            }
+            $parentArr = &$parentArr[$part];
+        }
+
+        // Add the final part to the structure
+        if (empty($parentArr[$leafPart])) {
+            $parentArr[$leafPart] = $val;
+        } elseif ($baseval && is_array($parentArr[$leafPart])) {
+            $parentArr[$leafPart]['__base_val'] = $val;
+        }
+    }
+    return $returnArr;
+}
+
+function plotNode($level, $text)
+{
+    $indent = str_repeat('&nbsp', $level * 10);
+    echo "<div>{$indent}{$text}</div>";
+}
+
+function plotTree($arr, $indent=0, $mother_run=true){
+    if ($mother_run) {
+        // the beginning of plotTree. We're at rootlevel
+        plotNode($indent, "start");
+    }
+
+    foreach ($arr as $k=>$v){
+        // skip the baseval thingy. Not a real node.
+        if ($k == "__base_val") continue;
+        // determine the real value of this node.
+        //$show_val = (is_array($v) ? $v["__base_val"] : $v);
+        $show_val = (is_array($v) ? 'ARRAY' : $v);
+        // show the indents
+        //plotNode($indent, 'INDENT');
+//        if ($indent == 0) {
+//            // this is a root node. no parents
+//            plotNode($indent, "O ");
+//        } elseif (is_array($v)){
+//            // this is a normal node. parents and children
+//            plotNode($indent, "+ ");
+//        } else {
+//            // this is a leaf node. no children
+//            plotNode($indent, "- ");
+//        }
+//
+        // show the actual node
+        plotNode($indent, $k . " (" . $show_val . ")");
+        if (is_array($v)) {
+            // this is what makes it recursive, rerun for childs
+            plotTree($v, ($indent+1), false);
+        }
+    }
+
+    if ($mother_run) {
+        plotNode($indent, "end");
+    }
+}
+$terms = array();
+foreach ($commonTermRecords as $commonTermRecord)
+{
+    $commonTerm = $commonTermRecord->common_term;
+    $terms[$commonTerm] = $commonTerm;
+    //echo "<div>$commonTermRecord->common_term</div>";
+}
+
+$tree = explodeTree($terms, ',', false);
+plotTree($tree);
+
+
+?>
+
 
 <?php emitPageJavaScript($kind, $kindName, $elementId, $commonTermCount); ?>
 <?php echo foot(); ?>
