@@ -269,11 +269,13 @@ class VocabularyTermsEditor
         if (!$elementTextRecord->save())
             throw new Exception($this->reportError(__FUNCTION__, ' save element text record failed'));
 
-        // Reindex the item -- can we just reindex the element text without redoing the entire item?
+        // Reindex the item by saving it as though the user had just edited the item and clicked the Save button.
         $itemId = $elementText['record_id'];
         $item = ItemMetadata::getItemFromId($itemId);
-
-        return;
+        $args['record'] = $item;
+        $args['insert'] = false;
+        $avantElasticsearch = new AvantElasticsearch();
+        $avantElasticsearch->afterSaveItem($args);
     }
 
     protected function updateTermOrder()
