@@ -176,6 +176,8 @@ class AvantVocabularyTableBuilder
                   $table
                 WHERE
                   record_type = 'Item' AND element_id = $elementId
+                ORDER BY
+                  text  
             ";
 
             $results = $this->db->query($sql)->fetchAll();
