@@ -957,6 +957,12 @@
             showDrawerErrorMessage(item, '<?php echo __('The Local Term and Common Term cannot both be blank'); ?>');
             return false;
         }
+
+        if (itemValues.localTerm.trim() === itemValues.commonTerm)
+        {
+            showDrawerErrorMessage(item, '<?php echo __('The Local Term and Common Term cannot be the same'); ?>');
+            return false;
+        }
         return true;
     }
 </script>
