@@ -7,6 +7,11 @@ class AvantVocabulary_VocabularyController extends Omeka_Controller_AbstractActi
         return;
     }
 
+    public function showVocabularyTreeAction()
+    {
+        return;
+    }
+
     public function updateVocabularyTermAction()
     {
         return;

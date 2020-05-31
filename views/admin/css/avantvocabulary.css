@@ -1,11 +1,29 @@
 :root {
     --selected-term: #d8cfb6;
-    --term-link: #9d5b41;
+    --term-link: #306fb5;
+    --term-link-hover: #479dff;
     --vocabulary-editor-message: #376b2e;
+}
+
+.vocabulary-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
 }
 
 #add-vocabulary-term-button {
     float: right;
+}
+
+.vocabulary-view-toggle {
+    padding-top: 8px;
+    font-size: 110%;
+}
+
+.vocabulary-build-buttons {
+    border-top: solid 1px #ccc;
+    padding-top: 16px;
+    margin-top: 24px;
 }
 
 #vocabulary-terms-list-header {
@@ -13,8 +31,8 @@
     font-size: 120%;
     color: #777;
     margin-top: 12px;
-    padding-bottom: 4px;
-    padding-left: 10px;
+    padding: 4px 0 4px 10px;
+    border-top: solid 1px #777;
     border-bottom: solid 1px #777;
 }
 
@@ -46,11 +64,6 @@
 
 #vocabulary-terms-list .drawer-contents label {
     padding-bottom: 2px;
-}
-
-.vocabulary-controls {
-    display: flex;
-    justify-content: space-between;
 }
 
 .vocabulary-drawer-common-term {
@@ -100,6 +113,11 @@
 .vocabulary-term-right a,
 .vocabulary-term-right a:visited {
     color: var(--term-link)
+}
+
+.vocabulary-term-left a:hover,
+.vocabulary-term-right a:hover {
+    color: var(--term-link-hover)
 }
 
 .vocabulary-term-left {

@@ -80,7 +80,7 @@ echo "<div class='vocabulary-controls'>";
 echo "<div>";
 echo "<label class='vocabulary-chooser-label'>Vocabulary: </label>";
 echo "<SELECT required id='vocabulary-chooser' class='vocabulary-chooser'>";
-echo "<OPTION value='0' selected disabled hidden>Select a vocabulary</OPTION>";
+echo "<OPTION value='0' selected disabled hidden>Select a vocabulary to edit</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_LABEL . "</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "''>" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL . "</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL . "</OPTION>";
@@ -92,6 +92,8 @@ if ($isValidKind)
     echo "<div>";
     echo "<button id='add-vocabulary-term-button' type='button' class='action-button'>" . __('Add a new %s term', $kindName) . "</button>";
     echo "</div>";
+    echo "<a class='vocabulary-view-toggle' href='../vocabulary/tree?kind=$kind'>" . __('View the %s term hierarchy', $kindName) . "</a>";
+
 }
 echo "</div>";
 
@@ -100,17 +102,19 @@ if (!$isValidKind)
     if ($kind == 0 && current_user()->role == 'super')
     {
         // When the kind is 0, show the Build button to a super user.
-        echo "<hr/>";
+        echo "<div class='vocabulary-build-buttons'>";
         if (isset($_COOKIE['XDEBUG_SESSION']))
         {
             echo '<div class="health-report-error">XDEBUG_SESSION in progress. Build status will not be reported in real-time.<br/>';
             echo '<a href="http://localhost/omeka-2.6/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
             echo '</div>';
         }
-        echo "<button id='rebuild-common-terms-button'>Rebuild Common Terms</button>";
+        echo "<div>" . __('These are super user options. Do not use them unless you understand what they are for.') . "</div><br/>";
+        echo "<button id='rebuild-common-terms-button'>Rebuild Common Terms table</button>";
         echo "&nbsp;&nbsp;";
-        echo "<button id='rebuild-local-terms-button'>Rebuild Local Terms</button>";
+        echo "<button id='rebuild-local-terms-button'>Rebuild Local Terms table</button>";
         echo "<div id='status-area'></div>";
+        echo "</div>";
     }
 
     // Don't show anything else until the user chooses a vocabulary.
@@ -125,8 +129,6 @@ $commonTermCount = number_format($commonTermCount, 0, '.', ',');
 $localTermItemRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItemsInOrder($kind);
 $localTermCount = count($localTermItemRecords);
 $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
-
-$commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getAllCommonTermRecordsForKind($kind);
 
 // The HTML that follows displays the choose vocabulary.
 ?>
@@ -218,77 +220,6 @@ $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getAllCommonTe
     }
     ?>
 </ul>
-
-<?php
-
-// The tree functions were adapted from https://kvz.io/convert-anything-to-tree-structures-in-php.html
-function explodeTree($array, $delimiter = '_', $baseval = false)
-{
-    if(!is_array($array)) return false;
-    $splitRE   = '/' . preg_quote($delimiter, '/') . '/';
-    $returnArr = array();
-    foreach ($array as $key => $val) {
-        // Get parent parts and the current leaf
-        $parts	= preg_split($splitRE, $key, -1, PREG_SPLIT_NO_EMPTY);
-        $leafPart = array_pop($parts);
-
-        // Build parent structure
-        // Might be slow for really deep and large structures
-        $parentArr = &$returnArr;
-        foreach ($parts as $part) {
-            if (!isset($parentArr[$part])) {
-                $parentArr[$part] = array();
-            } elseif (!is_array($parentArr[$part])) {
-                if ($baseval) {
-                    $parentArr[$part] = array('__base_val' => $parentArr[$part]);
-                } else {
-                    $parentArr[$part] = array();
-                }
-            }
-            $parentArr = &$parentArr[$part];
-        }
-
-        // Add the final part to the structure
-        if (empty($parentArr[$leafPart])) {
-            $parentArr[$leafPart] = $val;
-        } elseif ($baseval && is_array($parentArr[$leafPart])) {
-            $parentArr[$leafPart]['__base_val'] = $val;
-        }
-    }
-    return $returnArr;
-}
-
-function plotNode($level, $name)
-{
-    echo "<div class='vocabulary-node node-level-{$level}'>$name</div>";
-}
-
-function plotTree($tree, $indent=0)
-{
-    foreach ($tree as $name => $kids)
-    {
-        if ($name == '__base_val')
-            continue;
-        plotNode($indent + 1, $name);
-        if (is_array($kids))
-        {
-            plotTree($kids, $indent + 1);
-        }
-    }
-}
-$terms = array();
-foreach ($commonTermRecords as $commonTermRecord)
-{
-    $commonTerm = $commonTermRecord->common_term;
-    $terms[$commonTerm] = $commonTermRecord->common_term_id;
-}
-
-$tree = explodeTree($terms, ',', true);
-echo "<div class='vocabulary-tree'>";
-plotTree($tree);
-echo "</div>";
-?>
-
 
 <?php emitPageJavaScript($kind, $kindName, $elementId, $commonTermCount); ?>
 <?php echo foot(); ?>

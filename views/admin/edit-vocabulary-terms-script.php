@@ -2,7 +2,7 @@
     const addTermButton = jQuery('#add-vocabulary-term-button');
     const busyIndicator = jQuery('#vocabulary-editor-busy');
     const commonTermCount = '<?php echo $commonTermCount; ?>';
-    const defaultMessage = '<?php echo __('To edit a term, click its pencil icon.   Drag terms up or down to reorder them.'); ?>';
+    const defaultMessage = '<?php echo __('To edit a term, click its pencil icon.&nbsp;&nbsp;Drag terms up or down to reorder them.&nbsp;&nbsp;<a href="https://digitalarchive.avantlogic.net/docs/" target="_blank">Learn more</a>'); ?>';
     const elementId = <?php echo $elementId; ?>;
     const kind = <?php echo $kind; ?>;
     const kindName = '<?php echo $kindName; ?>';
@@ -343,6 +343,7 @@
 
     function initialize()
     {
+        showEditorMessage('Get started');
         setItemTitles();
         enableSuggestions();
         initializePageControls();
@@ -433,11 +434,12 @@
             start: function(event, ui)
             {
                 jQuery(ui.item).data("startindex", ui.item.index());
-                showEditorMessage('<?php echo __('Moving an item...'); ?>');
+                showEditorMessage('<?php echo __('Moving a term...'); ?>');
             },
             stop: function(event, ui)
             {
                 moveItem(ui.item);
+                showEditorMessage('');
             }
         });
 
@@ -752,7 +754,7 @@
     {
         if (message.length === 0)
             message = defaultMessage;
-        jQuery('#vocabulary-term-editor-message-area').text(message);
+        jQuery('#vocabulary-term-editor-message-area').html(message);
     }
 
     function showRebuildStatus(status)
