@@ -28,16 +28,12 @@
 
 #vocabulary-terms-list-header {
     font-weight: bold;
-    font-size: 120%;
+    font-size: 110%;
     color: #777;
     margin-top: 12px;
     padding: 4px 0 4px 10px;
-    border-top: solid 1px #777;
-    border-bottom: solid 1px #777;
-}
-
-#vocabulary-terms-list-header .vocabulary-term-count {
-    padding-right: 90px
+    border-top: solid 2px #acacac;
+    border-bottom: solid 1px #acacac;
 }
 
 #vocabulary-terms-list {
@@ -129,6 +125,18 @@
     display: inline-block;
     float: right;
     padding-right: 60px;
+}
+
+.vocabulary-term-count a {
+    width:32px;
+    display: inline-block;
+    text-align: right;
+    padding: 0 8px;
+}
+
+.vocabulary-term-edit {
+    float: right;
+    padding-right: 8px;
 }
 
 .vocabulary-term-edit-icon::after {

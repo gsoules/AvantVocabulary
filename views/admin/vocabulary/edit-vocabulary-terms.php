@@ -162,6 +162,7 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
     <div class="vocabulary-term-left">Local Term</div>
     <div class="vocabulary-term-mapping">Mapping</div>
     <div class="vocabulary-term-right">Common Term</div>
+    <div class="vocabulary-term-edit">Edit</div>
     <div class="vocabulary-term-count">Uses</div>
 </div>
 
