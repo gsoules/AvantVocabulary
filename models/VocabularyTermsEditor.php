@@ -58,7 +58,7 @@ class VocabularyTermsEditor
 
     protected function getElementTextsThatUseTerm($elementId, $oldTerm)
     {
-        $results = array();
+        $oldTerm = addslashes($oldTerm);
 
         try
         {
@@ -99,6 +99,8 @@ class VocabularyTermsEditor
 
     public function getLocalTermUsageCount($elementId, $localTerm)
     {
+        $localTerm = addslashes($localTerm);
+
         try
         {
             $table = "{$this->db->prefix}element_texts";

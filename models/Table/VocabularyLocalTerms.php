@@ -4,6 +4,8 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
 {
     public function getCommonTermForLocalTerm($kind, $localTerm)
     {
+        $localTerm = addslashes($localTerm);
+
         // This method returns a record from the local terms table joined with one from the common terms table
         // so that the result includes the text of the common term for the local term's common term Id.
         $db = get_db();
@@ -23,6 +25,8 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
 
     public function getLocalTermRecord($kind, $localTerm)
     {
+        $localTerm = addslashes($localTerm);
+
         $select = $this->getSelect();
         $select->where("kind = $kind AND LOWER(`local_term`) = LOWER('$localTerm')");
         $result = $this->fetchObject($select);
