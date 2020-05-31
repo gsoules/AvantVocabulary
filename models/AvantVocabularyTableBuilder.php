@@ -14,8 +14,9 @@ class AvantVocabularyTableBuilder
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyCommonTermsTable();
 
-        // Read the vocabulary CSV file
-        $handle = fopen("C:\Users\gsoules\Dropbox\Python\Python-Common-Facets\data\output-nomenclature-sortEn_2020-05-18.csv", 'r');
+        $nomenclatureFileName = VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'nomenclature.csv';
+
+        $handle = fopen($nomenclatureFileName, 'r');
         $rowNumber = 0;
         while (($row = fgetcsv($handle, 0, ',')) !== FALSE)
         {

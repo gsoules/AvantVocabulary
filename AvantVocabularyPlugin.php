@@ -1,5 +1,7 @@
 <?php
 
+define('VOCABULARY_PLUGIN_DIR', dirname(__FILE__));
+
 class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
 {
     protected $_hooks = array(
