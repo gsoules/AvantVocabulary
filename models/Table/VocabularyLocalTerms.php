@@ -4,13 +4,21 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
 {
     public function getCommonTermForLocalTerm($kind, $localTerm)
     {
+        // This method returns a record from the local terms table joined with one from the common terms table
+        // so that the result includes the text of the common term for the local term's common term Id.
+        $db = get_db();
         $select = $this->getSelect();
-        $select->where("kind = $kind AND local_term = '$localTerm'");
+        $select->where("vocabulary_local_terms.kind = $kind AND vocabulary_local_terms.local_term = '$localTerm'");
+
+        // Join with the Common Terms table where the common_term_id is the same.
+        $select->joinLeft(
+            array('vocabulary_common_terms' => "{$db->prefix}vocabulary_common_terms"),
+            'vocabulary_local_terms.common_term_id = vocabulary_common_terms.common_term_id',
+            array('common_term')
+        );
+
         $result = $this->fetchObject($select);
-        if ($result)
-            return $result->common_term;
-        else
-            return '';
+        return $result->common_term;
     }
 
     public function getLocalTermRecord($kind, $localTerm)
