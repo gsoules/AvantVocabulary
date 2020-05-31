@@ -56,6 +56,33 @@ class VocabularyTermsEditor
         return json_encode(array('success'=>true, 'id'=>$localTermRecord->id));
     }
 
+    protected function getElementTextsThatUseTerm($elementId, $oldTerm)
+    {
+        $results = array();
+
+        try
+        {
+            $table = "{$this->db->prefix}element_texts";
+
+            $sql = "
+                SELECT
+                  id, record_id
+                FROM
+                  $table
+                WHERE
+                  record_type = 'Item' AND element_id = $elementId AND text = '$oldTerm'
+            ";
+
+            $results = $this->db->query($sql)->fetchAll();
+        }
+        catch (Exception $e)
+        {
+            throw $e;
+        }
+
+        return $results;
+    }
+
     protected function getIdForCommonTerm($kind, $commonTerm)
     {
         $commonTermId = 0;
@@ -155,6 +182,32 @@ class VocabularyTermsEditor
         return "Exception in method $methodName(): $error";
     }
 
+    protected function updateAndReindexItemUsingNewTerm($elementText, $newTerm)
+    {
+        $elementTextId = $elementText['id'];
+
+        $select = $this->db->select()
+            ->from($this->db->ElementText)
+            ->where("id = $elementTextId");
+
+        $elementTextRecord = $this->db->getTable('ElementText')->fetchObject($select);
+        if (!$elementTextRecord)
+            throw new Exception($this->reportError(__FUNCTION__, ' get element text record failed'));
+
+        // Update the element text record with the new term.
+        $elementTextRecord['text'] = $newTerm;
+        if (!$elementTextRecord->save())
+            throw new Exception($this->reportError(__FUNCTION__, ' save element text record failed'));
+
+        // Reindex the item by saving it as though the user had just edited the item and clicked the Save button.
+        $itemId = $elementText['record_id'];
+        $item = ItemMetadata::getItemFromId($itemId);
+        $args['record'] = $item;
+        $args['insert'] = false;
+        $avantElasticsearch = new AvantElasticsearch();
+        $avantElasticsearch->afterSaveItem($args);
+    }
+
     protected function updateTerm()
     {
         // This method is called via AJAX. Get the posted data.
@@ -207,10 +260,10 @@ class VocabularyTermsEditor
 
             // Update every Omeka item that uses this term.
             $elementId = $itemValues['elementId'];
-            $elementTexts = $this->getElementTextUsingTerm($elementId, $oldTerm);
+            $elementTexts = $this->getElementTextsThatUseTerm($elementId, $oldTerm);
             foreach ($elementTexts as $elementText)
             {
-                $this->updateItemToUseNewTerm($elementText, $newTerm);
+                $this->updateAndReindexItemUsingNewTerm($elementText, $newTerm);
             }
 
             $success = true;
@@ -223,59 +276,6 @@ class VocabularyTermsEditor
         }
 
         return json_encode(array('success'=>$success, 'error'=>$error));
-    }
-
-    protected function getElementTextUsingTerm($elementId, $oldTerm)
-    {
-        $results = array();
-
-        try
-        {
-            $table = "{$this->db->prefix}element_texts";
-
-            $sql = "
-                SELECT
-                  id, record_id
-                FROM
-                  $table
-                WHERE
-                  record_type = 'Item' AND element_id = $elementId AND text = '$oldTerm'
-            ";
-
-            $results = $this->db->query($sql)->fetchAll();
-        }
-        catch (Exception $e)
-        {
-            throw $e;
-        }
-
-        return $results;
-    }
-
-    protected function updateItemToUseNewTerm($elementText, $newTerm)
-    {
-        $elementTextId = $elementText['id'];
-
-        $select = $this->db->select()
-            ->from($this->db->ElementText)
-            ->where("id = $elementTextId");
-
-        $elementTextRecord = $this->db->getTable('ElementText')->fetchObject($select);
-        if (!$elementTextRecord)
-            throw new Exception($this->reportError(__FUNCTION__, ' get element text record failed'));
-
-        // Update the element text record with the new term.
-        $elementTextRecord['text'] = $newTerm;
-        if (!$elementTextRecord->save())
-            throw new Exception($this->reportError(__FUNCTION__, ' save element text record failed'));
-
-        // Reindex the item by saving it as though the user had just edited the item and clicked the Save button.
-        $itemId = $elementText['record_id'];
-        $item = ItemMetadata::getItemFromId($itemId);
-        $args['record'] = $item;
-        $args['insert'] = false;
-        $avantElasticsearch = new AvantElasticsearch();
-        $avantElasticsearch->afterSaveItem($args);
     }
 
     protected function updateTermOrder()
