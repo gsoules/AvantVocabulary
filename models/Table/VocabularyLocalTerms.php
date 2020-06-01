@@ -71,4 +71,12 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         $results = $this->fetchObjects($select);
         return $results;
     }
+
+    public function getRowCount()
+    {
+        $select = $this->getSelect();
+        $select->columns('COUNT(*) AS count');
+        $result = $this->fetchObject($select);
+        return $result->count;
+    }
 }
