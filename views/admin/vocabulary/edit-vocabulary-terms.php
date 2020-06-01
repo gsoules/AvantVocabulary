@@ -180,6 +180,8 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
         $localTerm = $localTermRecord->local_term;
         $commonTermId = $localTermRecord->common_term_id;
         $commonTerm = $localTermRecord->common_term;
+        if ($localTerm == $commonTerm)
+            $localTerm = '';
 
         $term = $localTerm ? $localTerm : $commonTerm;
         $usageCount = $vocabularyTermsEditor->getLocalTermUsageCount($elementId, $term);
