@@ -105,7 +105,7 @@ if (!$isValidKind)
         echo "<div class='vocabulary-build-buttons'>";
         if (isset($_COOKIE['XDEBUG_SESSION']))
         {
-            echo '<div class="health-report-error">XDEBUG_SESSION in progress. Build status will not be reported in real-time.<br/>';
+            echo '<div class="health-report-error">';
             echo '<a href="http://localhost/omeka-2.6/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
             echo '</div>';
         }
