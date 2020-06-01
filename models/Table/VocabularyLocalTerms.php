@@ -42,9 +42,23 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         return $results;
     }
 
+    public function getLocalTerms($kind)
+    {
+        $terms = array();
+        $mappings = $this->getLocalToCommonTermMap($kind);
+
+        // Return just the local terms.
+        foreach ($mappings as $mapping)
+        {
+            $terms[] = $mapping['local_term'];
+        }
+        return $terms;
+    }
+
     public function getLocalToCommonTermMap($kind)
     {
-        // This method joins the local and common terms table to return just the local and common term from each.        // so that the results include the text of the common term for the local term's common term Id.
+        // This method joins the local and common terms table to return just the local and common term from each.
+        // so that the results include the text of the common term for the local term's common term Id.
         $db = get_db();
         $select = $this->getSelect();
         $select->reset(Zend_Db_Select::COLUMNS);

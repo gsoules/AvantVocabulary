@@ -18,4 +18,18 @@ class AvantVocabulary
 
     // Common terms with an Id higher than this do not come from Nomenclature 4.0.
     const VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID = 20000;
+
+    public static function getVocabularyKinds()
+    {
+        // Return a table that associates element Ids with their vocabulary kind. The element Id
+        // cannot be used as the kind since it could vary on different Digital Archive installations.
+        $kindTable = [];
+        $typeElementId = ItemMetadata::getElementIdForElementName('Type');
+        $subjectElementId = ItemMetadata::getElementIdForElementName('Subject');
+        $placeElementId = ItemMetadata::getElementIdForElementName('Place');
+        $kindTable[$typeElementId] = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE;
+        $kindTable[$subjectElementId] = AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT;
+        $kindTable[$placeElementId] = AvantVocabulary::VOCABULARY_TERM_KIND_PLACE;
+        return $kindTable;
+    }
 }
