@@ -41,79 +41,15 @@ class AvantVocabularyTableBuilder
 
     protected function createLocalTerms($elementName, $kind)
     {
+        // Get the set of unique text values for this element.
         $elementId = ItemMetadata::getElementIdForElementName($elementName);
+        $localTerms = $this->fetchUniqueLocalTerms($elementId);
 
-        // Get the set of unique text values for this elements.
-        $results = $this->fetchUniqueLocalTerms($elementId);
-
-        foreach ($results as $index => $result)
+        foreach ($localTerms as $index => $term)
         {
-            // Check if this local term is already in the local terms table.
-            $localTerm = $result['text'];
-            $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $localTerm);
-
-            $commonTermRecord = null;
-
-            if ($localTermRecord)
-            {
-                // The local term is already in the local terms table. Assess its common term mapping.
-                $mappingChanged = false;
-
-                if ($localTermRecord->mapping == AvantVocabulary::VOCABULARY_MAPPING_NONE)
-                {
-                    // The local term is not mapped to a common term. See if a common term now exists.
-                    $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
-                    if ($commonTermRecord)
-                    {
-                        // There is now a common term that is identical to this local term.
-                        $localTermRecord->common_term = $localTerm;
-                        $localTermRecord->common_term_id = $commonTermRecord->common_term_id;
-                        $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL;
-                        $mappingChanged = true;
-                    }
-                }
-                else
-                {
-                    // The local term is mapped to a common term. Verify that the common term still exists.
-                    $commonTermRecord = $this->getCommonTermRecord($kind, $localTermRecord->common_term);
-                    if (!$commonTermRecord)
-                    {
-                        // There is no longer a common term that matches this local term's common term.
-                        // See if the there is now a common term that matches the local term.
-                        $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
-                        if ($commonTermRecord)
-                        {
-                            // There is now a common term that is identical to this local term.
-                            $localTermRecord->common_term = $localTerm;
-                            $localTermRecord->common_term_id = $commonTermRecord->common_term_id;
-                            $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL;
-                            $mappingChanged = true;
-                        }
-                        else
-                        {
-                            // Neither the local or common term match a common term. Set this local term to unmapped.
-                            $localTermRecord->common_term = null;
-                            $localTermRecord->common_term_id = 0;
-                            $localTermRecord->mapping = AvantVocabulary::VOCABULARY_MAPPING_NONE;
-                            $mappingChanged = true;
-                        }
-                    }
-                }
-
-                if ($mappingChanged)
-                {
-                    // The local term's mapping has changed. Update its record in the local terms table.
-                    // This can happen when the common terms table gets updated and some of the terms have changed such
-                    // that they now match a local term, or no longer match a local term's mapping to a common term.
-                    $this->databaseUpdateRecordForLocalTerm($localTermRecord);
-                }
-                continue;
-            }
-            else
-            {
-                // The local term does not exist in the local terms table. Add it.
-                $this->databaseInsertRecordForLocalTerm($kind, $localTerm, $index + 1);
-            }
+            // Add the term to the local terms table.
+            $localTerm = $term['text'];
+            $this->databaseInsertRecordForLocalTerm($kind, $localTerm, $index + 1);
         }
     }
 
