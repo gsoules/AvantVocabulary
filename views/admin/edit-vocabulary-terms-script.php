@@ -891,6 +891,14 @@
         }
         else
         {
+            // Form the update confirmation message. There are multiple cases:
+            // 1 : Mapped local term changed -> update all items to use changed term
+            // 2 : Mapped local term erased -> update all items to use common term
+            // 3 : Mapped local term added -> update all items to use local term
+            // 4 : Unmapped common term change -> update all items to use changed term
+            // 5 : Mapped common term changed -> reindex all items to use changed term
+            // 6 : Mapped common term removed -> reindex all items to remove common term
+
             let affected = usageCount === '1' ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
             let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
             let message = '<?php echo __('This will update {1} using "{2}" as the {3}.'); ?>';
