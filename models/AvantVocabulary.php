@@ -26,14 +26,6 @@ class AvantVocabulary
         $this->db = get_db();
     }
 
-    public function getCommonTermForLocalTerm($kind, $localTerm)
-    {
-        $commonTerm = $this->db->getTable('VocabularyLocalTerms')->getCommonTermForLocalTerm($kind, $localTerm);
-        if (!$commonTerm)
-            $commonTerm = 'UNMAPPED';
-        return $commonTerm;
-    }
-
     public static function getWhereKind($kind)
     {
         // This method treats kind as a bit mask. If either the Type or the Subject bit is set, it creates
