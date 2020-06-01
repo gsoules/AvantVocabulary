@@ -18,32 +18,4 @@ class AvantVocabulary
 
     // Common terms with an Id higher than this do not come from Nomenclature 4.0.
     const VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID = 20000;
-
-    protected $db;
-
-    public function __construct()
-    {
-        $this->db = get_db();
-    }
-
-    public static function getWhereKind($kind)
-    {
-        // This method treats kind as a bit mask. If either the Type or the Subject bit is set, it creates
-        // part of a SQL Where clause that tests kind against the single bit passed in (0001 or 0010) and
-        // and also tests against both bits being set (0011). This somewhat cumbersome approach addresses
-        // the fact that the Common Facets vocabulary contains thousands of terms that apply to both
-        // Type and Subject elements. Rather than duplicate them in the common terms table so that each has
-        // its own kind, they only appear once, but their kind is VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT.
-
-        if ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE || $kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT)
-        {
-            $typeOrSubject = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT;
-            $whereKind = "(kind = $kind OR kind = $typeOrSubject)";
-        }
-        else
-        {
-            $whereKind = "kind = $kind";
-        }
-        return $whereKind;
-    }
 }

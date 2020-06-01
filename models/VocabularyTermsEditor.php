@@ -264,25 +264,16 @@ class VocabularyTermsEditor
             $newTerm = $newCommonTermRecord->common_term;
         }
 
+        // Update the local term record with the new data.
         $localTermRecord['local_term'] = $newLocalTerm;
         $localTermRecord['common_term_id'] = $newCommonTermId;
-
         if (!$localTermRecord->save())
             throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
 
-        try
-        {
-            $this->updateAndReindexItems($itemValues, $oldTerm, $newTerm);
-            $success = true;
-            $error = '';
-        }
-        catch (Exception $e)
-        {
-            $success = false;
-            $error = $e->getMessage();
-        }
+        // Update the Elasticsearch indexes with the new data.
+        $this->updateAndReindexItems($itemValues, $oldTerm, $newTerm);
 
-        return json_encode(array('success'=>$success, 'error'=>$error));
+        return json_encode(array('success'=>true));
     }
 
     protected function updateTermOrder()

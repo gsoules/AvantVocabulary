@@ -4,7 +4,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 {
     public function commonTermCount($kind)
     {
-        $whereKind = AvantVocabulary::getWhereKind($kind);
+        $whereKind = $this->getWhereKind($kind);
 
         $select = $this->getSelect();
         $select->reset(Zend_Db_Select::COLUMNS);
@@ -16,7 +16,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 
     public function getAllCommonTermRecordsForKind($kind)
     {
-        $whereKind = AvantVocabulary::getWhereKind($kind);
+        $whereKind = $this->getWhereKind($kind);
 
         try
         {
@@ -36,7 +36,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
     {
         $commonTerm = addslashes($commonTerm);
 
-        $whereKind = AvantVocabulary::getWhereKind($kind);
+        $whereKind = $this->getWhereKind($kind);
 
         try
         {
@@ -70,7 +70,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 
     public function getCommonTermSuggestions($kind, $term)
     {
-        $whereKind = AvantVocabulary::getWhereKind($kind);
+        $whereKind = $this->getWhereKind($kind);
         $query = $this->getQueryForLike($term);
 
         try
@@ -115,5 +115,26 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         $select->columns('COUNT(*) AS count');
         $result = $this->fetchObject($select);
         return $result->count;
+    }
+
+    protected function getWhereKind($kind)
+    {
+        // This method treats kind as a bit mask. If either the Type or the Subject bit is set, it creates
+        // part of a SQL Where clause that tests kind against the single bit passed in (0001 or 0010) and
+        // and also tests against both bits being set (0011). This somewhat cumbersome approach addresses
+        // the fact that the Common Facets vocabulary contains thousands of terms that apply to both
+        // Type and Subject elements. Rather than duplicate them in the common terms table so that each has
+        // its own kind, they only appear once, but their kind is VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT.
+
+        if ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE || $kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT)
+        {
+            $typeOrSubject = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT;
+            $whereKind = "(kind = $kind OR kind = $typeOrSubject)";
+        }
+        else
+        {
+            $whereKind = "kind = $kind";
+        }
+        return $whereKind;
     }
 }
