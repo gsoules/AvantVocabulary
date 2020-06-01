@@ -20,11 +20,12 @@ class AvantVocabularyTableBuilderProgress
         if ($tableName == 'common')
         {
             $count = $this->db->getTable('VocabularyCommonTerms')->getRowCount();
-            return "$count records written";
+            return "$count records written to common terms table";
         }
         else
         {
-            return 'Working on ' . $tableName;
+            $count = $this->db->getTable('VocabularyLocalTerms')->getRowCount();
+            return "$count records written to local terms table";
         }
     }
 }
