@@ -891,9 +891,9 @@
         }
         else
         {
-            let affected = usageCount === 1 ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
+            let affected = usageCount === '1' ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
             let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
-            let message = '<?php echo __('This will update the {1} using "{2}" as the value for the {3} metadata. These updates can take a while.'); ?>';
+            let message = '<?php echo __('This will update {1} using "{2}" as the {3}.'); ?>';
             message = message.replace('{1}', affected);
             message = message.replace('{2}', term);
             message = message.replace('{3}', kindName);
