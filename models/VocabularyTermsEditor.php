@@ -184,30 +184,42 @@ class VocabularyTermsEditor
         return "Exception in method $methodName(): $error";
     }
 
-    protected function updateAndReindexItemUsingNewTerm($elementText, $newTerm)
+    protected function updateAndReindexItems($itemValues, $oldTerm, $newTerm)
     {
-        $elementTextId = $elementText['id'];
+        // Update every Omeka item that uses this term.
+        $elementId = $itemValues['elementId'];
+        $elementTexts = $this->getElementTextsThatUseTerm($elementId, $oldTerm);
 
-        $select = $this->db->select()
-            ->from($this->db->ElementText)
-            ->where("id = $elementTextId");
+        // The index builder gets created here so that the expense it incurs to create vocabulary tables in only
+        // incurred once for all of the items that will get reindexed.
+        $avantElasticsearchIndexBuilder = new AvantElasticsearchIndexBuilder();
+        $sharedIndexIsEnabled = (bool)get_option(ElasticsearchConfig::OPTION_ES_SHARE) == true;
+        $localIndexIsEnabled = (bool)get_option(ElasticsearchConfig::OPTION_ES_LOCAL) == true;
 
-        $elementTextRecord = $this->db->getTable('ElementText')->fetchObject($select);
-        if (!$elementTextRecord)
-            throw new Exception($this->reportError(__FUNCTION__, ' get element text record failed'));
+        foreach ($elementTexts as $elementText)
+        {
+            $elementTextId = $elementText['id'];
 
-        // Update the element text record with the new term.
-        $elementTextRecord['text'] = $newTerm;
-        if (!$elementTextRecord->save())
-            throw new Exception($this->reportError(__FUNCTION__, ' save element text record failed'));
+            // Get the ElementText record for the term.
+            $select = $this->db->select()
+                ->from($this->db->ElementText)
+                ->where("id = $elementTextId");
+            $elementTextRecord = $this->db->getTable('ElementText')->fetchObject($select);
+            if (!$elementTextRecord)
+                throw new Exception($this->reportError(__FUNCTION__, ' get element text record failed'));
 
-        // Reindex the item by saving it as though the user had just edited the item and clicked the Save button.
-        $itemId = $elementText['record_id'];
-        $item = ItemMetadata::getItemFromId($itemId);
-        $args['record'] = $item;
-        $args['insert'] = false;
-        $avantElasticsearch = new AvantElasticsearch();
-        $avantElasticsearch->afterSaveItem($args);
+            // Update the ElementText record with the new term.
+            $elementTextRecord['text'] = $newTerm;
+            if (!$elementTextRecord->save())
+                throw new Exception($this->reportError(__FUNCTION__, ' save element text record failed'));
+
+            // Reindex the item by saving it as though the user had just edited the item and clicked the Save button.
+            $itemId = $elementText['record_id'];
+            $item = ItemMetadata::getItemFromId($itemId);
+
+            $avantElasticsearch = new AvantElasticsearch();
+            $avantElasticsearch->updateIndexForItem($item, $avantElasticsearchIndexBuilder, $sharedIndexIsEnabled, $localIndexIsEnabled);
+        }
     }
 
     protected function updateTerm()
@@ -255,19 +267,12 @@ class VocabularyTermsEditor
         $localTermRecord['local_term'] = $newLocalTerm;
         $localTermRecord['common_term_id'] = $newCommonTermId;
 
+        if (!$localTermRecord->save())
+            throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
+
         try
         {
-            if (!$localTermRecord->save())
-                throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
-
-            // Update every Omeka item that uses this term.
-            $elementId = $itemValues['elementId'];
-            $elementTexts = $this->getElementTextsThatUseTerm($elementId, $oldTerm);
-            foreach ($elementTexts as $elementText)
-            {
-                $this->updateAndReindexItemUsingNewTerm($elementText, $newTerm);
-            }
-
+            $this->updateAndReindexItems($itemValues, $oldTerm, $newTerm);
             $success = true;
             $error = '';
         }
