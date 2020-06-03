@@ -477,7 +477,7 @@
 
         rebuildCommonTermsButton.on("click", function(event)
         {
-            if (!confirm('Are you sure you want to rebuild the Common Terms table?'))
+            if (!confirm('Are you sure you want to build the Common Terms table?'))
                 return;
             tableName = 'common';
             startRebuild();
@@ -485,7 +485,7 @@
 
         rebuildLocalTermsButton.on("click", function(event)
         {
-            if (!confirm('Are you sure you want to rebuild the Local Terms table?\n\nALL MAPPED TERMS WILL BE LOST.'))
+            if (!confirm('Are you sure you want to build the Local Terms table?\n\nALL MAPPED TERMS WILL BE LOST.'))
                 return;
             tableName = 'local';
             startRebuild();
