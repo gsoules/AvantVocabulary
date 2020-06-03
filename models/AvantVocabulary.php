@@ -35,6 +35,6 @@ class AvantVocabulary
 
     public static function progressFileName()
     {
-        return VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'progress.txt';
+        return VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'progress-' . current_user()->id . '.txt';
     }
 }
