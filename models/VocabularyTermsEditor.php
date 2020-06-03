@@ -231,7 +231,7 @@ class VocabularyTermsEditor
             // Write the progress to a file that can be read by the Ajax progress reporting logic.
             $completed += 1;
             $progress = round($completed / $total * 100, 0);
-            file_put_contents($progressFileName, "$progress% done");
+            file_put_contents($progressFileName, "$progress%");
         }
 
         // Delete the progress file.

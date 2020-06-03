@@ -195,9 +195,9 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
     border-radius: 15px;
     text-align: center;
     position: fixed;
+    top: 50%;
     left: 50%;
-    top: 60%;
-}
+    transform: translate(-50%, -50%);}
 
 #vocabulary-term-input {
     width:100%;

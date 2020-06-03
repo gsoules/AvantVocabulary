@@ -20,21 +20,25 @@ class AvantVocabularyTableBuilderProgress
         if ($tableName == 'common')
         {
             $count = $this->db->getTable('VocabularyCommonTerms')->getRowCount();
-            return "$count " . __('records written to common terms table');
+            $count = number_format($count, 0, '.', ',');
+            $message = $count . __(' records written to the common terms table');
         }
         else if ($tableName == 'local')
         {
             $count = $this->db->getTable('VocabularyLocalTerms')->getRowCount();
-            return "$count " . __('ecords written to local terms table');
+            $count = number_format($count, 0, '.', ',');
+            $message = $count . __(' records written to the local terms table');
         }
         else
         {
             $progressFileName = AvantVocabulary::progressFileName();
+            $message = 'Updating items in database: ';
             if (file_exists($progressFileName))
-                $message = file_get_contents($progressFileName);
+                $progress = file_get_contents($progressFileName);
             else
-                $message = '';
-            return $message;
+                $progress = '0%';
+            $message .= $progress;
         }
+        return $message;
     }
 }

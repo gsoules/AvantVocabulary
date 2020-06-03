@@ -8,7 +8,6 @@
     const kindName = '<?php echo $kindName; ?>';
     const rebuildCommonTermsButton = jQuery("#rebuild-common-terms-button").button();
     const rebuildLocalTermsButton = jQuery("#rebuild-local-terms-button").button();
-    const statusArea = jQuery("#status-area");
     const termChooserDialogInput = jQuery("#vocabulary-term-input");
     const termChooserDialogMessage = jQuery('#vocabulary-term-message');
     const urlForEditorPage = '<?php echo $url; ?>/terms';
@@ -609,8 +608,6 @@
         if (!actionInProgress)
             return;
 
-        console.log('reportProgress ' + ++progressCount);
-
         // Call back to the server (this page) to get the status of the action.
         // The server returns the complete status since the action began, not just what has since transpired.
         jQuery.ajax(
@@ -624,11 +621,10 @@
                 },
                 success: function (data)
                 {
-                    showRebuildStatus(data);
-                    showBusyIndicator(data);
                     if (actionInProgress)
                     {
-                        progressTimer = setTimeout(reportProgress, 100);
+                        showBusyIndicator(data);
+                        progressTimer = setTimeout(reportProgress, 200);
                     }
                 },
                 error: function(request, status, error)
@@ -770,21 +766,16 @@
         jQuery('#vocabulary-term-editor-message-area').html(message);
     }
 
-    function showRebuildStatus(status)
-    {
-        statusArea.html(statusArea.html() + status + '<BR/>');
-    }
-
     function startRebuild()
     {
         actionInProgress = true;
-        statusArea.html('');
+        showBusyIndicator('');
 
         enableRebuildButtons(false);
 
         // Initiate periodic calls back to the server to get the status of the action.
         progressCount = 0;
-        progressTimer = setTimeout(reportProgress, 1000);
+        progressTimer = setTimeout(reportProgress, 200);
 
         // Call back to the server (this page) to initiate the action which can take several minutes.
         // While waiting, the reportProgress function is called on a timer to get the status of the action.
@@ -800,11 +791,13 @@
                 success: function (data)
                 {
                     actionInProgress = false;
+                    clearTimeout(progressTimer);
                     let status = 'Build completed';
                     if (!data['success'])
                         status = 'Build failed: ' + data['error'];
-                    console.log(status);
-                    showRebuildStatus(status);
+                    console.log(">>> >>> " + status);
+                    showBusyIndicator(status);
+                    window.setTimeout(function () { busyIndicator.fadeOut(); }, 2000)
                     enableRebuildButtons(true);
                 },
                 error: function (request, status, error)
@@ -866,7 +859,7 @@
         showBusyIndicator('<?php echo __('Updating items in database...'); ?>');
 
         actionInProgress = true;
-        progressTimer = setTimeout(reportProgress, 1000);
+        progressTimer = setTimeout(reportProgress, 200);
 
         // Disable the Update button so that the user can't click it again during the update.
         item.find('.update-item-button').prop('disabled', true);
@@ -918,18 +911,20 @@
 
             let affected = usageCount === '1' ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
             let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
-            let message = '<?php echo __('This will update {1} using "{2}" as the {3}.'); ?>';
-            message = message.replace('{1}', affected);
-            message = message.replace('{2}', term);
-            message = message.replace('{3}', kindName);
+            let message1 = '<?php echo __('{1} will be updated'); ?>';
+            let message2 = '<?php echo __('The {2} will be set to "{3}"'); ?>';
+            message1 = message1.replace('{1}', affected);
+            message2 = message2.replace('{3}', term);
+            message2 = message2.replace('{2}', kindName);
 
-            jQuery("#dialog-confirm-update-term p").text(message);
+            jQuery("#dialog-confirm-update-term h2").text(message1);
+            jQuery("#dialog-confirm-update-term p").text(message2);
 
             jQuery("#dialog-confirm-update-term").dialog({
                 autoOpen: true,
                 resizable: false,
                 height: "auto",
-                width: 400,
+                width: 600,
                 modal: true,
                 buttons: {
                     '<?php echo __('Update'); ?>': function() {
