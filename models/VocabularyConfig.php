@@ -1,6 +1,6 @@
 <?php
 
-define('CONFIG_LABEL_DELETE_VOCABULARY_TABLE', __('Delete Vocabulary Table'));
+define('CONFIG_LABEL_DELETE_VOCABULARY_TABLE', __('Delete Tables'));
 
 class VocabularyConfig extends ConfigOptions
 {
