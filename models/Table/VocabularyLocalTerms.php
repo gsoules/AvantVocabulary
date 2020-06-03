@@ -71,7 +71,7 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
             'vocabulary_local_terms.common_term_id = vocabulary_common_terms.common_term_id',
             array('common_term')
         );
-        
+
         $select->order('order');
 
         // Use fetchAll instead of fetchObjects to get only the values of the local_term and common_term columns.
