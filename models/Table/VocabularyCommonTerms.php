@@ -58,7 +58,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         {
             $select = $this->getSelect();
             $select->where("common_term_id = '$commonTermId'");
-            $result = $this->fetchObjects($select);
+            $result = $this->fetchObject($select);
         }
         catch (Exception $e)
         {

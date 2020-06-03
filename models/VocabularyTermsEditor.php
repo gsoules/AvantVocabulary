@@ -53,7 +53,7 @@ class VocabularyTermsEditor
                 throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
         }
 
-        return json_encode(array('success'=>true, 'id'=>$localTermRecord->id));
+        return json_encode(array('success'=>true, 'id'=>$localTermRecord->id, 'commonTermId'=>$commonTermId));
     }
 
     protected function getElementTextsThatUseTerm($elementId, $oldTerm)
@@ -186,9 +186,15 @@ class VocabularyTermsEditor
 
     protected function updateAndReindexItems($itemValues, $oldTerm, $newTerm)
     {
+        if ($newTerm == $oldTerm)
+            return;
+
         // Update every Omeka item that uses this term.
         $elementId = $itemValues['elementId'];
         $elementTexts = $this->getElementTextsThatUseTerm($elementId, $oldTerm);
+
+        if (empty($elementTexts))
+            return;
 
         // The index builder gets created here so that the expense it incurs to create vocabulary tables in only
         // incurred once for all of the items that will get reindexed.
@@ -233,10 +239,12 @@ class VocabularyTermsEditor
         if (!$localTermRecord)
             throw new Exception($this->reportError(__FUNCTION__, ' get local term record failed'));
 
-        $newLocalTerm = $itemValues['localTerm'];
-        $newCommonTermId = $itemValues['commonTermId'];
         $oldLocalTerm = $localTermRecord->local_term;
+        $newLocalTerm = $itemValues['localTerm'];
+
         $oldCommonTermId = $localTermRecord->common_term_id;
+        $newCommonTerm = $itemValues['commonTerm'];
+        $newCommonTermId = $newCommonTerm ? $this->getIdForCommonTerm($itemValues['kind'], $newCommonTerm) : 0;
 
         // Determine the old term, before the update.
         if ($oldLocalTerm)
@@ -258,10 +266,7 @@ class VocabularyTermsEditor
         }
         else
         {
-            $newCommonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($newCommonTermId);
-            if (!$newCommonTermRecord)
-                throw new Exception($this->reportError(__FUNCTION__, ' get new common term record failed'));
-            $newTerm = $newCommonTermRecord->common_term;
+            $newTerm = $newCommonTerm;
         }
 
         // Update the local term record with the new data.
@@ -273,7 +278,7 @@ class VocabularyTermsEditor
         // Update the Elasticsearch indexes with the new data.
         $this->updateAndReindexItems($itemValues, $oldTerm, $newTerm);
 
-        return json_encode(array('success'=>true));
+        return json_encode(array('success'=>true, 'commonTermId'=>$newCommonTermId));
     }
 
     protected function updateTermOrder()

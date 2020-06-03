@@ -99,6 +99,10 @@
             newItem.attr('id', 'item-' + data['id']);
             newItem.find('.drawer-contents').hide();
 
+            // Set the common term Id for the new item.
+            let commonTermId = data['commonTermId'];
+            newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', commonTermId);
+
             // Convert the Save button back into the Update button.
             let updateButton = newItem.find('.update-item-button');
             updateButton.text('<?php echo __('Update'); ?>');
@@ -155,6 +159,10 @@
 
         if (data['success'])
         {
+            // Set the common term Id for the update item.
+            let commonTermId = data['commonTermId'];
+            item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', commonTermId);
+
             // Update the item's title with the updated local and/or common terms.
             setItemTitle(item);
 
@@ -478,7 +486,7 @@
 
         rebuildLocalTermsButton.on("click", function(event)
         {
-            if (!confirm('Are you sure you want to rebuild the Local Terms table?\n\nALL UNMAPPED TERMS WILL BE LOST.'))
+            if (!confirm('Are you sure you want to rebuild the Local Terms table?\n\nALL MAPPED TERMS WILL BE LOST.'))
                 return;
             tableName = 'local';
             startRebuild();
