@@ -186,10 +186,7 @@ class VocabularyTermsEditor
 
     protected function updateAndReindexItems($itemValues, $oldTerm, $newTerm)
     {
-        if ($newTerm == $oldTerm)
-            return;
-
-        // Update every Omeka item that uses this term.
+        // Update every Omeka item that uses the old.
         $elementId = $itemValues['elementId'];
         $elementTexts = $this->getElementTextsThatUseTerm($elementId, $oldTerm);
 
