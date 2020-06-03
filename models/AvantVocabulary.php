@@ -32,4 +32,9 @@ class AvantVocabulary
         $kindTable[$placeElementId] = AvantVocabulary::VOCABULARY_TERM_KIND_PLACE;
         return $kindTable;
     }
+
+    public static function progressFileName()
+    {
+        return VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'progress.txt';
+    }
 }

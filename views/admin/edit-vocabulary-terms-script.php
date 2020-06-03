@@ -625,9 +625,10 @@
                 success: function (data)
                 {
                     showRebuildStatus(data);
+                    showBusyIndicator(data);
                     if (actionInProgress)
                     {
-                        progressTimer = setTimeout(reportProgress, 1000);
+                        progressTimer = setTimeout(reportProgress, 100);
                     }
                 },
                 error: function(request, status, error)
@@ -864,6 +865,9 @@
 
         showBusyIndicator('<?php echo __('Updating items in database...'); ?>');
 
+        actionInProgress = true;
+        progressTimer = setTimeout(reportProgress, 1000);
+
         // Disable the Update button so that the user can't click it again during the update.
         item.find('.update-item-button').prop('disabled', true);
 
@@ -877,6 +881,7 @@
                     itemValues: JSON.stringify(itemValues)
                 },
                 success: function (data) {
+                    actionInProgress = false;
                     showBusyIndicator('');
                     afterUpdateItem(item, data);
                 },

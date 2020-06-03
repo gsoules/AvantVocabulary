@@ -115,6 +115,7 @@ if (!$isValidKind)
         echo "<button id='rebuild-local-terms-button'>Rebuild Local Terms table</button>";
         echo "<div id='status-area'></div>";
         echo "</div>";
+        echo "<div id='vocabulary-editor-busy'></div>";
     }
 
     // Don't show anything else until the user chooses a vocabulary.

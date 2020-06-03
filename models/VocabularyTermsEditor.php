@@ -199,6 +199,11 @@ class VocabularyTermsEditor
         $sharedIndexIsEnabled = (bool)get_option(ElasticsearchConfig::OPTION_ES_SHARE) == true;
         $localIndexIsEnabled = (bool)get_option(ElasticsearchConfig::OPTION_ES_LOCAL) == true;
 
+        // Keep track of how many items have been updated.
+        $total = count($elementTexts);
+        $completed = 0;
+        $progressFileName = AvantVocabulary::progressFileName();
+
         foreach ($elementTexts as $elementText)
         {
             $elementTextId = $elementText['id'];
@@ -222,7 +227,15 @@ class VocabularyTermsEditor
 
             $avantElasticsearch = new AvantElasticsearch();
             $avantElasticsearch->updateIndexForItem($item, $avantElasticsearchIndexBuilder, $sharedIndexIsEnabled, $localIndexIsEnabled);
+
+            // Write the progress to a file that can be read by the Ajax progress reporting logic.
+            $completed += 1;
+            $progress = round($completed / $total * 100, 0);
+            file_put_contents($progressFileName, "$progress% done");
         }
+
+        // Delete the progress file.
+        unlink($progressFileName);
     }
 
     protected function updateTerm()
