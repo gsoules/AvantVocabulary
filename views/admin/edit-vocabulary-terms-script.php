@@ -725,6 +725,10 @@
         {
             // The term is in use. Display it as a link to search results of the items that use it.
             let href = '../../find?advanced[0][element_id]=' + kindName + '&advanced[0][type]=is+exactly&advanced[0][terms]=' + localTerm;
+
+            // Make the link search only the local site since that's what the usages are for.
+            href += '&site=0'
+
             let altText = '<?php echo __('View the items that use this term'); ?>';
             let usageCountLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + usageCount + "</a>";
             item.find('.vocabulary-term-count').html(usageCountLink);
