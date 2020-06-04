@@ -704,7 +704,7 @@
         {
             leftTerm = localTerm;
             rightTerm = '';
-            mappingIndicator = '<?php echo __('is not mapped'); ?>';
+            mappingIndicator = '<span><?php echo __('not mapped'); ?></span>';
         }
         else
         {
