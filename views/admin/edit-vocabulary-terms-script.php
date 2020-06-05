@@ -693,24 +693,28 @@
         let leftTerm;
         let rightTerm
         let mappingIndicator;
+        let usageTerm;
 
         if (localTerm && commonTerm && localTerm !== commonTerm)
         {
             leftTerm = localTerm;
             rightTerm = commonTermLink;
             mappingIndicator = '<?php echo __('replaces &nbsp; &rarr;'); ?>';
+            usageTerm = localTerm;
         }
         else if (localTerm && !commonTerm)
         {
             leftTerm = localTerm;
             rightTerm = '';
             mappingIndicator = '<span><?php echo __('not mapped'); ?></span>';
+            usageTerm = localTerm;
         }
         else
         {
             leftTerm = commonTermLink;
             rightTerm = '';
             mappingIndicator = '<?php echo __('is a common term'); ?>';
+            usageTerm = commonTerm;
         }
 
         item.find('.vocabulary-term-left').html(leftTerm);
@@ -721,7 +725,7 @@
         if (usageCount !== 0)
         {
             // The term is in use. Display it as a link to search results of the items that use it.
-            let href = '../../find?advanced[0][element_id]=' + kindName + '&advanced[0][type]=is+exactly&advanced[0][terms]=' + localTerm;
+            let href = '../../find?advanced[0][element_id]=' + kindName + '&advanced[0][type]=is+exactly&advanced[0][terms]=' + usageTerm;
 
             // Make the link search only the local site since that's what the usages are for.
             href += '&site=0'
