@@ -681,9 +681,9 @@
         {
             // The common term is from Nomenclature. Display it as a link to that term on the Nomenclature website.
             // If it's really long, truncate it so that it won't wrap. The full term can be seen in the drawer.
-            const maxTermLen = 60;
-            if (commonTerm.length > maxTermLen)
-                commonTerm = commonTerm.substr(0, maxTermLen) + '...';
+            // const maxTermLen = 60;
+            // if (commonTerm.length > maxTermLen)
+            //     commonTerm = commonTerm.substr(0, maxTermLen) + '...';
 
             let href = 'https://www.nomenclature.info/parcourir-browse.app?lang=en&id=' + commonTermId +'&wo=N&ws=INT';
             let altText = '<?php echo __('View the Nomenclature 4.0 specification for term '); ?>' + commonTermId;
@@ -697,29 +697,28 @@
 
         if (localTerm && commonTerm && localTerm !== commonTerm)
         {
-            leftTerm = localTerm;
-            rightTerm = commonTermLink;
-            mappingIndicator = '<?php echo __('replaces &nbsp; &rarr;'); ?>';
+            leftTerm = localTerm + '<span>(' + commonTermLink + ')<span>';
+            mappingIndicator = '<?php echo __('mapped'); ?>';
+            rightTerm = '';
             usageTerm = localTerm;
         }
         else if (localTerm && !commonTerm)
         {
             leftTerm = localTerm;
             rightTerm = '';
-            mappingIndicator = '<span><?php echo __('not mapped'); ?></span>';
+            mappingIndicator = '<span><?php echo __('unmapped'); ?><span>';
             usageTerm = localTerm;
         }
         else
         {
             leftTerm = commonTermLink;
             rightTerm = '';
-            mappingIndicator = '<?php echo __('is a common term'); ?>';
+            mappingIndicator = '<?php echo __('common'); ?>';
             usageTerm = commonTerm;
         }
 
         item.find('.vocabulary-term-left').html(leftTerm);
         item.find('.vocabulary-term-mapping').html(mappingIndicator);
-        item.find('.vocabulary-term-right').html(rightTerm);
 
         let usageCount = itemValues.usageCount;
         if (usageCount !== 0)
@@ -733,6 +732,10 @@
             let altText = '<?php echo __('View the items that use this term'); ?>';
             let usageCountLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + usageCount + "</a>";
             item.find('.vocabulary-term-count').html(usageCountLink);
+        }
+        else
+        {
+            item.find('.vocabulary-term-count').html('');
         }
     }
 

@@ -161,7 +161,6 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 <div id="vocabulary-terms-list-header">
     <div class="vocabulary-term-left">Local Term</div>
     <div class="vocabulary-term-mapping">Mapping</div>
-    <div class="vocabulary-term-right">Common Term</div>
     <div class="vocabulary-term-edit">Edit</div>
     <div class="vocabulary-term-count">Uses</div>
 </div>
@@ -197,7 +196,6 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
                 <div class="sortable-item sortable-item vocabulary-term-header">
                     <div class="vocabulary-term-left"></div>
                     <div class="vocabulary-term-mapping"></div>
-                    <div class="vocabulary-term-right"></div>
                     <span class="vocabulary-term-edit-icon"></span>
                     <div class="vocabulary-term-count"><?php echo $usageCount; ?></div>
                 </div>
