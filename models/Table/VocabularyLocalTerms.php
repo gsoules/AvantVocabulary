@@ -50,7 +50,10 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         // Return just the local terms.
         foreach ($mappings as $mapping)
         {
-            $terms[] = $mapping['local_term'];
+            $term = $mapping['local_term'];
+            if (empty($term))
+                $term = $mapping['common_term'];
+            $terms[] = $term;
         }
         return $terms;
     }
