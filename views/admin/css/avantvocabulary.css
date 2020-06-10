@@ -27,16 +27,6 @@
     margin-top: 24px;
 }
 
-#vocabulary-terms-list-header {
-    font-weight: bold;
-    font-size: 110%;
-    color: #777;
-    margin-top: 12px;
-    padding: 4px 0 4px 10px;
-    border-top: solid 2px #acacac;
-    border-bottom: solid 1px #acacac;
-}
-
 #vocabulary-terms-list {
     margin-top: 8px;
 }
@@ -103,12 +93,22 @@
     color: #b72d2d;
 }
 
+#vocabulary-terms-list-header {
+    font-weight: bold;
+    font-size: 110%;
+    color: black;
+    margin-top: 12px;
+    padding: 4px 0 4px 10px;
+    border-top: solid 2px #acacac;
+    border-bottom: solid 1px #acacac;
+}
+
 .vocabulary-term-left {
     display: inline-block;
     font-weight: bold;
-    color: black;
+    /*color: black;*/
     text-align: left;
-    width: 550px;
+    width: 700px;
 }
 
 .vocabulary-term-left a,
@@ -142,9 +142,6 @@
     display: inline-block;
     float: right;
     padding-right: 24px;
-    font-weight: bold;
-    font-size: 110%;
-    font-family: "Courier New";
 }
 
 .vocabulary-term-count a {
@@ -152,6 +149,9 @@
     display: inline-block;
     text-align: right;
     padding: 0 8px;
+    font-weight: bold;
+    font-size: 110%;
+    font-family: "Courier New";
 }
 
 .vocabulary-term-edit {
@@ -344,18 +344,36 @@ https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-wit
     padding-right: 4px;
 }
 
-/*@media screen and (min-width: 1200px) {*/
-/*    .vocabulary-term-left {*/
-/*        width: 700px;*/
-/*    }*/
-/*}*/
+/* When the screen is 1200px wide or less */
+@media screen and (max-width: 1200px) {
+    .vocabulary-term-left {
+        width: 550px;
+    }
+}
 
-/*@media screen and (min-width: 960px) {*/
-/*    .vocabulary-term-left {*/
-/*        width: 500px;*/
-/*    }*/
+/* When the screen is 960px wide or less */
+@media screen and (max-width: 960px) {
+    .vocabulary-term-left {
+        width: 400px;
+    }
 
-/*    .vocabulary-term-mapping {*/
-/*        display: none;*/
-/*    }*/
-/*}*/
+    .vocabulary-term-mapping {
+        display: none;
+    }
+}
+
+/* When the screen is 768px wide or less */
+@media screen and (max-width: 768px) {
+    .vocabulary-term-left {
+        width: 360px;
+    }
+
+    .vocabulary-term-count,
+    .vocabulary-view-toggle {
+        display: none;
+    }
+
+    #vocabulary-term-editor-message-area {
+        height: 48px;
+    }
+}

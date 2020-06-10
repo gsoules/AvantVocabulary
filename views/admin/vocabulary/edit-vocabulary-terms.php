@@ -90,9 +90,9 @@ echo "</div>";
 if ($isValidKind)
 {
     echo "<div>";
-    echo "<button id='add-vocabulary-term-button' type='button' class='action-button'>" . __('Add a new %s term', $kindName) . "</button>";
+    echo "<button id='add-vocabulary-term-button' type='button' class='action-button'>" . __('Add %s', $kindName) . "</button>";
     echo "</div>";
-    echo "<a class='vocabulary-view-toggle' href='../vocabulary/tree?kind=$kind'>" . __('View the %s term hierarchy', $kindName) . "</a>";
+    echo "<a class='vocabulary-view-toggle' href='../vocabulary/tree?kind=$kind'>" . __('View %s hierarchy', $kindName) . "</a>";
 
 }
 echo "</div>";
@@ -159,7 +159,7 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 </div>
 
 <div id="vocabulary-terms-list-header">
-    <div class="vocabulary-term-left">Local Term</div>
+    <div class="vocabulary-term-left"><?php echo $kindName; ?> Term</div>
     <div class="vocabulary-term-mapping">Mapping</div>
     <div class="vocabulary-term-edit">Edit</div>
     <div class="vocabulary-term-count">Uses</div>

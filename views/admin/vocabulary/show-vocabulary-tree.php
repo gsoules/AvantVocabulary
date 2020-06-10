@@ -101,7 +101,7 @@ echo "</div>";
 
 if ($isValidKind)
 {
-    echo "<a class='vocabulary-view-toggle' href='../vocabulary/terms?kind=$kind'>" . __('Return to the Vocabulary Editor') . "</a>";
+    echo "<a class='vocabulary-view-toggle' href='../vocabulary/terms?kind=$kind'>" . __('Return to Vocabulary Editor') . "</a>";
 }
 echo "</div>";
 
