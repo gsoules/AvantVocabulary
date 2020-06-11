@@ -231,6 +231,10 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
 #dialog-confirm-update-term {
     display: none;
 }
+#vocabulary-tree-instructions div {
+    margin-top: 8px;
+    font-size: 110%;
+}
 
 .vocabulary-tree {
     margin-top: 16px;

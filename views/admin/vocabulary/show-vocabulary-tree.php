@@ -118,7 +118,8 @@ foreach ($commonTermRecords as $commonTermRecord)
     $terms[$commonTerm] = $commonTermRecord->common_term_id;
 }
 
-$instructions = __('Terms followed by an identifier number come from Nomenclature 4.0. Click the identifier to see the Nomenclature description.');
+$instructions = '<div>' . __('This page displays the entire %s hierarchy. It is provided for informative purposes only.', $kindName) . '</div>';
+$instructions .= '<div>' . __('Nomenclature 4.0 terms are followed by their identifier number. Click it for inforamation about the term.') . '</div>';
 
 echo "<div class='vocabulary-controls'>";
 echo "<div>";
@@ -129,7 +130,7 @@ echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>" . Ava
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "''>" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL . "</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL . "</OPTION>";
 echo "</SELECT>";
-echo "<p>$instructions</p>";
+echo "<div id='vocabulary-tree-instructions'>$instructions</div>";
 echo "</div>";
 
 if ($isValidKind)
