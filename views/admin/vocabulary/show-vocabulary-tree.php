@@ -37,9 +37,25 @@ function explodeTree($array, $delimiter = '_', $baseval = false)
     return $returnArr;
 }
 
-function plotNode($level, $name)
+function plotNode($level, $name, $identifier)
 {
-    echo "<div class='vocabulary-node node-level-{$level}'>$name</div>";
+    if ($identifier >= 20000)
+    {
+        // Not a Nomenclature 4.0 identifier.
+        $identifier = 0;
+    }
+
+    if ($identifier)
+    {
+        $href = 'https://www.nomenclature.info/parcourir-browse.app?lang=en&id=' . $identifier . '&wo=N&ws=INT';
+        $link = "$name <a href='$href' target='_blank'>$identifier</a>";
+    }
+    else
+    {
+        $link = $name;
+    }
+
+    echo "<div class='vocabulary-node node-level-{$level}'>$link</div>";
 }
 
 function plotTree($tree, $indent=0)
@@ -48,7 +64,21 @@ function plotTree($tree, $indent=0)
     {
         if ($name == '__base_val')
             continue;
-        plotNode($indent + 1, $name);
+
+        $identifier = 0;
+        if (array_key_exists($name, $tree))
+        {
+            $term = $tree[$name];
+            if (is_array($term))
+            {
+                $identifier = isset($term['__base_val']) ? $term['__base_val'] : 0;
+            }
+            else
+            {
+                $identifier = $tree[$name];
+            }
+        }
+        plotNode($indent + 1, $name, $identifier);
         if (is_array($kids))
         {
             plotTree($kids, $indent + 1);
@@ -87,8 +117,9 @@ foreach ($commonTermRecords as $commonTermRecord)
     $terms[$commonTerm] = $commonTermRecord->common_term_id;
 }
 
-echo "<div class='vocabulary-controls'>";
+$instructions = __('Terms followed by an identifier number come from Nomenclature 4.0. Click the identifier to see the Nomenclature description.');
 
+echo "<div class='vocabulary-controls'>";
 echo "<div>";
 echo "<label class='vocabulary-chooser-label'>Vocabulary: </label>";
 echo "<SELECT required id='vocabulary-chooser' class='vocabulary-chooser'>";
@@ -97,6 +128,7 @@ echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>" . Ava
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "''>" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL . "</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL . "</OPTION>";
 echo "</SELECT>";
+echo "<p>$instructions</p>";
 echo "</div>";
 
 if ($isValidKind)

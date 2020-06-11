@@ -234,11 +234,28 @@ body.vocabulary-terms-page .ui-autocomplete .ui-menu-item.ui-state-focus {
 
 .vocabulary-tree {
     margin-top: 16px;
+    background-color: white;
+    padding: 24px 24px;
 }
 
 .vocabulary-node {
-    font-family: "Courier New";
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 20px;
+}
+
+.vocabulary-node a {
+    padding-left: 4px;
+    font-size: 90%;
+}
+
+.vocabulary-node a,
+.vocabulary-node a:visited {
+    color: var(--term-link);
+}
+
+.vocabulary-node a:hover {
+    color: var(--term-link-hover);
 }
 
 .node-level-1 {
