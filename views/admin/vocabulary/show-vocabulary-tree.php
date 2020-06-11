@@ -58,7 +58,7 @@ function plotNode($level, $name, $identifier)
     echo "<div class='vocabulary-node node-level-{$level}'>$link</div>";
 }
 
-function plotTree($tree, $indent=0)
+function plotTree($tree, $indent= 0, $parents = '')
 {
     foreach ($tree as $name => $kids)
     {
@@ -78,10 +78,11 @@ function plotTree($tree, $indent=0)
                 $identifier = $tree[$name];
             }
         }
-        plotNode($indent + 1, $name, $identifier);
+        $ancestors = $parents ? "$parents, $name" : $name;
+        plotNode($indent + 1, $ancestors, $identifier);
         if (is_array($kids))
         {
-            plotTree($kids, $indent + 1);
+            plotTree($kids, $indent + 1, $ancestors);
         }
     }
 }
