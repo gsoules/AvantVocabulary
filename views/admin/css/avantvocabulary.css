@@ -4,6 +4,7 @@
     --term-link-hover: #479dff;
     --vocabulary-editor-message: #376b2e;
     --mapped-term: #777;
+    --unmapped-term: #b72d2d;
 }
 
 .vocabulary-controls {
@@ -90,7 +91,7 @@
 }
 
 .vocabulary-term-mapping span {
-    color: #b72d2d;
+    color: var(--unmapped-term);
 }
 
 #vocabulary-terms-list-header {
@@ -106,14 +107,12 @@
 .vocabulary-term-left {
     display: inline-block;
     font-weight: bold;
-    /*color: black;*/
     text-align: left;
     width: 700px;
 }
 
 .vocabulary-term-left a,
 .vocabulary-term-left a:visited {
-    /*text-decoration-line: underline;*/
     color: var(--term-link);
 }
 
@@ -121,20 +120,20 @@
     color: var(--term-link-hover);
 }
 
-.vocabulary-term-left span {
-    color: var(--mapped-term);
-    font-weight: normal;
-    padding-left: 8px;
+.vocabulary-term-left span.unmapped{
+    color: var(--unmapped-term);
 }
 
-.vocabulary-term-left span a,
-.vocabulary-term-left span a:visited {
-    /*text-decoration-line: underline;*/
+.vocabulary-term-left span.mapped {
+    padding-left: 8px;
+}
+.vocabulary-term-left span.mapped a,
+.vocabulary-term-left span.mapped a:visited {
     color: var(--term-link);
     font-weight: normal;
 }
 
-.vocabulary-term-left span a:hover {
+.vocabulary-term-left span.mapped a:hover {
     color: var(--term-link-hover);
 }
 

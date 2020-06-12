@@ -118,8 +118,9 @@ foreach ($commonTermRecords as $commonTermRecord)
     $terms[$commonTerm] = $commonTermRecord->common_term_id;
 }
 
-$instructions = '<div>' . __('This page displays the entire %s hierarchy. It is provided for informative purposes only.', $kindName) . '</div>';
-$instructions .= '<div>' . __('Nomenclature 4.0 terms are followed by their identifier number. Click it for inforamation about the term.') . '</div>';
+$learnMoreLink = '<a href="https://digitalarchive.avantlogic.net/docs/#archivist/vocabularies/" target="_blank">Learn about vocabularies</a>';
+$instructions = '<div>' . __('This page displays the entire %s vocabulary hierarchy. ', $kindName) . $learnMoreLink . '</div>';
+$instructions .= '<div>' . __('Nomenclature 4.0 terms are followed by their identifier number. Click it for information about the term.') . '</div>';
 
 echo "<div class='vocabulary-controls'>";
 echo "<div>";

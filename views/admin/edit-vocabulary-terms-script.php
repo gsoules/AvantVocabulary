@@ -2,7 +2,7 @@
     const addTermButton = jQuery('#add-vocabulary-term-button');
     const busyIndicator = jQuery('#vocabulary-editor-busy');
     const commonTermCount = '<?php echo $commonTermCount; ?>';
-    const defaultMessage = '<?php echo __('To edit a term, click its pencil icon.&nbsp;&nbsp;Drag terms up or down to reorder them.&nbsp;&nbsp;<a href="https://digitalarchive.avantlogic.net/docs/#user/vocabulary-editor/" target="_blank">Learn more</a>'); ?>';
+    const defaultMessage = '<?php echo __('To edit a term, click its pencil icon.&nbsp;&nbsp;Drag terms up or down to reorder them.&nbsp;&nbsp;<a href="https://digitalarchive.avantlogic.net/docs/#archivist/vocabulary-editor/" target="_blank">Learn more</a>'); ?>';
     const elementId = <?php echo $elementId; ?>;
     const kind = <?php echo $kind; ?>;
     const kindName = '<?php echo $kindName; ?>';
@@ -697,22 +697,20 @@
 
         if (localTerm && commonTerm && localTerm !== commonTerm)
         {
-            leftTerm = localTerm + '<span>(' + commonTermLink + ')<span>';
+            leftTerm = localTerm + '<span class="mapped">(' + commonTermLink + ')<span>';
             mappingIndicator = '<?php echo __('mapped'); ?>';
-            rightTerm = '';
             usageTerm = localTerm;
         }
         else if (localTerm && !commonTerm)
         {
             leftTerm = localTerm;
-            rightTerm = '';
+            leftTerm = '<span class="unmapped">' + leftTerm + '<span>';
             mappingIndicator = '<span><?php echo __('unmapped'); ?><span>';
             usageTerm = localTerm;
         }
         else
         {
             leftTerm = commonTermLink;
-            rightTerm = '';
             mappingIndicator = '<?php echo __('common'); ?>';
             usageTerm = commonTerm;
         }
