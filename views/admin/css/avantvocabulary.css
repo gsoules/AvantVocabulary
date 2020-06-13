@@ -126,11 +126,12 @@
 
 .vocabulary-term-left span.mapped {
     padding-left: 8px;
+    font-weight: normal;
 }
+
 .vocabulary-term-left span.mapped a,
 .vocabulary-term-left span.mapped a:visited {
     color: var(--term-link);
-    font-weight: normal;
 }
 
 .vocabulary-term-left span.mapped a:hover {
