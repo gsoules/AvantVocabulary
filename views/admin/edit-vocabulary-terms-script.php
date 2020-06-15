@@ -129,7 +129,9 @@
         {
             // Report that the add was not accepted which because the new term is the same as an existing term.
             let term = itemValues.localTerm ? itemValues.localTerm : itemValues.commonTerm;
-            showTermAlreadyExistsError(newItem, term, kindName);
+            showErrorTermAlreadyExists(newItem, term, kindName);
+
+            reportAddOrUpdateError(data['error'], newItem, term)
         }
     }
 
@@ -170,16 +172,8 @@
         }
         else
         {
-            let error = data['error'];
-            if (error === 'local-term-exists')
-            {
-                let itemValues = getItemValues(item);
-                showTermAlreadyExistsError(item, itemValues.localTerm, kindName);
-            }
-            else
-            {
-                alert(error);
-            }
+            let itemValues = getItemValues(item);
+            reportAddOrUpdateError(data['error'], item, itemValues.localTerm);
         }
     }
 
@@ -612,6 +606,22 @@
         });
     }
 
+    function reportAddOrUpdateError(error, item, term)
+    {
+        if (error === 'local-term-exists')
+        {
+            showErrorTermAlreadyExists(item, term, kindName);
+        }
+        else if (error === 'local-term-is-common-term')
+        {
+            showErrorLocalTermIsCommonTerm(item, term, kindName);
+        }
+        else
+        {
+            alert(error);
+        }
+    }
+
     function reportProgress()
     {
         if (!actionInProgress)
@@ -770,15 +780,7 @@
 
     function showDrawerErrorMessage(item, message)
     {
-        item.find('.drawer-message').text(message);
-    }
-
-    function showTermAlreadyExistsError(item, term, kindName)
-    {
-        let message = '<?php echo __('The {1} vocabulary already contains "{2}"'); ?>';
-        message = message.replace('{1}', kindName);
-        message = message.replace('{2}', term);
-        showDrawerErrorMessage(item, message);
+        item.find('.drawer-message').html(message);
     }
 
     function showEditorMessage(message)
@@ -786,6 +788,21 @@
         if (message.length === 0)
             message = defaultMessage;
         jQuery('#vocabulary-term-editor-message-area').html(message);
+    }
+
+    function showErrorTermAlreadyExists(item, term, kindName)
+    {
+        let message = '<?php echo __('The {1} vocabulary already contains "{2}"'); ?>';
+        message = message.replace('{1}', kindName);
+        message = message.replace('{2}', term);
+        showDrawerErrorMessage(item, message);
+    }
+
+    function showErrorLocalTermIsCommonTerm(item, term, kindName)
+    {
+        let message = '<?php echo __('"{1}" is a common term and cannot be used as a local term.</br>Remove it from the Local Term field and then choose it for the Common Term.'); ?>';
+        message = message.replace('{1}', term);
+        showDrawerErrorMessage(item, message);
     }
 
     function startRebuild()

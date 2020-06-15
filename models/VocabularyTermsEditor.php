@@ -30,6 +30,13 @@ class VocabularyTermsEditor
             return json_encode(array('success'=>false, 'id'=>0));
         }
 
+        // Determine if the local term is a common term.
+        $commonTermId = $this->getIdForCommonTerm($kind, $localTerm);
+        if ($commonTermId)
+        {
+            return json_encode(array('success'=>false, 'error'=>'local-term-is-common-term'));
+        }
+
         $commonTermId = $this->getIdForCommonTerm($kind, $commonTerm);
 
         $localTermRecord = new VocabularyLocalTerms();
@@ -256,11 +263,18 @@ class VocabularyTermsEditor
         if (strtolower($newLocalTerm) != strtolower($oldLocalTerm))
         {
             // Check to see if the new local term already exists.
-            $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $newLocalTerm);
-            if ($localTermRecord)
+            $localTermRecordForNewTerm = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $newLocalTerm);
+            if ($localTermRecordForNewTerm)
             {
                 return json_encode(array('success'=>false, 'error'=>'local-term-exists'));
             }
+        }
+
+        // Determine if the local term is a common term.
+        $commonTermId = $this->getIdForCommonTerm($kind, $newLocalTerm);
+        if ($commonTermId)
+        {
+            return json_encode(array('success'=>false, 'error'=>'local-term-is-common-term'));
         }
 
         $oldCommonTermId = $localTermRecord->common_term_id;
