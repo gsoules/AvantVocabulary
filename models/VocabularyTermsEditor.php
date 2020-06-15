@@ -243,6 +243,7 @@ class VocabularyTermsEditor
         // This method is called via AJAX. Get the posted data.
         $itemValues = json_decode($_POST['itemValues'], true);
         $id = intval($itemValues['id']);
+        $kind = $itemValues['kind'];
 
         // Get the local term record and update it with the posted local and common terms.
         $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordById($id);
@@ -252,9 +253,19 @@ class VocabularyTermsEditor
         $oldLocalTerm = $localTermRecord->local_term;
         $newLocalTerm = $itemValues['localTerm'];
 
+        if (strtolower($newLocalTerm) != strtolower($oldLocalTerm))
+        {
+            // Check to see if the new local term already exists.
+            $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $newLocalTerm);
+            if ($localTermRecord)
+            {
+                return json_encode(array('success'=>false, 'error'=>'local-term-exists'));
+            }
+        }
+
         $oldCommonTermId = $localTermRecord->common_term_id;
         $newCommonTerm = $itemValues['commonTerm'];
-        $newCommonTermId = $newCommonTerm ? $this->getIdForCommonTerm($itemValues['kind'], $newCommonTerm) : 0;
+        $newCommonTermId = $newCommonTerm ? $this->getIdForCommonTerm($kind, $newCommonTerm) : 0;
 
         // Determine the old term, before the update.
         if ($oldLocalTerm)

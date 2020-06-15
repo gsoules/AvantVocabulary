@@ -45,6 +45,9 @@
         let firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
         let newItem = firstItem.clone();
 
+        // Get rid of any leftover message.
+        showDrawerErrorMessage(newItem, '');
+
         // Set the item's Id to 'item-0' so that we can find it later. Hide the header and show only the drawer.
         activeItemId = 'item-0';
         newItem.attr('id', activeItemId);
@@ -126,10 +129,7 @@
         {
             // Report that the add was not accepted which because the new term is the same as an existing term.
             let term = itemValues.localTerm ? itemValues.localTerm : itemValues.commonTerm;
-            let message = '<?php echo __('The {1} vocabulary already contains "{2}"'); ?>';
-            message = message.replace('{1}', kindName);
-            message = message.replace('{2}', term);
-            showDrawerErrorMessage(newItem, message);
+            showTermAlreadyExistsError(newItem, term, kindName);
         }
     }
 
@@ -170,7 +170,16 @@
         }
         else
         {
-            alert(data['error']);
+            let error = data['error'];
+            if (error === 'local-term-exists')
+            {
+                let itemValues = getItemValues(item);
+                showTermAlreadyExistsError(item, itemValues.localTerm, kindName);
+            }
+            else
+            {
+                alert(error);
+            }
         }
     }
 
@@ -759,11 +768,19 @@
         }
     }
 
-
     function showDrawerErrorMessage(item, message)
     {
         item.find('.drawer-message').text(message);
     }
+
+    function showTermAlreadyExistsError(item, term, kindName)
+    {
+        let message = '<?php echo __('The {1} vocabulary already contains "{2}"'); ?>';
+        message = message.replace('{1}', kindName);
+        message = message.replace('{2}', term);
+        showDrawerErrorMessage(item, message);
+    }
+
     function showEditorMessage(message)
     {
         if (message.length === 0)
