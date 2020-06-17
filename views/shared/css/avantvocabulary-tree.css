@@ -1,0 +1,88 @@
+:root {
+    --instructions: #376b2e;
+    --term-link: #185c91;
+    --term-link-hover: #479dff;
+}
+
+.vocabulary-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+#vocabulary-chooser {
+    margin-top: 6px;
+    font-size: 16px;
+    width: 100px;
+}
+
+.vocabulary-chooser-label {
+    font-size: 18px;
+    font-weight: bold;
+    padding-right: 4px;
+    display: inline-block;
+    margin-top:10px;
+}
+
+#vocabulary-tree-instructions {
+    margin-top: 16px;
+}
+
+#vocabulary-tree-instructions div {
+    margin-top: 8px;
+    font-size: 110%;
+    color: var(--instructions);
+}
+
+.vocabulary-view-toggle {
+    margin-top: 12px;
+    font-size: 110%;
+}
+
+.vocabulary-tree {
+    margin-top: 16px;
+    background-color: #fff;
+    padding: 8px 24px;
+}
+
+.vocabulary-node {
+    line-height: 20px;
+}
+
+.vocabulary-node a {
+    padding-left: 4px;
+    font-size: 90%;
+}
+
+div.vocabulary-tree div.vocabulary-node a,
+div.vocabulary-tree div.vocabulary-node a:visited {
+    color: var(--term-link);
+}
+
+div.vocabulary-tree div.vocabulary-node a:hover {
+    color: var(--term-link-hover);
+}
+
+.node-level-1 {
+    padding-left: 0;
+}
+
+.node-level-2 {
+    padding-left: 25px;
+}
+
+.node-level-3 {
+    padding-left: 50px;
+}
+
+.node-level-4 {
+    padding-left: 75px;
+}
+
+.node-level-5 {
+    padding-left: 100px;
+}
+
+.node-level-6 {
+    padding-left: 125px;
+}

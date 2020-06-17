@@ -108,7 +108,11 @@ if ($isValidKind)
         $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL;
 }
 
-$url = WEB_ROOT . '/admin/vocabulary';
+$referrer = $_SERVER['HTTP_REFERER'];
+$onAdminPage = strpos($referrer, '/admin');
+$parent = $onAdminPage ? '/admin' : '';
+
+$url = WEB_ROOT . $parent . '/vocabulary';
 $terms = array();
 $commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getAllCommonTermRecordsForKind($kind);
 
@@ -118,27 +122,33 @@ foreach ($commonTermRecords as $commonTermRecord)
     $terms[$commonTerm] = $commonTermRecord->common_term_id;
 }
 
-$learnMoreLink = '<a href="https://digitalarchive.avantlogic.net/docs/#archivist/vocabularies/" target="_blank">Learn about vocabularies</a>';
+$learnMoreLink = '<a href="https://digitalarchive.avantlogic.net/docs/archivist/vocabularies/" target="_blank">Learn about vocabularies</a>';
 $instructions = '<div>' . __('This page displays the entire %s vocabulary hierarchy. ', $kindName) . $learnMoreLink . '</div>';
-$instructions .= '<div>' . __('Nomenclature 4.0 terms are followed by their identifier number. Click it for information about the term.') . '</div>';
+$instructions .= '<div>' . __('Nomenclature 4.0 terms are followed by their identifier number (click it for more information about the term).') . '</div>';
 
 echo "<div class='vocabulary-controls'>";
+
 echo "<div>";
-echo "<label class='vocabulary-chooser-label'>Vocabulary: </label>";
+echo "<div class='vocabulary-chooser-label'>Vocabulary: </div>";
 echo "<SELECT required id='vocabulary-chooser' class='vocabulary-chooser'>";
 echo "<OPTION value='0' selected disabled hidden>Select a vocabulary</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_LABEL . "</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "''>" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL . "</OPTION>";
 echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL . "</OPTION>";
 echo "</SELECT>";
-echo "<div id='vocabulary-tree-instructions'>$instructions</div>";
 echo "</div>";
 
-if ($isValidKind)
+$referrer = $_SERVER['HTTP_REFERER'];
+$onAdminPage = strpos($referrer, '/admin');
+if ($isValidKind && $onAdminPage)
 {
-    echo "<a class='vocabulary-view-toggle' href='../vocabulary/terms?kind=$kind'>" . __('Return to Vocabulary Editor') . "</a>";
+    echo "<div class='vocabulary-view-toggle'>";
+    echo "<a href='../vocabulary/terms?kind=$kind'>" . __('Return to Vocabulary Editor') . "</a>";
+    echo "</div>";
 }
 echo "</div>";
+
+echo "<div id='vocabulary-tree-instructions'>$instructions</div>";
 
 $tree = explodeTree($terms, ',', true);
 echo "<div class='vocabulary-tree'>";
