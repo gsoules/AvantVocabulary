@@ -648,7 +648,11 @@
                 },
                 error: function(request, status, error)
                 {
-                    alert('AJAX ERROR on reportProgress' + ' >>> ' + JSON.stringify(request));
+                    // Remove the HTML tags from the message and separate the lines with actual newline characters.
+                    let message = JSON.stringify(request);
+                    message = message.replace(/(<([^>]+)>)/ig,"");
+                    message = message.replace(/\\n/g, '\n');
+                    alert('AJAX ERROR on reportProgress' + ' >>> ' + message);
                 }
             }
         );
