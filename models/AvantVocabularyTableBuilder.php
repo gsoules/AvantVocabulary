@@ -9,12 +9,59 @@ class AvantVocabularyTableBuilder
         $this->db = get_db();
     }
 
+    public function test()
+    {
+        return $this->fetchUniqueLocalTerms(53);
+    }
+
+    protected static function requestRemoteAssets($url)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $data = curl_exec($ch);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE );
+        $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        curl_close($ch);
+
+        if (empty($data) || $contentType != 'text/plain')
+        {
+            $data = array();
+            $data['error'] = true;
+            $data['response-code'] = $responseCode;
+        }
+
+        return $data;
+    }
+
+    protected static function getRemoteVocabularyTerms()
+    {
+        $url = 'https://digitalarchive.us/vocabulary/nomenclature.csv';
+        $data = self::requestRemoteAssets($url);
+
+        if (isset($data['error']))
+        {
+            // The request to the URL either failed or did not return proper data.
+            $assets['error'] = true;
+            $assets['response-code'] = '[' . json_encode($data) . ']';
+            return $assets;
+        }
+        else
+        {
+            return $data;
+        }
+    }
+
     protected function buildCommonTermsTable()
     {
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyCommonTermsTable();
 
         $nomenclatureFileName = VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'nomenclature.csv';
+        $nomenclatureFileName = 'https://digitalarchive.us/vocabulary/nomenclature.csv';
 
         $handle = fopen($nomenclatureFileName, 'r');
         $rowNumber = 0;
