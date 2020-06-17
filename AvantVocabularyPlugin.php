@@ -10,6 +10,7 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
         'config_form',
         'define_routes',
         'install',
+        'public_head',
         'uninstall',
         'upgrade'
     );
@@ -34,6 +35,7 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
     public function hookAdminHead($args)
     {
         queue_css_file('avantvocabulary');
+        queue_css_file('avantvocabulary-tree');
     }
 
     public function hookConfig()
@@ -55,6 +57,11 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
     {
         VocabularyTableFactory::createVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyLocalTermsTable();
+    }
+
+    public function hookPublicHead($args)
+    {
+        queue_css_file('avantvocabulary-tree');
     }
 
     public function hookUninstall()
