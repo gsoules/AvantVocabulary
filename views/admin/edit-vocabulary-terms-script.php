@@ -622,6 +622,14 @@
         }
     }
 
+    function reportAjaxError(request, action)
+    {
+        let message = JSON.stringify(request);
+        message = message.replace(/(<([^>]+)>)/ig,"");
+        message = message.replace(/\\n/g, '\n');
+        alert('AJAX ERROR on ' + action + ' >>> ' + message);
+    }
+
     function reportProgress()
     {
         if (!actionInProgress)
@@ -648,11 +656,7 @@
                 },
                 error: function(request, status, error)
                 {
-                    // Remove the HTML tags from the message and separate the lines with actual newline characters.
-                    let message = JSON.stringify(request);
-                    message = message.replace(/(<([^>]+)>)/ig,"");
-                    message = message.replace(/\\n/g, '\n');
-                    alert('AJAX ERROR on reportProgress' + ' >>> ' + message);
+                    reportAjaxError(request, 'reportProgress');
                 }
             }
         );
@@ -683,8 +687,9 @@
                     showBusyIndicator('');
                     afterNewItemSaved(data, itemValues);
                 },
-                error: function (request, status, error) {
-                    alert('AJAX ERROR on Save ' +  JSON.stringify(request));
+                error: function (request, status, error)
+                {
+                    reportAjaxError(request, 'Save');
                 }
             }
         );
@@ -846,7 +851,7 @@
                 error: function (request, status, error)
                 {
                     clearTimeout(progressTimer);
-                    alert('AJAX ERROR on build ' + tableName + ' >>> ' +  JSON.stringify(request));
+                    reportAjaxError(request, 'build ' + tableName);
                 }
             }
         );
