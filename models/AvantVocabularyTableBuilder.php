@@ -228,7 +228,7 @@ class AvantVocabularyTableBuilder
         }
 
         // Update the local and shared indexes for just those items.
-        foreach ($itemIds as $ItemId)
+        foreach ($itemIds as $itemId)
         {
             $this->updateItemIndexes($itemId);
         }
@@ -285,13 +285,21 @@ class AvantVocabularyTableBuilder
         return ("$message: $function on line $line");
     }
 
-    protected function updateElementTexts($elementTextsId, $newTerm)
+    protected function updateElementTexts($elementTextsId, $text)
     {
-
+        $sql = "UPDATE `{$this->db->ElementTexts}` SET text = '$text' WHERE id = $elementTextsId";
+        $this->db->query($sql);
     }
 
     protected function updateItemIndexes($itemId)
     {
+        $item = ItemMetadata::getItemFromId($itemId);
 
+        $avantElasticsearchIndexBuilder = new AvantElasticsearchIndexBuilder();
+        $sharedIndexIsEnabled = (bool)get_option(ElasticsearchConfig::OPTION_ES_SHARE) == true;
+        $localIndexIsEnabled = (bool)get_option(ElasticsearchConfig::OPTION_ES_LOCAL) == true;
+
+        $avantElasticsearch = new AvantElasticsearch();
+        $avantElasticsearch->updateIndexForItem($item, $avantElasticsearchIndexBuilder, $sharedIndexIsEnabled, $localIndexIsEnabled);
     }
 }
