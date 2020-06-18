@@ -10,7 +10,6 @@ class VocabularyTableFactory
         CREATE TABLE IF NOT EXISTS `{$db->prefix}vocabulary_common_terms` (
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `kind` int(10) unsigned NOT NULL,
-            `leaf_term` varchar(128) DEFAULT NULL,
             `common_term` varchar(512) DEFAULT NULL,
             `common_term_id` int(10) unsigned NOT NULL,
             PRIMARY KEY (`id`)

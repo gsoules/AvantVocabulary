@@ -97,9 +97,8 @@ class VocabularyTermsEditor
         {
             // Get the Id for the common term.
             $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
-            if (!$commonTermRecord)
-                throw new Exception($this->reportError(__FUNCTION__, ' get common term record failed'));
-            $commonTermId = $commonTermRecord->common_term_id;
+            if ($commonTermRecord)
+                $commonTermId = $commonTermRecord->common_term_id;
         }
         return $commonTermId;
     }

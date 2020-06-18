@@ -12,10 +12,6 @@ class AvantVocabulary
     const VOCABULARY_TERM_KIND_SUBJECT_LABEL = 'Subject';
     const VOCABULARY_TERM_KIND_PLACE_LABEL = 'Place';
 
-    const VOCABULARY_MAPPING_NONE = 0;
-    const VOCABULARY_MAPPING_IDENTICAL = 1;
-    const VOCABULARY_MAPPING_SYNONYMOUS = 2;
-
     // Common terms with an Id higher than this do not come from Nomenclature 4.0.
     const VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID = 20000;
 
@@ -43,6 +39,11 @@ class AvantVocabulary
         return $kindTable;
     }
 
+    public static function kindIsTypeOrSubject($kind)
+    {
+        return $kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE || $kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT;
+    }
+
     public static function progressFileName()
     {
         return VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'progress-' . current_user()->id . '.txt';
@@ -60,7 +61,15 @@ class AvantVocabulary
         if ($password == $tail)
         {
             $tableBuilder = new AvantVocabularyTableBuilder();
-            $response = $tableBuilder->refreshCommonTerms();
+
+            try
+            {
+                $response = $tableBuilder->refreshCommonTerms();
+            }
+            catch (Exception $e)
+            {
+                $response = 'Request failed: ' . $e->getMessage();
+            }
         }
 
         return $response;

@@ -126,7 +126,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         // Type and Subject elements. Rather than duplicate them in the common terms table so that each has
         // its own kind, they only appear once, but their kind is VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT.
 
-        if ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE || $kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT)
+        if (AvantVocabulary::kindIsTypeOrSubject($kind))
         {
             $typeOrSubject = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT;
             $whereKind = "(kind = $kind OR kind = $typeOrSubject)";
