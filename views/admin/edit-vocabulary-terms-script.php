@@ -840,12 +840,16 @@
                 {
                     actionInProgress = false;
                     clearTimeout(progressTimer);
-                    let status = 'Build completed';
-                    if (!data['success'])
+                    if (data['success'])
+                    {
+                        status = 'Build completed';
+                        window.setTimeout(function () { busyIndicator.fadeOut(); }, 2000)
+                    }
+                    else
+                    {
                         status = 'Build failed: ' + data['error'];
-                    console.log(">>> >>> " + status);
+                    }
                     showBusyIndicator(status);
-                    window.setTimeout(function () { busyIndicator.fadeOut(); }, 2000)
                     enableRebuildButtons(true);
                 },
                 error: function (request, status, error)
