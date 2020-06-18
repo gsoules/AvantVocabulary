@@ -12,6 +12,14 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         return $result;
     }
 
+    public function getLocalTermRecordsByCommonTermId($commonTermId)
+    {
+        $select = $this->getSelect();
+        $select->where("common_term_id = $commonTermId");
+        $results = $this->fetchObjects($select);
+        return $results;
+    }
+
     public function getLocalTermRecordById($id)
     {
         $select = $this->getSelect();
