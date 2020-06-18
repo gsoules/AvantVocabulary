@@ -14,23 +14,16 @@ class AvantVocabularyTableBuilder
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyCommonTermsTable();
 
-        $nomenclatureCsvFile = 'https://digitalarchive.us/vocabulary/nomenclature.csv';
+        $url = 'https://digitalarchive.us/vocabulary/nomenclature.csv';
+        $rows = $this->readDataRowsFromRemoteCsvFile($url);
 
-        $handle = fopen($nomenclatureCsvFile, 'r');
-        if (!$handle)
+        foreach ($rows as $row)
         {
-            throw new Exception($this->reportError("Could not read $nomenclatureCsvFile", __FUNCTION__, __LINE__));
-        }
+            $kind = $row[0];
+            $id = intval($row[1]);
+            $term = $row[2];
 
-        $rowNumber = 0;
-        while (($row = fgetcsv($handle, 0, ',')) !== FALSE)
-        {
-            // Skip the header row;
-            $rowNumber += 1;
-            if ($rowNumber == 1 || empty($row[0]))
-                continue;
-
-            $this->databaseInsertRecordForCommonTerm($row);
+            $this->databaseInsertRecordForCommonTerm($kind, $id, $term);
         }
     }
 
@@ -39,9 +32,11 @@ class AvantVocabularyTableBuilder
         VocabularyTableFactory::dropVocabularyLocalTermsTable();
         VocabularyTableFactory::createVocabularyLocalTermsTable();
 
-        $this->createLocalTerms('Type', AvantVocabulary::VOCABULARY_TERM_KIND_TYPE);
-        $this->createLocalTerms('Subject', AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT);
-        $this->createLocalTerms('Place', AvantVocabulary::VOCABULARY_TERM_KIND_PLACE);
+        $fields = AvantVocabulary::getVocabularyFields();
+        foreach ($fields as $elementName => $kind)
+        {
+            $this->createLocalTerms($elementName, $kind);
+        }
     }
 
     protected function createLocalTerms($elementName, $kind)
@@ -58,13 +53,12 @@ class AvantVocabularyTableBuilder
         }
     }
 
-    protected function databaseInsertRecordForCommonTerm($csvFileRow)
+    protected function databaseInsertRecordForCommonTerm($kind, $id, $term)
     {
         $commonTermRecord = new VocabularyCommonTerms();
-        $commonTermRecord['kind'] = $csvFileRow[0];
-        $commonTermRecord['leaf_term'] = $csvFileRow[3];
-        $commonTermRecord['common_term'] = $csvFileRow[2];
-        $commonTermRecord['common_term_id'] = intval($csvFileRow[1]);
+        $commonTermRecord['kind'] = $kind;
+        $commonTermRecord['common_term_id'] = $id;
+        $commonTermRecord['common_term'] = $term;
 
         if (!$commonTermRecord->save())
             throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
@@ -82,23 +76,14 @@ class AvantVocabularyTableBuilder
         if ($commonTermRecord)
         {
             // Add the common term info to the local term record.
-            $localTermRecord['common_term'] = $localTerm;
             $localTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
-            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_IDENTICAL;
         }
         else
         {
             // The local term is not the same as any common term.
             $localTermRecord['common_term_id'] = 0;
-            $localTermRecord['mapping'] = AvantVocabulary::VOCABULARY_MAPPING_NONE;
         }
 
-        if (!$localTermRecord->save())
-            throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
-    }
-
-    protected function databaseUpdateRecordForLocalTerm($localTermRecord)
-    {
         if (!$localTermRecord->save())
             throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
     }
@@ -172,30 +157,141 @@ class AvantVocabularyTableBuilder
         echo $response;
     }
 
-    public function refreshCommonTerms()
+    protected function readDataRowsFromRemoteCsvFile($url)
     {
-        $nomenclatureCsvFile = 'https://digitalarchive.us/vocabulary/changes.csv';
+        $response = AvantAdmin::requestRemoteAsset($url);
+        if ($response['response-code'] != 200)
+            throw new Exception("Could not read $url");
 
-        $handle = fopen($nomenclatureCsvFile, 'r');
-        if (!$handle)
-        {
-            return "Could not read $nomenclatureCsvFile";
-        }
+        // Break the response into individual rows from the CSV file.
+        $rawRows = explode("\r\n", $response['result']);
 
-        $rowNumber = 0;
-        while (($row = fgetcsv($handle, 0, ',')) !== FALSE)
+        $rows = array();
+        foreach ($rawRows as $index => $rawRow)
         {
             // Skip the header row;
-            $rowNumber += 1;
-            if ($rowNumber == 1 || empty($row[0]))
+            if ($index == 0)
                 continue;
+
+            $row = str_getcsv($rawRow);
+            if (!empty($row[0]))
+                $rows[] = $row;
         }
 
-        return 'OK';
+        return $rows;
+    }
+
+    protected function refreshCommonTerm($termKind, $termId, $oldTerm, $newTerm)
+    {
+        // Update the common terms table with updated terms.
+        $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($termId);
+        if (!$commonTermRecord)
+            throw new Exception($this->reportError('Get record failed', __FUNCTION__, __LINE__));
+        $commonTermRecord['common_term'] = $newTerm;
+        if (!$commonTermRecord->save())
+            throw new Exception($this->reportError('Save common term failed',  __FUNCTION__, __LINE__));
+
+        // If the common term is now the same as a local term, add the common term Id to the local term table.
+        $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($termKind, $newTerm);
+        if ($localTermRecord)
+        {
+            $localTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
+            if (!$localTermRecord->save())
+                throw new Exception($this->reportError('Save local term failed',  __FUNCTION__, __LINE__));
+        }
+
+        // Fetch all element texts that use one of the changed terms as a Type, Subject, or Place.
+        // From the element texts we also get a list of the items that those texts belong to.
+        $elementTextsIds = array();
+        $itemIds = array();
+        $kinds = AvantVocabulary::getVocabularyKinds();
+        foreach ($kinds as $elementId => $kind)
+        {
+            $isTypeOrSubject = AvantVocabulary::kindIsTypeOrSubject($kind);
+            if ($kind == $termKind || ($isTypeOrSubject && $termKind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT))
+            {
+                $results = $this->fetchElementTextsHavingTerm($elementId, $oldTerm);
+                foreach ($results as $result)
+                {
+                    $elementTextsIds[] = $result['id'];
+                    $itemId = $result['record_id'];
+                    if (!in_array($itemId, $itemIds))
+                        $itemIds[] = $result['record_id'];
+                }
+            }
+        }
+
+        // Update the element texts for those items.
+        foreach ($elementTextsIds as $elementTextsId)
+        {
+            $this->updateElementTexts($elementTextsId, $newTerm);
+        }
+
+        // Update the local and shared indexes for just those items.
+        foreach ($itemIds as $ItemId)
+        {
+            $this->updateItemIndexes($itemId);
+        }
+    }
+
+    protected function fetchElementTextsHavingTerm($elementId, $commonTerm)
+    {
+        $commonTerm = addslashes($commonTerm);
+
+        try
+        {
+            $table = "{$this->db->prefix}element_texts";
+
+            $sql = "
+                SELECT
+                  id,
+                  record_id
+                FROM
+                  $table
+                WHERE
+                  element_id = $elementId AND text = '$commonTerm'
+            ";
+
+            $results = $this->db->query($sql)->fetchAll();
+        }
+        catch (Exception $e)
+        {
+            $results = array();
+        }
+
+        return $results;
+    }
+
+    public function refreshCommonTerms()
+    {
+        $url = 'https://digitalarchive.us/vocabulary/changes.csv';
+        $rows = $this->readDataRowsFromRemoteCsvFile($url);
+
+        foreach ($rows as $row)
+        {
+            $kind = $row[0];
+            $id = intval($row[1]);
+            $oldTerm = $row[2];
+            $newTerm = $row[3];
+
+            $this->refreshCommonTerm($kind, $id, $oldTerm, $newTerm);
+        }
+
+        return count($rows) . " terms updated";
     }
 
     private function reportError($message, $function, $line)
     {
         return ("$message: $function on line $line");
+    }
+
+    protected function updateElementTexts($elementTextsId, $newTerm)
+    {
+
+    }
+
+    protected function updateItemIndexes($itemId)
+    {
+
     }
 }
