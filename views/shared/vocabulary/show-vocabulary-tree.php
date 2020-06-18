@@ -108,8 +108,8 @@ if ($isValidKind)
         $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL;
 }
 
-$referrer = $_SERVER['HTTP_REFERER'];
-$onAdminPage = strpos($referrer, '/admin');
+$requestUri = $_SERVER['REQUEST_URI'];
+$onAdminPage = strpos($requestUri, '/admin');
 $parent = $onAdminPage ? '/admin' : '';
 
 $url = WEB_ROOT . $parent . '/vocabulary';
@@ -138,8 +138,6 @@ echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>" . Av
 echo "</SELECT>";
 echo "</div>";
 
-$referrer = $_SERVER['HTTP_REFERER'];
-$onAdminPage = strpos($referrer, '/admin');
 if ($isValidKind && $onAdminPage)
 {
     echo "<div class='vocabulary-view-toggle'>";
