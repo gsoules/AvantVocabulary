@@ -48,23 +48,21 @@ class AvantVocabulary
         return VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'progress-' . current_user()->id . '.txt';
     }
 
-    public static function refreshCommonVocabulary()
+    public static function refreshCommonVocabulary($password)
     {
         $response = 'Request denied';
-        if (isset($_POST['password']))
+
+        // Use the last six characters of the Elasticsearch key as the password for remote access to AvantVocabulary.
+        // This is simpler/safer than the remote caller having to know an Omeka user name and password. Though the
+        // key is public anyway, using just the tail end of it means the caller does not know the entire key.
+        $key = ElasticsearchConfig::getOptionValueForKey();
+        $tail = substr($key, strlen($key) - 6);
+        if ($password == $tail)
         {
-            // Use the last six characters of the Elasticsearch key as the password for remote access to AvantVocabulary.
-            // This is simpler/safer than the remote caller having to know an Omeka user name and password. Though the
-            // key is public anyway, using just the tail end of it means the caller does not know the entire key.
-            $password = $_POST['password'];
-            $key = ElasticsearchConfig::getOptionValueForKey();
-            $tail = substr($key, strlen($key) - 6);
-            if ($password == $tail)
-            {
-                $tableBuilder = new AvantVocabularyTableBuilder();
-                $response = $tableBuilder->refreshCommonTerms();
-            }
+            $tableBuilder = new AvantVocabularyTableBuilder();
+            $response = $tableBuilder->refreshCommonTerms();
         }
+
         return $response;
     }
 }
