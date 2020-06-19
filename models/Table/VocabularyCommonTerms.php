@@ -34,7 +34,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 
     public function getCommonTermRecordByCommonTerm($kind, $commonTerm)
     {
-        $commonTerm = addslashes($commonTerm);
+        $commonTerm = AvantCommon::escapeQuotes($commonTerm);
 
         $whereKind = $this->getWhereKind($kind);
 
@@ -94,7 +94,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 
     protected function getQueryForLike($term)
     {
-        $term = addslashes($term);
+        $term = AvantCommon::escapeQuotes($term);
 
         $keywords = $this->getKeywords($term);
         $query = '';

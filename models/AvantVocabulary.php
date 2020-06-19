@@ -74,4 +74,19 @@ class AvantVocabulary
 
         return $response;
     }
+
+    public static function vocabulary_diff_url()
+    {
+        return self::vocabulary_url('digital-archive-diff.csv');
+    }
+
+    public static function vocabulary_terms_url()
+    {
+        return self::vocabulary_url('digital-archive-vocabulary.csv');
+    }
+
+    public static function vocabulary_url($fileName)
+    {
+        return 'https://digitalarchive.us/vocabulary/' . $fileName;
+    }
 }

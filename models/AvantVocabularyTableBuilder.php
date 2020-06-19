@@ -14,8 +14,7 @@ class AvantVocabularyTableBuilder
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyCommonTermsTable();
 
-        $url = 'https://digitalarchive.us/vocabulary/nomenclature.csv';
-        $rows = $this->readDataRowsFromRemoteCsvFile($url);
+        $rows = $this->readDataRowsFromRemoteCsvFile(AvantVocabulary::vocabulary_terms_url());
 
         foreach ($rows as $row)
         {
@@ -74,7 +73,7 @@ class AvantVocabularyTableBuilder
         $localTermRecord['local_term'] = $localTerm;
 
         // Check if the local term is identical to a common term.
-        $commonTermRecord = $this->getCommonTermRecord($localTerm);
+        $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
         if ($commonTermRecord)
         {
             // Add the common term info to the local term record.
@@ -142,9 +141,9 @@ class AvantVocabularyTableBuilder
         return $results;
     }
 
-    protected function getCommonTermRecord($commonTerm)
+    protected function getCommonTermRecord($kind, $commonTerm)
     {
-        return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($commonTerm);
+        return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
     }
 
     protected function getCommonTermRecordByCommonTermId($commonTermId)
@@ -187,13 +186,22 @@ class AvantVocabularyTableBuilder
         echo $response;
     }
 
-    protected function convertLocalTermToCommonTerm($termKind, $term, $commonTermRecord)
+    protected function convertLocalTermToNewCommonTerm($commonTermKind, $term, $commonTermId)
     {
-        // See if the local term is mapped to a common term.
-        $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($termKind, $term);
+        // See if a local term exists that has the same name as a new common term.
+        $localTermRecords = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsByLocalTerm($term);
 
-        if ($localTermRecord)
+        foreach ($localTermRecords as $localTermRecord)
         {
+            $localTermKind = $localTermRecord->kind;
+
+            // See if the local term's kind is compatible with the common term's kind.
+            $compatible = (
+                $commonTermKind == $localTermKind ||
+                AvantVocabulary::kindIsTypeOrSubject($localTermKind) && $commonTermKind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT);
+            if (!$compatible)
+                continue;
+
             // A local term with the common term's text exists. If it is mapped to a common term, we'll leave the
             // mapping alone even though that violates the rule that a common term cannot be used as a local term.
             // That's better however, than trashing the existing mapping without the site administrator being made
@@ -203,7 +211,7 @@ class AvantVocabularyTableBuilder
             if (!$mapped)
             {
                 // Set the local term record's common term Id to indicate that the local and common terms are the same.
-                $localTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
+                $localTermRecord['common_term_id'] = $commonTermId;
                 if (!$localTermRecord->save())
                 {
                     throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
@@ -227,9 +235,9 @@ class AvantVocabularyTableBuilder
         }
     }
 
-    protected function fetchElementTextsHavingTerm($elementId, $commonTerm)
+    protected function fetchElementTextsHavingTerm($elementId, $term)
     {
-        $commonTerm = addslashes($commonTerm);
+        $term = AvantCommon::escapeQuotes($term);
 
         try
         {
@@ -242,7 +250,7 @@ class AvantVocabularyTableBuilder
                 FROM
                   $table
                 WHERE
-                  element_id = $elementId AND text = '$commonTerm'
+                  element_id = $elementId AND text = '$term'
             ";
 
             $results = $this->db->query($sql)->fetchAll();
@@ -257,17 +265,17 @@ class AvantVocabularyTableBuilder
 
     public function refreshCommonTerms()
     {
-        $url = 'https://digitalarchive.us/vocabulary/changes.csv';
-        $rows = $this->readDataRowsFromRemoteCsvFile($url);
+        $rows = $this->readDataRowsFromRemoteCsvFile(AvantVocabulary::vocabulary_diff_url());
 
         foreach ($rows as $row)
         {
-            $kind = $row[0];
-            $id = intval($row[1]);
-            $oldTerm = $row[2];
-            $newTerm = $row[3];
+            $action = $row[0];
+            $kind = $row[1];
+            $id = intval($row[2]);
+            $oldTerm = $row[3];
+            $newTerm = $row[4];
 
-            $this->refreshCommonTerm($kind, $id, $oldTerm, $newTerm);
+            $this->refreshCommonTerm($action, $kind, $id, $oldTerm, $newTerm);
         }
 
         return count($rows) . " terms refreshed";
@@ -280,7 +288,7 @@ class AvantVocabularyTableBuilder
             throw new Exception("Could not read $url");
 
         // Break the response into individual rows from the CSV file.
-        $rawRows = explode("\r\n", $response['result']);
+        $rawRows = explode("\n", $response['result']);
 
         $rows = array();
         foreach ($rawRows as $index => $rawRow)
@@ -297,98 +305,89 @@ class AvantVocabularyTableBuilder
         return $rows;
     }
 
-    protected function refreshCommonTerm($termKind, $commonTermId, $oldTerm, $newTerm)
+    protected function refreshCommonTerm($action, $termKind, $commonTermId, $oldTerm, $newTerm)
     {
-        // This method gets called when the definition of a common term has been changed, deleted, or added.
-
-        if ($newTerm == 'DELETED')
+        // This method gets called when a common term has been added, deleted, or updated.
+        // It is called once for each action in a diff file.
+        switch ($action)
         {
-            $change = 'DELETE';
-            // A common term has been deleted. This has no affect on element texts that use the term because they
-            // will retain the term's text. However, local terms that are mapped to the deleted term must be unmapped
-            $this->convertLocalTermToUnmapped($commonTermId);
+            case 'ADD':
+                // Add the new term to the common terms table, but first see if it's already in the table. This can
+                // happen if the term kind is for both Type and Subject in which case, the diff file will contain an
+                // ADD action for each kind. It can also happen if the diff file is processed more than once.
+                $commonTermRecord = $this->getCommonTermRecordByCommonTermId($commonTermId);
+                if (!$commonTermRecord)
+                    $commonTermRecord = $this->databaseInsertRecordForCommonTerm($termKind, $commonTermId, $newTerm);
+                break;
 
-            // Remove the term from the common terms table.
-            $this->databaseRemoveCommonTerm($commonTermId);
-        }
-        elseif ($oldTerm == 'ADDED')
-        {
-            $change = 'ADD';
-            // A common term has been added. This has no affect on element texts because no text has changed.
-            // Add the new term to the common terms table so that it's available to use, but first see if it
-            // already exists. This should not happen in practice, but it could if the same change CSV file
-            // gets submitted more than once such that the common term got added on a previous submission.
-            $commonTermRecord = $this->getCommonTermRecordByCommonTermId($commonTermId);
-            if (!$commonTermRecord)
-                $commonTermRecord = $this->databaseInsertRecordForCommonTerm($termKind, $commonTermId, $newTerm);
+            case 'DELETE':
+                // A common term has been deleted. Unmap any local terms that are mapped to it.
+                $this->convertLocalTermToUnmapped($commonTermId);
 
-            // See if the new common term is the same as a local term, and if so, make the local term common.
-            $this->convertLocalTermToCommonTerm($termKind, $newTerm, $commonTermRecord);
-        }
-        else
-        {
-            $change = 'EDIT';
-            // The text of an existing term changed. Get the common term's record from the database.
-            $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($commonTermId);
-            if (!$commonTermRecord)
-                throw new Exception($this->reportError('Get common term record failed', __FUNCTION__, __LINE__));
+                // Remove the term from the common terms table.
+                $this->databaseRemoveCommonTerm($commonTermId);
+                break;
 
-            // Update the common term's record with the new text.
-            $commonTermRecord['common_term'] = $newTerm;
-            if (!$commonTermRecord->save())
-                throw new Exception($this->reportError('Save common term failed',  __FUNCTION__, __LINE__));
+            case 'UPDATE':
+                // The common term's text has changed. Get the common term's record from the database.
+                $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($commonTermId);
+                if (!$commonTermRecord)
+                    throw new Exception($this->reportError('Get common term record failed', __FUNCTION__, __LINE__));
 
-            // See if the new common term is the same as a local term, and if so, make the local term common.
-            $this->convertLocalTermToCommonTerm($termKind, $newTerm, $commonTermRecord);
+                // Update the common term's record with the new text unless it has already been changed.
+                // This can happen for the UPDATE action the same as explained for the ADD action in the comment above.
+                if ($commonTermRecord['common_term'] != $newTerm)
+                {
+                    $commonTermRecord['common_term'] = $newTerm;
+                    if (!$commonTermRecord->save())
+                        throw new Exception($this->reportError('Save common term failed',  __FUNCTION__, __LINE__));
+                }
+                break;
         }
 
-        // Update items affect by the change.
-        $this->refreshItemsUsingCommonTerm($termKind, $oldTerm, $newTerm, $change);
+        if ($action == 'ADD' || $action == 'UPDATE')
+        {
+            // See if the added or updated common term is the same as a local term, and if so, make the local term common.
+            $this->convertLocalTermToNewCommonTerm($termKind, $newTerm, $commonTermRecord->common_term_id);
+        }
+
+        // Update items affect by the actions above.
+        $this->refreshItemsUsingCommonTerm($action, $termKind, $oldTerm, $newTerm);
     }
 
-    protected function refreshItemsUsingCommonTerm($termKind, $oldTerm, $newTerm, $change)
+    protected function refreshItemsUsingCommonTerm($action, $kind, $oldTerm, $newTerm)
     {
         // This method updates all element texts and items that are affected by a change to a common term.
-        // Since the same term can be used for multiple kinds (e.g. both Type and Subject), refresh each kind.
+
+        // These arrays keep track of element texts and items that are affected by the change.
+        $elementTextsIds = array();
+        $itemIds = array();
+
+        // Get the element Id corresponding to the term's kind.
         $kinds = AvantVocabulary::getVocabularyKinds();
-        foreach ($kinds as $elementId => $kind)
+        $elementId = array_search($kind, $kinds);
+
+        // Query the database to get all element texts that use the term.
+        $term = $action == 'ADD' ? $newTerm : $oldTerm;
+        $results = $this->fetchElementTextsHavingTerm($elementId, $term);
+
+        // Examine the results. Each contains the element text's Id and the Id of the element's item.
+        foreach ($results as $result)
         {
-            // Determine if the term's kind matches the loop kind. For example, if the term kind is Place and
-            // the loop kind is the Place, that's a match. If the term kind matches the Type and Subject kind,
-            // and the loop kind is either of those, then that's a match.
-            $loopKindIsTypeOrSubject = AvantVocabulary::kindIsTypeOrSubject($kind);
-            $termKindMatchesTypeAndSubject = $termKind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT;
-            $matchingKind = $kind == $termKind || $loopKindIsTypeOrSubject && $termKindMatchesTypeAndSubject;
+            // Add this element text's Id to the list of affected element texts.
+            $elementTextsIds[] = $result['id'];
 
-            // These arrays keep track of element texts and items that are affected by the change.
-            $elementTextsIds = array();
-            $itemIds = array();
-
-            if ($matchingKind)
+            // Add the element text's item to the list of affected items.
+            $itemId = $result['record_id'];
+            if (!in_array($itemId, $itemIds))
             {
-                // Query the database to get all element texts of the term's kind that use the term.
-                $term = $change == 'ADD' ? $newTerm : $oldTerm;
-                $results = $this->fetchElementTextsHavingTerm($elementId, $term);
-
-                // Examine the results. Each contains the element text's Id and the Id of the element's item.
-                foreach ($results as $result)
-                {
-                    // Add this element text's Id to the list of affected element texts.
-                    $elementTextsIds[] = $result['id'];
-
-                    // Add the element text's item to the list of affected items.
-                    $itemId = $result['record_id'];
-                    if (!in_array($itemId, $itemIds))
-                    {
-                        $itemIds[] = $result['record_id'];
-                    }
-                }
+                $itemIds[] = $result['record_id'];
             }
         }
 
         // Update the element texts to replace the old term with the new term. There's no need to do
         // this when a term is added or deleted since those changes don't alter the element text.
-        if ($change = 'EDIT')
+        if ($action == 'UPDATE')
         {
             foreach ($elementTextsIds as $elementTextsId)
             {

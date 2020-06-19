@@ -65,7 +65,7 @@ class VocabularyTermsEditor
 
     protected function getElementTextsThatUseTerm($elementId, $oldTerm)
     {
-        $oldTerm = addslashes($oldTerm);
+        $oldTerm = AvantCommon::escapeQuotes($oldTerm);
 
         try
         {
@@ -105,7 +105,7 @@ class VocabularyTermsEditor
 
     public function getLocalTermUsageCount($elementId, $localTerm)
     {
-        $localTerm = addslashes($localTerm);
+        $localTerm = AvantCommon::escapeQuotes($localTerm);
 
         try
         {
