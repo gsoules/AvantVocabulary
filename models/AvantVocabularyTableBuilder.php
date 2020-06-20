@@ -269,7 +269,8 @@ class AvantVocabularyTableBuilder
             $this->refreshCommonTerm($action, $kind, $id, $oldTerm, $newTerm);
         }
 
-        return count($rows) . " terms refreshed";
+        $count = count($rows);
+        return ($count == 1 ? '1 term' : "$count terms") . ' refreshed';
     }
 
     protected function readDataRowsFromRemoteCsvFile($url)
