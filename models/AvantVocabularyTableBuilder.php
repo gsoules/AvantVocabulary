@@ -361,48 +361,32 @@ class AvantVocabularyTableBuilder
 
     protected function refreshItems($action, $kind, $oldTerm, $newTerm)
     {
-        // This method updates all element texts and items that are affected by a change to a common term.
-
-        // These arrays keep track of element texts and items that are affected by the change.
-        $elementTextsIds = array();
-        $itemIds = array();
-
         // Get the element Id corresponding to the term's kind.
         $kinds = AvantVocabulary::getVocabularyKinds();
         $elementId = array_search($kind, $kinds);
 
         // Query the database to get all element texts that use the term.
-        $term = $action == 'ADD' ? $newTerm : $oldTerm;
-        $results = $this->fetchElementTextsHavingTerm($elementId, $term);
+        $results = $this->fetchElementTextsHavingTerm($elementId, $action == 'ADD' ? $newTerm : $oldTerm);
 
         // Examine the results. Each contains the element text's Id and the Id of the element's item.
+        $refreshedItemIds = array();
         foreach ($results as $result)
         {
-            // Add this element text's Id to the list of affected element texts.
-            $elementTextsIds[] = $result['id'];
+            if ($action == 'UPDATE')
+            {
+                // Update the element texts to replace the old term with the new term. There's no need to do
+                // this when a term is added or deleted since those changes don't alter the element text.
+                $this->updateElementTexts($result['id'], $newTerm);
+            }
 
-            // Add the element text's item to the list of affected items.
+            // Get the Id of the item that the element text belongs to. If the item has already been refreshed, ignore it.
             $itemId = $result['record_id'];
-            if (!in_array($itemId, $itemIds))
-            {
-                $itemIds[] = $result['record_id'];
-            }
-        }
+            if (in_array($itemId, $refreshedItemIds))
+                continue;
 
-        // Update the element texts to replace the old term with the new term. There's no need to do
-        // this when a term is added or deleted since those changes don't alter the element text.
-        if ($action == 'UPDATE')
-        {
-            foreach ($elementTextsIds as $elementTextsId)
-            {
-                $this->updateElementTexts($elementTextsId, $newTerm);
-            }
-        }
-
-        // Update the local and shared indexes for affected items so that the indexes will contain the new term.
-        foreach ($itemIds as $itemId)
-        {
+            // Update the local and shared indexes for the  item so that the indexes will contain the new term.
             $this->updateItemIndexes($itemId);
+            $refreshedItemIds[] = $itemId;
         }
     }
 
