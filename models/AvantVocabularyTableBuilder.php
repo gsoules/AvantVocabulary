@@ -205,16 +205,14 @@ class AvantVocabularyTableBuilder
             // That's better however, than trashing the existing mapping without the site administrator being made
             // aware of the change. The violation will be highlighted in the Vocabulary Editor.
             $mapped = $localTermRecord['common_term_id'] > 0;
+            if ($mapped)
+                continue;
 
-            if (!$mapped)
-            {
-                // Set the local term record's common term Id to indicate that the local and common terms are the same.
-                $localTermRecord['common_term_id'] = $commonTermId;
-                if (!$localTermRecord->save())
-                {
-                    throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
-                }
-            }
+            // Update the local term record to use the common term.
+            $localTermRecord['common_term_id'] = $commonTermId;
+            $localTermRecord['local_term'] = '';
+            if (!$localTermRecord->save())
+                throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
         }
     }
 
