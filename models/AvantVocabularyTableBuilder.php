@@ -218,17 +218,25 @@ class AvantVocabularyTableBuilder
 
     protected function convertLocalTermToUnmapped($commonTermId)
     {
-        // Get all the local records that use the common term Id.
+        // Get all the local records that use the common term.
         $localTermRecords = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsByCommonTermId($commonTermId);
 
-        foreach ($localTermRecords as $localTermRecord)
+        if ($localTermRecords)
         {
-            $localTermRecord['common_term_id'] = 0;
-            if (!$localTermRecord->save())
+            // Get the common term text.
+            $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($commonTermId);
+            $commonTerm = $commonTermRecord->common_term;
+
+            // Change each local term record to be unmapped (has a local term that is not mapped to a common term).
+            foreach ($localTermRecords as $localTermRecord)
             {
-                throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
+                $localTermRecord['local_term'] = $commonTerm;
+                $localTermRecord['common_term_id'] = 0;
+                if (!$localTermRecord->save())
+                    throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
             }
         }
+
     }
 
     protected function fetchElementTextsHavingTerm($elementId, $term)
@@ -348,10 +356,10 @@ class AvantVocabularyTableBuilder
         }
 
         // Update items affect by the actions above.
-        $this->refreshItemsUsingCommonTerm($action, $termKind, $oldTerm, $newTerm);
+        $this->refreshItems($action, $termKind, $oldTerm, $newTerm);
     }
 
-    protected function refreshItemsUsingCommonTerm($action, $kind, $oldTerm, $newTerm)
+    protected function refreshItems($action, $kind, $oldTerm, $newTerm)
     {
         // This method updates all element texts and items that are affected by a change to a common term.
 
