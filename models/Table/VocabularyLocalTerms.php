@@ -2,16 +2,6 @@
 
 class Table_VocabularyLocalTerms extends Omeka_Db_Table
 {
-    public function getLocalTermRecord($kind, $localTerm)
-    {
-        $localTerm = AvantCommon::escapeQuotes($localTerm);
-
-        $select = $this->getSelect();
-        $select->where("kind = $kind AND LOWER(`local_term`) = LOWER('$localTerm')");
-        $result = $this->fetchObject($select);
-        return $result;
-    }
-
     public function getLocalTermRecordsByCommonTermId($commonTermId)
     {
         $select = $this->getSelect();
@@ -22,6 +12,7 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
 
     public function getLocalTermRecordsByLocalTerm($localTerm)
     {
+        // This method gets all local terms of any kind that match a term.
         $localTerm = AvantCommon::escapeQuotes($localTerm);
         $select = $this->getSelect();
         $select->where("local_term = '$localTerm'");
@@ -85,7 +76,7 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         $select->columns(array('local_term', 'vocabulary_common_terms.common_term'));
         $select->where("vocabulary_local_terms.kind = $kind");
 
-        // Join with the Common Terms table where the common_term_id is the same.
+        // Join with the Common Terms table where its common_term_id is the same as the local term common_term_id.
         $select->joinLeft(
             array('vocabulary_common_terms' => "{$db->prefix}vocabulary_common_terms"),
             'vocabulary_local_terms.common_term_id = vocabulary_common_terms.common_term_id',
@@ -96,6 +87,17 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
 
         // Use fetchAll instead of fetchObjects to get only the values of the local_term and common_term columns.
         $results = $db->query($select)->fetchAll();
+
+
+        // Find local terms that are the same as common terms and set their text to the common term.
+        // This is necessary because the local terms table only contains local term text for mapped
+        // local terms where the local term text is different than the common term text.
+        foreach ($results as $index => $result)
+        {
+            if (empty($result['local_term']))
+                $results[$index]['local_term'] = $result['common_term'];
+        }
+
         return $results;
     }
 
@@ -114,5 +116,15 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         $select->columns('COUNT(*) AS count');
         $result = $this->fetchObject($select);
         return $result->count;
+    }
+
+    public function localTermExists($kind, $localTerm)
+    {
+        $localTerm = AvantCommon::escapeQuotes($localTerm);
+        $select = $this->getSelect();
+        $select->columns('COUNT(*) AS count');
+        $select->where("kind = $kind AND LOWER(`local_term`) = LOWER('$localTerm')");
+        $result = $this->fetchObject($select);
+        return $result->count >= 1;
     }
 }

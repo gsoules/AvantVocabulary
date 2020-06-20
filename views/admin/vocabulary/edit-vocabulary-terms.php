@@ -110,9 +110,9 @@ if (!$isValidKind)
             echo '</div>';
         }
         echo "<div>" . __('These are super user options. Do not use them unless you understand what they are for.') . "</div><br/>";
-        echo "<button id='rebuild-common-terms-button'>Build Common Terms table</button>";
+        echo "<button id='rebuild-common-terms-button'>Rebuild Common Terms table</button>";
         echo "&nbsp;&nbsp;";
-        echo "<button id='rebuild-local-terms-button'>Build Local Terms table</button>";
+        echo "<button id='rebuild-local-terms-button'>Rebuild Local Terms table</button>";
         echo "</div>";
         echo "<div id='vocabulary-editor-busy'></div>";
     }
@@ -179,8 +179,6 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
         $localTerm = $localTermRecord->local_term;
         $commonTermId = $localTermRecord->common_term_id;
         $commonTerm = $localTermRecord->common_term;
-        if ($localTerm == $commonTerm)
-            $localTerm = '';
 
         $term = $localTerm ? $localTerm : $commonTerm;
         $usageCount = $vocabularyTermsEditor->getLocalTermUsageCount($elementId, $term);

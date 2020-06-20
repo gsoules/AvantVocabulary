@@ -70,18 +70,16 @@ class AvantVocabularyTableBuilder
         $localTermRecord = new VocabularyLocalTerms();
         $localTermRecord['order'] = $order;
         $localTermRecord['kind'] = $kind;
-        $localTermRecord['local_term'] = $localTerm;
 
-        // Check if the local term is identical to a common term.
         $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
         if ($commonTermRecord)
         {
-            // Add the common term info to the local term record.
+            $localTermRecord['local_term'] = '';
             $localTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
         }
         else
         {
-            // The local term is not the same as any common term.
+            $localTermRecord['local_term'] = $localTerm;
             $localTermRecord['common_term_id'] = 0;
         }
 

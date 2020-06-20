@@ -24,8 +24,7 @@ class VocabularyTermsEditor
 
         // Check to see if the term already exists.
         $term = $localTerm ? $localTerm : $commonTerm;
-        $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $term);
-        if ($localTermRecord)
+        if ($this->db->getTable('VocabularyLocalTerms')->localTermExists($kind, $term))
         {
             return json_encode(array('success'=>false, 'id'=>0));
         }
@@ -39,15 +38,14 @@ class VocabularyTermsEditor
 
         $commonTermId = $this->getIdForCommonTerm($kind, $commonTerm);
 
-        $localTermRecord = new VocabularyLocalTerms();
-        $localTermRecord['id'] = 0;
-        $localTermRecord['order'] = 0;
-        $localTermRecord['kind'] = $kind;
-        $localTermRecord['local_term'] = $localTerm;
-        $localTermRecord['common_term_id'] = $commonTermId;
+        $newLocalTermRecord = new VocabularyLocalTerms();
+        $newLocalTermRecord['order'] = 0;
+        $newLocalTermRecord['kind'] = $kind;
+        $newLocalTermRecord['local_term'] = $localTerm;
+        $newLocalTermRecord['common_term_id'] = $commonTermId;
 
         // Add the new term by updating the new record to insert it into the database.
-        if (!$localTermRecord->save())
+        if (!$newLocalTermRecord->save())
             throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
 
         // Reorder all of the terms so that this new term is the first.
@@ -60,7 +58,7 @@ class VocabularyTermsEditor
                 throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
         }
 
-        return json_encode(array('success'=>true, 'id'=>$localTermRecord->id, 'commonTermId'=>$commonTermId));
+        return json_encode(array('success'=>true, 'id'=>$newLocalTermRecord->id, 'commonTermId'=>$commonTermId));
     }
 
     protected function getElementTextsThatUseTerm($elementId, $oldTerm)
@@ -259,11 +257,10 @@ class VocabularyTermsEditor
         $oldLocalTerm = $localTermRecord->local_term;
         $newLocalTerm = $itemValues['localTerm'];
 
-        if (strtolower($newLocalTerm) != strtolower($oldLocalTerm))
+        if (!empty($newLocalTerm) && strtolower($newLocalTerm) != strtolower($oldLocalTerm))
         {
             // Check to see if the new local term already exists.
-            $localTermRecordForNewTerm = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecord($kind, $newLocalTerm);
-            if ($localTermRecordForNewTerm)
+            if ($this->db->getTable('VocabularyLocalTerms')->localTermExists($kind, $newLocalTerm))
             {
                 return json_encode(array('success'=>false, 'error'=>'local-term-exists'));
             }
