@@ -200,10 +200,9 @@ class AvantVocabularyTableBuilder
             if (!$compatible)
                 continue;
 
-            // A local term with the common term's text exists. If it is mapped to a common term, we'll leave the
-            // mapping alone even though that violates the rule that a common term cannot be used as a local term.
-            // That's better however, than trashing the existing mapping without the site administrator being made
-            // aware of the change. The violation will be highlighted in the Vocabulary Editor.
+            // A local term with the common term's text exists. If it is mapped to a common term, leave the mapping
+            // alone even though that violates the rule that a common term cannot be used as a local term. That's better
+            // however, than trashing the existing mapping without the site administrator being made aware of the change.
             $mapped = $localTermRecord['common_term_id'] > 0;
             if ($mapped)
                 continue;
