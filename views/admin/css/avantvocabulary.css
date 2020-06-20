@@ -7,6 +7,25 @@
     --unmapped-term: #b72d2d;
 }
 
+.vocabulary-chooser-area {
+    width: 30%;
+}
+
+.vocabulary-controls select {
+    -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    border-radius: 0;
+    border: 1px solid #ccc;
+    display:inline-block;
+    font-size: 14px;
+    height: 28px;
+    line-height: 18px;
+    margin-bottom: 0px;
+    margin-right: 3px;
+    width:46%;
+    vertical-align: top;
+}
+
 #add-vocabulary-term-button {
     float: right;
 }
@@ -307,6 +326,10 @@ https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-wit
 
 /* When the screen is 768px wide or less */
 @media screen and (max-width: 768px) {
+    .vocabulary-chooser-area {
+        width: 70%;
+    }
+
     .vocabulary-term-left {
         width: 360px;
     }
