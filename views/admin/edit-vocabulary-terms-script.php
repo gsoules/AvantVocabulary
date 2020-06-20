@@ -329,6 +329,8 @@
         let commonTerm = item.find('.vocabulary-drawer-common-term').text();
         let commonTermId = item.find('.vocabulary-drawer-common-term').attr('data-common-term-id');
         let usageCount = item.find('.vocabulary-term-count').text();
+        if (usageCount === '')
+            usageCount = '0';
         usageCount = parseInt(usageCount, 10);
 
         // Get the Id minus the "item-" prefix.
@@ -719,7 +721,6 @@
         }
 
         let leftTerm;
-        let rightTerm
         let mappingIndicator;
         let usageTerm;
 
@@ -941,6 +942,8 @@
     {
         let itemValues = getItemValues(item);
         let usageCount = item.find('.vocabulary-term-count').text();
+        if (usageCount === '')
+            usageCount = '0';
 
         if (!validateItemValues(item, itemValues))
             return;
