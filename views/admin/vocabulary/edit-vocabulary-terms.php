@@ -55,73 +55,19 @@ if (AvantCommon::isAjaxRequest())
 $pageTitle = __('Vocabulary Editor');
 echo head(array('title' => $pageTitle, 'bodyclass' => 'vocabulary-terms-page'));
 
-// Get the vocabulary kind from the URL.
-$kind = isset($_GET['kind']) ? intval($_GET['kind']) : 0;
-$isValidKind =
-    $kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE ||
-    $kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT ||
-    $kind == AvantVocabulary::VOCABULARY_TERM_KIND_PLACE;
-
-$kindName = '';
-if ($isValidKind)
-{
-    if ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE)
-        $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_LABEL;
-    elseif ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT)
-        $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL;
-    elseif ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_PLACE)
-        $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL;
-}
+list($kind, $kindName) = AvantVocabulary::getDefaultKindFromQueryOrCookie();
 
 $elementId = ItemMetadata::getElementIdForElementName($kindName);
 
 echo "<div class='vocabulary-controls'>";
+echo AvantVocabulary::emitVocabularyKindChooser();
 
 echo "<div>";
-echo "<label class='vocabulary-chooser-label'>Vocabulary: </label>";
-echo "<SELECT required id='vocabulary-chooser' class='vocabulary-chooser'>";
-echo "<OPTION value='0' selected disabled hidden>Select a vocabulary to edit</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_LABEL . "</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "''>" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL . "</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL . "</OPTION>";
-echo "</SELECT>";
+echo "<button id='add-vocabulary-term-button' type='button' class='action-button'>" . __('Add %s', $kindName) . "</button>";
 echo "</div>";
+echo "<a class='vocabulary-view-toggle' href='../vocabulary/tree?kind=$kind'>" . __('View %s hierarchy', $kindName) . "</a>";
 
-if ($isValidKind)
-{
-    echo "<div>";
-    echo "<button id='add-vocabulary-term-button' type='button' class='action-button'>" . __('Add %s', $kindName) . "</button>";
-    echo "</div>";
-    echo "<a class='vocabulary-view-toggle' href='../vocabulary/tree?kind=$kind'>" . __('View %s hierarchy', $kindName) . "</a>";
-
-}
 echo "</div>";
-
-if (!$isValidKind)
-{
-    if ($kind == 0 && current_user()->role == 'super')
-    {
-        // When the kind is 0, show the Build button to a super user.
-        echo "<div class='vocabulary-build-buttons'>";
-        if (isset($_COOKIE['XDEBUG_SESSION']))
-        {
-            echo '<div class="health-report-error">';
-            echo '<a href="http://localhost/omeka-2.6/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
-            echo '</div>';
-        }
-        echo "<div>" . __('These are super user options. Do not use them unless you understand what they are for.') . "</div><br/>";
-        echo "<button id='rebuild-common-terms-button'>Rebuild Common Terms table</button>";
-        echo "&nbsp;&nbsp;";
-        echo "<button id='rebuild-local-terms-button'>Rebuild Local Terms table</button>";
-        echo "</div>";
-        echo "<div id='vocabulary-editor-busy'></div>";
-    }
-
-    // Don't show anything else until the user chooses a vocabulary.
-    emitPageJavaScript($kind, $kindName, $elementId, 0);
-    echo foot();
-    return;
-}
 
 $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
 $commonTermCount = number_format($commonTermCount, 0, '.', ',');
@@ -220,5 +166,23 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
     ?>
 </ul>
 
-<?php emitPageJavaScript($kind, $kindName, $elementId, $commonTermCount); ?>
-<?php echo foot(); ?>
+<?php
+if (AvantCommon::userIsSuper())
+{
+    echo "<div class='vocabulary-build-buttons'>";
+    if (isset($_COOKIE['XDEBUG_SESSION']))
+    {
+        echo '<div class="health-report-error">';
+        echo '<a href="http://localhost/omeka-2.6/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
+        echo '</div>';
+    }
+    echo "<div>" . __('These are super user options. Do not use them unless you understand what they are for.') . "</div><br/>";
+    echo "<button id='rebuild-common-terms-button'>Rebuild Common Terms table</button>";
+    echo "&nbsp;&nbsp;";
+    echo "<button id='rebuild-local-terms-button'>Rebuild Local Terms table</button>";
+    echo "</div>";
+    echo "<div id='vocabulary-editor-busy'></div>";
+}
+
+emitPageJavaScript($kind, $kindName, $elementId, $commonTermCount);
+echo foot();

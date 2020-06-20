@@ -12,15 +12,59 @@ class AvantVocabulary
     const VOCABULARY_TERM_KIND_SUBJECT_LABEL = 'Subject';
     const VOCABULARY_TERM_KIND_PLACE_LABEL = 'Place';
 
+    const VOCABULARY_TERM_COOKIE = 'VOCAB-KIND';
+
     // Common terms with an Id higher than this do not come from Nomenclature 4.0.
     const VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID = 20000;
+
+    public static function emitVocabularyKindChooser()
+    {
+        $html = '';
+        $html .= "<div class='vocabulary-chooser-area'>";
+        $html .= "<label class='vocabulary-chooser-label'>Vocabulary: </label>";
+        $html .= "<SELECT required id='vocabulary-chooser'>";
+        $html .= "<OPTION value='0' selected disabled hidden>Select a vocabulary to edit</OPTION>";
+
+        $kindFields = self::getVocabularyFields();
+        foreach ($kindFields as $kindName => $kind)
+            $html .= "<OPTION value='" . $kind . "'>" . $kindName . "</OPTION>";
+
+        $html .= "</SELECT>";
+        $html .= "</div>";
+        return $html;
+    }
+
+    public static function getDefaultKindFromQueryOrCookie()
+    {
+        $kinds = self::getVocabularyKinds();
+
+        // Get the vocabulary kind from the URL.
+        $kind = isset($_GET['kind']) ? intval($_GET['kind']) : 0;
+        $isValidKind = in_array($kind, $kinds);
+
+        if (!$isValidKind)
+        {
+            // The kind is not on the query string. Get it from the cookie.
+            $kind = isset($_COOKIE[self::VOCABULARY_TERM_COOKIE]) ? $_COOKIE[self::VOCABULARY_TERM_COOKIE] : 0;
+            $isValidKind = in_array($kind, $kinds);
+            if (!$isValidKind)
+            {
+                // There's no cookie (or it has a bad value). Default to Type.
+                $kind = self::VOCABULARY_TERM_KIND_TYPE;
+            }
+        }
+
+        $kindFields = self::getVocabularyFields();
+        $kindName = array_search($kind, $kindFields);
+        return array($kind, $kindName);
+    }
 
     public static function getVocabularyFields()
     {
         return array(
-            'Type'=>AvantVocabulary::VOCABULARY_TERM_KIND_TYPE,
-            'Subject'=>AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT,
-            'Place'=>AvantVocabulary::VOCABULARY_TERM_KIND_PLACE
+            'Type'=>self::VOCABULARY_TERM_KIND_TYPE,
+            'Subject'=>self::VOCABULARY_TERM_KIND_SUBJECT,
+            'Place'=>self::VOCABULARY_TERM_KIND_PLACE
         );
     }
 
@@ -41,7 +85,7 @@ class AvantVocabulary
 
     public static function kindIsTypeOrSubject($kind)
     {
-        return $kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE || $kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT;
+        return $kind == self::VOCABULARY_TERM_KIND_TYPE || $kind == self::VOCABULARY_TERM_KIND_SUBJECT;
     }
 
     public static function progressFileName()

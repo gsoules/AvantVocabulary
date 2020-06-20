@@ -12,7 +12,7 @@
     const termChooserDialogMessage = jQuery('#vocabulary-term-message');
     const urlForEditorPage = '<?php echo $url; ?>/terms';
     const urlForTermEditor = '<?php echo $url; ?>/update';
-
+    const VOCABULARY_TERM_COOKIE = '<?php echo AvantVocabulary::VOCABULARY_TERM_COOKIE; ?>';
 
     let activeItemId = 0;
     let actionInProgress = false;
@@ -361,6 +361,8 @@
         initializePageControls();
         initializeDrawerControls();
         enableAllItems(true);
+
+        Cookies.set(VOCABULARY_TERM_COOKIE, kind, {expires: 14, sameSite: 'lax'});
     }
 
     function initializeDrawerControls()

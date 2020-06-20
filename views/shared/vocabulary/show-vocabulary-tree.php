@@ -90,23 +90,7 @@ function plotTree($tree, $indent= 0, $parents = '')
 $pageTitle = __('Vocabulary Hierarchy');
 echo head(array('title' => $pageTitle, 'bodyclass' => 'vocabulary-tree-page'));
 
-// Get the vocabulary kind from the URL.
-$kind = isset($_GET['kind']) ? intval($_GET['kind']) : 0;
-$isValidKind =
-    $kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE ||
-    $kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT ||
-    $kind == AvantVocabulary::VOCABULARY_TERM_KIND_PLACE;
-
-$kindName = '';
-if ($isValidKind)
-{
-    if ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE)
-        $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_LABEL;
-    elseif ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT)
-        $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL;
-    elseif ($kind == AvantVocabulary::VOCABULARY_TERM_KIND_PLACE)
-        $kindName = AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL;
-}
+list($kind, $kindName) = AvantVocabulary::getDefaultKindFromQueryOrCookie();
 
 $requestUri = $_SERVER['REQUEST_URI'];
 $onAdminPage = strpos($requestUri, '/admin');
@@ -127,18 +111,9 @@ $instructions = '<div>' . __('This page displays the entire %s vocabulary hierar
 $instructions .= '<div>' . __('Nomenclature 4.0 terms are followed by their identifier number (click it for more information about the term).') . '</div>';
 
 echo "<div class='vocabulary-controls'>";
+echo AvantVocabulary::emitVocabularyKindChooser();
 
-echo "<div>";
-echo "<div class='vocabulary-chooser-label'>Vocabulary: </div>";
-echo "<SELECT required id='vocabulary-chooser' class='vocabulary-chooser'>";
-echo "<OPTION value='0' selected disabled hidden>Select a vocabulary</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_LABEL . "</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT . "''>" . AvantVocabulary::VOCABULARY_TERM_KIND_SUBJECT_LABEL . "</OPTION>";
-echo "<OPTION value='" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE . "'>" . AvantVocabulary::VOCABULARY_TERM_KIND_PLACE_LABEL . "</OPTION>";
-echo "</SELECT>";
-echo "</div>";
-
-if ($isValidKind && $onAdminPage)
+if ($onAdminPage)
 {
     echo "<div class='vocabulary-view-toggle'>";
     echo "<a href='../vocabulary/terms?kind=$kind'>" . __('Return to Vocabulary Editor') . "</a>";
