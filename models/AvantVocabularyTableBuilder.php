@@ -87,26 +87,16 @@ class AvantVocabularyTableBuilder
             throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
     }
 
-    protected function databaseRemoveCommonTerm($commonTermId)
+    protected function databaseRemoveCommonTerm($commonTermRecord)
     {
-        $commonTermRecord = $this->getCommonTermRecordByCommonTermId($commonTermId);
-        if (!$commonTermRecord)
+        try
         {
-            // This should not happen in practice, but it could if the same change CSV file gets submitted
-            // more than once such that the common term got deleted on a previous submission.
-            return;
+            $commonTermRecord->delete();
         }
-        else
+        catch (Exception $e)
         {
-            try
-            {
-                $commonTermRecord->delete();
-            }
-            catch (Exception $e)
-            {
-                $message = $e->getMessage();
-                throw new Exception($this->reportError('Delete failed: ' . $message, __FUNCTION__, __LINE__));
-            }
+            $message = $e->getMessage();
+            throw new Exception($this->reportError('Delete failed: ' . $message, __FUNCTION__, __LINE__));
         }
     }
 
@@ -310,25 +300,28 @@ class AvantVocabularyTableBuilder
 
     protected function refreshCommonTerm($action, $termKind, $commonTermId, $oldTerm, $newTerm)
     {
-        // This method gets called when a common term has been added, deleted, or updated.
-        // It is called once for each action in a diff file.
+        // This method gets called when a common term has been added, deleted, or updated. It is called once for each
+        // action in a diff file. If the same diff file gets processed more than once, or if a previous action was
+        // equivalent to a subsequent action (e.g. the action was for both a Type and Subject), the action gets skipped.
         switch ($action)
         {
             case 'ADD':
-                // Add the new term to the common terms table, but first see if it's already in the table. This can
-                // happen if the term kind is for both Type and Subject in which case, the diff file will contain an
-                // ADD action for each kind. It can also happen if the diff file is processed more than once.
                 $commonTermRecord = $this->getCommonTermRecordByCommonTermId($commonTermId);
-                if (!$commonTermRecord)
+                if ($commonTermRecord)
+                    $action = 'SKIP';
+                else
                     $commonTermRecord = $this->databaseInsertRecordForCommonTerm($termKind, $commonTermId, $newTerm);
                 break;
 
             case 'DELETE':
-                // A common term has been deleted. Unmap any local terms that are mapped to it.
-                $this->convertLocalTermToUnmapped($commonTermId);
-
-                // Remove the term from the common terms table.
-                $this->databaseRemoveCommonTerm($commonTermId);
+                $commonTermRecord = $this->getCommonTermRecordByCommonTermId($commonTermId);
+                if ($commonTermRecord)
+                {
+                    $this->convertLocalTermToUnmapped($commonTermId);
+                    $this->databaseRemoveCommonTerm($commonTermRecord);
+                }
+                else
+                    $action = 'SKIP';
                 break;
 
             case 'UPDATE':
@@ -337,16 +330,20 @@ class AvantVocabularyTableBuilder
                 if (!$commonTermRecord)
                     throw new Exception($this->reportError('Get common term record failed', __FUNCTION__, __LINE__));
 
-                // Update the common term's record with the new text unless it has already been changed.
-                // This can happen for the UPDATE action the same as explained for the ADD action in the comment above.
-                if ($commonTermRecord['common_term'] != $newTerm)
+                if ($commonTermRecord->common_term == $newTerm)
+                    $action = 'SKIP';
+                else
                 {
+                    // Update the common term's record with the new text.
                     $commonTermRecord['common_term'] = $newTerm;
                     if (!$commonTermRecord->save())
                         throw new Exception($this->reportError('Save common term failed',  __FUNCTION__, __LINE__));
                 }
                 break;
         }
+
+        if ($action == 'SKIP')
+            return;
 
         if ($action == 'ADD' || $action == 'UPDATE')
         {

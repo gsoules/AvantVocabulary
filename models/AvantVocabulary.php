@@ -116,7 +116,7 @@ class AvantVocabulary
             }
         }
 
-        return $response;
+        return '[' . ElasticsearchConfig::getOptionValueForContributorId() . '] ' . $response;
     }
 
     public static function vocabulary_diff_url()
