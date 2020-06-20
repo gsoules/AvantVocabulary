@@ -184,7 +184,7 @@ class AvantVocabularyTableBuilder
             // See if the local term's kind is compatible with the common term's kind.
             $compatible = (
                 $commonTermKind == $localTermKind ||
-                AvantVocabulary::kindIsTypeOrSubject($localTermKind) && $commonTermKind == AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT);
+                AvantVocabulary::kindIsTypeOrSubject($localTermKind) && $commonTermKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT);
             if (!$compatible)
                 continue;
 
@@ -341,11 +341,27 @@ class AvantVocabularyTableBuilder
         if ($action == 'ADD' || $action == 'UPDATE')
         {
             // See if the added or updated common term is the same as a local term, and if so, make the local term common.
-            $this->convertLocalTermToNewCommonTerm($termKind, $newTerm, $commonTermRecord->common_term_id);
+            if ($action == 'ADD' && $termKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT)
+            {
+                $this->convertLocalTermToNewCommonTerm(AvantVocabulary::KIND_TYPE, $newTerm, $commonTermRecord->common_term_id);
+                $this->convertLocalTermToNewCommonTerm(AvantVocabulary::KIND_SUBJECT, $newTerm, $commonTermRecord->common_term_id);
+            }
+            else
+            {
+                $this->convertLocalTermToNewCommonTerm($termKind, $newTerm, $commonTermRecord->common_term_id);
+            }
         }
 
         // Update items affect by the actions above.
-        $this->refreshItems($action, $termKind, $commonTermId, $oldTerm, $newTerm);
+        if ($action == 'ADD' && $termKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT)
+        {
+            $this->refreshItems($action, AvantVocabulary::KIND_TYPE, $commonTermId, $oldTerm, $newTerm);
+            $this->refreshItems($action, AvantVocabulary::KIND_SUBJECT, $commonTermId, $oldTerm, $newTerm);
+        }
+        else
+        {
+            $this->refreshItems($action, $termKind, $commonTermId, $oldTerm, $newTerm);
+        }
     }
 
     protected function refreshItems($action, $kind, $commonTermId, $oldTerm, $newTerm)

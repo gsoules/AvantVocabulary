@@ -129,7 +129,7 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 
         if (AvantVocabulary::kindIsTypeOrSubject($kind))
         {
-            $typeOrSubject = AvantVocabulary::VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT;
+            $typeOrSubject = AvantVocabulary::KIND_TYPE_OR_SUBJECT;
             $whereKind = "(kind = $kind OR kind = $typeOrSubject)";
         }
         else

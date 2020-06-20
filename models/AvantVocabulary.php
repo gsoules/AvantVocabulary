@@ -3,14 +3,10 @@
 class AvantVocabulary
 {
     # These values represent a bit map of flags which can be combined e.g. type & subject.
-    const VOCABULARY_TERM_KIND_TYPE = 1;             # 0001
-    const VOCABULARY_TERM_KIND_SUBJECT = 2;          # 0010
-    const VOCABULARY_TERM_KIND_PLACE = 4;            # 0100
-    const VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT = 3; # 0011
-
-    const VOCABULARY_TERM_KIND_TYPE_LABEL = 'Type';
-    const VOCABULARY_TERM_KIND_SUBJECT_LABEL = 'Subject';
-    const VOCABULARY_TERM_KIND_PLACE_LABEL = 'Place';
+    const KIND_TYPE = 1;            # 0001
+    const KIND_SUBJECT = 2;         # 0010
+    const KIND_PLACE = 4;           # 0100
+    const KIND_TYPE_OR_SUBJECT = 3; # 0011
 
     const VOCABULARY_TERM_COOKIE = 'VOCAB-KIND';
 
@@ -50,7 +46,7 @@ class AvantVocabulary
             if (!$isValidKind)
             {
                 // There's no cookie (or it has a bad value). Default to Type.
-                $kind = self::VOCABULARY_TERM_KIND_TYPE;
+                $kind = self::KIND_TYPE;
             }
         }
 
@@ -62,9 +58,9 @@ class AvantVocabulary
     public static function getVocabularyFields()
     {
         return array(
-            'Type'=>self::VOCABULARY_TERM_KIND_TYPE,
-            'Subject'=>self::VOCABULARY_TERM_KIND_SUBJECT,
-            'Place'=>self::VOCABULARY_TERM_KIND_PLACE
+            'Type'=>self::KIND_TYPE,
+            'Subject'=>self::KIND_SUBJECT,
+            'Place'=>self::KIND_PLACE
         );
     }
 
@@ -85,7 +81,7 @@ class AvantVocabulary
 
     public static function kindIsTypeOrSubject($kind)
     {
-        return $kind == self::VOCABULARY_TERM_KIND_TYPE || $kind == self::VOCABULARY_TERM_KIND_SUBJECT;
+        return $kind == self::KIND_TYPE || $kind == self::KIND_SUBJECT;
     }
 
     public static function progressFileName()
