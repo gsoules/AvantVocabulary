@@ -108,7 +108,7 @@ foreach ($commonTermRecords as $commonTermRecord)
 
 $learnMoreLink = '<a href="https://digitalarchive.avantlogic.net/docs/archivist/vocabularies/" target="_blank">Learn about vocabularies</a>';
 $instructions = '<div>' . __('This page displays the entire %s vocabulary hierarchy. ', $kindName) . $learnMoreLink . '</div>';
-$instructions .= '<div>' . __('Nomenclature 4.0 terms are followed by their identifier number (click it for more information about the term).') . '</div>';
+$instructions .= '<div>' . __('Terms that come from Nomenclature 4.0 are followed by their identifier number. Click the identifier to see the Nomenclature definition of the term.') . '</div>';
 
 echo "<div class='vocabulary-controls'>";
 echo AvantVocabulary::emitVocabularyKindChooser();
