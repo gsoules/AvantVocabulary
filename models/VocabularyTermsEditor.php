@@ -29,14 +29,26 @@ class VocabularyTermsEditor
             return json_encode(array('success'=>false, 'id'=>0));
         }
 
+        $commonTermId = $this->getIdForCommonTerm($kind, $commonTerm);
+
         // Determine if the local term is a common term.
-        $commonTermId = $this->getIdForCommonTerm($kind, $localTerm);
-        if ($commonTermId)
+        $commonTermIdForLocalTerm = $this->getIdForCommonTerm($kind, $localTerm);
+        if ($commonTermIdForLocalTerm)
         {
-            return json_encode(array('success'=>false, 'error'=>'local-term-is-common-term'));
+            if ($commonTermId)
+            {
+                // Report an error that the local term is a common term and there is already a common term.
+                return json_encode(array('success'=>false, 'error'=>'local-term-is-common-term'));
+            }
+            else
+            {
+                // Use the local term for the common term.
+                $commonTerm = $itemValues['localTerm'];
+                $localTerm = '';
+                $commonTermId = $commonTermIdForLocalTerm;
+            }
         }
 
-        $commonTermId = $this->getIdForCommonTerm($kind, $commonTerm);
 
         $newLocalTermRecord = new VocabularyLocalTerms();
         $newLocalTermRecord['order'] = 0;
@@ -58,7 +70,7 @@ class VocabularyTermsEditor
                 throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
         }
 
-        return json_encode(array('success'=>true, 'id'=>$newLocalTermRecord->id, 'commonTermId'=>$commonTermId));
+        return json_encode(array('success'=>true, 'id'=>$newLocalTermRecord->id, 'localTerm'=>$localTerm, 'commonTerm'=>$commonTerm, 'commonTermId'=>$commonTermId));
     }
 
     protected function getElementTextsThatUseTerm($elementId, $oldTerm)
@@ -257,47 +269,58 @@ class VocabularyTermsEditor
         $oldLocalTerm = $localTermRecord->local_term;
         $newLocalTerm = $itemValues['localTerm'];
 
+        // Check to see if the new local term already exists.
         if (!empty($newLocalTerm) && strtolower($newLocalTerm) != strtolower($oldLocalTerm))
         {
-            // Check to see if the new local term already exists.
             if ($this->db->getTable('VocabularyLocalTerms')->localTermExists($kind, $newLocalTerm))
             {
                 return json_encode(array('success'=>false, 'error'=>'local-term-exists'));
             }
         }
 
-        // Determine if the local term is a common term.
-        $commonTermId = $this->getIdForCommonTerm($kind, $newLocalTerm);
-        if ($commonTermId)
-        {
-            return json_encode(array('success'=>false, 'error'=>'local-term-is-common-term'));
-        }
-
         $oldCommonTermId = $localTermRecord->common_term_id;
         $newCommonTerm = $itemValues['commonTerm'];
         $newCommonTermId = $newCommonTerm ? $this->getIdForCommonTerm($kind, $newCommonTerm) : 0;
 
+        // Determine if the local term is a common term.
+        $commonTermIdForLocalTerm = $this->getIdForCommonTerm($kind, $newLocalTerm);
+        if ($commonTermIdForLocalTerm)
+        {
+            if ($newCommonTermId)
+            {
+                // Report an error that the local term is a common term and there is already a common term.
+                return json_encode(array('success'=>false, 'error'=>'local-term-is-common-term'));
+            }
+            else
+            {
+                // Use the local term for the common term.
+                $newCommonTerm = $itemValues['localTerm'];
+                $newLocalTerm = '';
+                $newCommonTermId = $commonTermIdForLocalTerm;
+            }
+        }
+
         // Determine the old term, before the update.
         if ($oldLocalTerm)
         {
-            $oldTerm = $oldLocalTerm;
+            $oldElementText = $oldLocalTerm;
         }
         else
         {
             $oldCommonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($oldCommonTermId);
             if (!$oldCommonTermRecord)
                 throw new Exception($this->reportError(__FUNCTION__, ' get old common term record failed'));
-            $oldTerm = $oldCommonTermRecord->common_term;
+            $oldElementText = $oldCommonTermRecord->common_term;
         }
 
         // Determine the new term, after the update.
         if ($newLocalTerm)
         {
-            $newTerm = $newLocalTerm;
+            $newElementText = $newLocalTerm;
         }
         else
         {
-            $newTerm = $newCommonTerm;
+            $newElementText = $newCommonTerm;
         }
 
         // Update the local term record with the new data.
@@ -307,9 +330,9 @@ class VocabularyTermsEditor
             throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
 
         // Update the Elasticsearch indexes with the new data.
-        $this->updateAndReindexItems($itemValues, $oldTerm, $newTerm);
+        $this->updateAndReindexItems($itemValues, $oldElementText, $newElementText);
 
-        return json_encode(array('success'=>true, 'commonTermId'=>$newCommonTermId));
+        return json_encode(array('success'=>true, 'localTerm'=>$newLocalTerm, 'commonTerm'=>$newCommonTerm, 'commonTermId'=>$newCommonTermId));
     }
 
     protected function updateTermOrder()

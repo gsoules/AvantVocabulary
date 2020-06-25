@@ -102,8 +102,9 @@
             newItem.find('.drawer-contents').hide();
 
             // Set the common term Id for the new item.
-            let commonTermId = data['commonTermId'];
-            newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', commonTermId);
+            newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', data['commonTermId']);
+            newItem.find('.vocabulary-drawer-local-term').val(data['localTerm']);
+            newItem.find('.vocabulary-drawer-common-term').text(data['commonTerm']);
 
             // Convert the Save button back into the Update button.
             let updateButton = newItem.find('.update-item-button');
@@ -160,9 +161,10 @@
 
         if (data['success'])
         {
-            // Set the common term Id for the update item.
-            let commonTermId = data['commonTermId'];
-            item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', commonTermId);
+            // Set the common term Id for the updated item.
+            item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', data['commonTermId']);
+            item.find('.vocabulary-drawer-local-term').val(data['localTerm']);
+            item.find('.vocabulary-drawer-common-term').text(data['commonTerm']);
 
             // Update the item's title with the updated local and/or common terms.
             setItemTitle(item);
@@ -812,7 +814,7 @@
 
     function showErrorLocalTermIsCommonTerm(item, term, kindName)
     {
-        let message = '<?php echo __('"{1}" is a common term and cannot be used as a local term.</br>Remove it from the Local Term field and then choose it for the Common Term.'); ?>';
+        let message = '<?php echo __('"{1}" is a common term and cannot be used as a local term'); ?>';
         message = message.replace('{1}', term);
         showDrawerErrorMessage(item, message);
     }

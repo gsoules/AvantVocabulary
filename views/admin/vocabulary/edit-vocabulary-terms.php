@@ -72,8 +72,8 @@ echo "</div>";
 $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
 $commonTermCount = number_format($commonTermCount, 0, '.', ',');
 
-$localTermItemRecords = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItemsInOrder($kind);
-$localTermCount = count($localTermItemRecords);
+$localTermItems = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItemsInOrder($kind);
+$localTermCount = count($localTermItems);
 $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 
 // The HTML that follows displays the choose vocabulary.
@@ -117,14 +117,14 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
     $vocabularyTermsEditor = new VocabularyTermsEditor();
     $elementId = ItemMetadata::getElementIdForElementName($kindName);
 
-    foreach ($localTermItemRecords as $localTermRecord)
+    foreach ($localTermItems as $localTermItem)
     {
         $hideClass = '';
-        $identifier = $localTermRecord->common_term_id;
+        $identifier = $localTermItem['common_term_id'];
 
-        $localTerm = $localTermRecord->local_term;
-        $commonTermId = $localTermRecord->common_term_id;
-        $commonTerm = $localTermRecord->common_term;
+        $localTerm = $localTermItem['local_term'];
+        $commonTermId = $localTermItem['common_term_id'];
+        $commonTerm = $localTermItem['common_term'];
 
         $term = $localTerm ? $localTerm : $commonTerm;
         $usageCount = $vocabularyTermsEditor->getLocalTermUsageCount($elementId, $term);
@@ -135,7 +135,7 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
         // responsible for creating and modifying the header when the user adds or edits a term. This way, this PHP
         // code does not need to know how the header is supposed to be formatted.
         ?>
-        <li id="item-<?php echo $localTermRecord->id; ?>" class="vocabulary-term-item" >
+        <li id="item-<?php echo $localTermItem['id']; ?>" class="vocabulary-term-item" >
             <div class="main_link ui-sortable-handle">
                 <div class="sortable-item sortable-item vocabulary-term-header">
                     <div class="vocabulary-term-left"></div>

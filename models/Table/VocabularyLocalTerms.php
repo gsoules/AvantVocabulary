@@ -30,11 +30,18 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
 
     public function getLocalTermItemsInOrder($kind)
     {
-        // This method returns the records from the local terms table joined with the common terms table
+        // This method returns data from the local terms table joined with the common terms table
         // so that the results include the text of the common term for the local term's common term Id.
 
         $db = get_db();
         $select = $this->getSelect();
+        $select->reset(Zend_Db_Select::COLUMNS);
+        $select->columns(array(
+            'vocabulary_local_terms.id',
+            'vocabulary_local_terms.local_term',
+            'vocabulary_local_terms.common_term_id',
+            'vocabulary_common_terms.common_term'
+        ));
         $select->where("vocabulary_local_terms.kind = $kind");
 
         // Join with the Common Terms table where the common_term_id is the same.
@@ -46,7 +53,9 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
 
         $select->order('order');
 
-        $results = $this->fetchObjects($select);
+        // Use fetchAll instead of fetchObjects to get only the values of the local_term and common_term columns.
+        $results = $db->query($select)->fetchAll();
+
         return $results;
     }
 
