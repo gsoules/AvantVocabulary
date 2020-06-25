@@ -5,13 +5,20 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
     public function commonTermCount($kind)
     {
         $whereKind = $this->getWhereKind($kind);
-
         $select = $this->getSelect();
         $select->reset(Zend_Db_Select::COLUMNS);
         $select->columns('COUNT(*) AS count');
         $select->where($whereKind);
-        $result = $this->fetchObject($select);
-        return $result->count;
+
+        try
+        {
+            $result = $this->fetchObject($select);
+            return $result->count;
+        }
+        catch (Exception $e)
+        {
+            return 0;
+        }
     }
 
     public function getAllCommonTermRecordsForKind($kind)

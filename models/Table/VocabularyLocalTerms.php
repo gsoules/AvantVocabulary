@@ -53,8 +53,15 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
 
         $select->order('order');
 
-        // Use fetchAll instead of fetchObjects to get only the values of the local_term and common_term columns.
-        $results = $db->query($select)->fetchAll();
+        try
+        {
+            // Use fetchAll instead of fetchObjects to get only the values of the local_term and common_term columns.
+            $results = $db->query($select)->fetchAll();
+        }
+        catch (Exception $e)
+        {
+            return array();
+        }
 
         return $results;
     }
