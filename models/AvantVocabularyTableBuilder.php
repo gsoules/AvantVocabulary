@@ -132,9 +132,9 @@ class AvantVocabularyTableBuilder
         return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $commonTerm);
     }
 
-    protected function getCommonTermRecordByCommonTermId($commonTermId)
+    protected function getCommonTermRecordByKindAndCommonTermId($kind, $commonTermId)
     {
-        return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($commonTermId);
+        return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByKindAndCommonTermId($kind, $commonTermId);
     }
 
     public function handleAjaxRequest($tableName)
@@ -306,13 +306,13 @@ class AvantVocabularyTableBuilder
         switch ($action)
         {
             case 'ADD':
-                $commonTermRecord = $this->getCommonTermRecordByCommonTermId($commonTermId);
+                $commonTermRecord = $this->getCommonTermRecordByKindAndCommonTermId($termKind, $commonTermId);
                 if (!$commonTermRecord)
                     $commonTermRecord = $this->databaseInsertRecordForCommonTerm($termKind, $commonTermId, $newTerm);
                 break;
 
             case 'DELETE':
-                $commonTermRecord = $this->getCommonTermRecordByCommonTermId($commonTermId);
+                $commonTermRecord = $this->getCommonTermRecordByKindAndCommonTermId($termKind, $commonTermId);
                 if ($commonTermRecord)
                 {
                     $this->convertLocalTermsToUnmapped($commonTermId);

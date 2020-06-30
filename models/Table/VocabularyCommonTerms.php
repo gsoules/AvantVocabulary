@@ -76,6 +76,22 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         return $result;
     }
 
+    public function getCommonTermRecordByKindAndCommonTermId($kind, $commonTermId)
+    {
+        try
+        {
+            $select = $this->getSelect();
+            $select->where("common_term_id = '$commonTermId' AND kind = '$kind'");
+            $result = $this->fetchObject($select);
+        }
+        catch (Exception $e)
+        {
+            $result = null;
+        }
+
+        return $result;
+    }
+
     public function getCommonTermSuggestions($kind, $term)
     {
         $whereKind = $this->getWhereKind($kind);
