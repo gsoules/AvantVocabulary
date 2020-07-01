@@ -2,6 +2,54 @@
 
 class Table_VocabularyLocalTerms extends Omeka_Db_Table
 {
+    public function getLocalTermItems($kind)
+    {
+        // A local term "item" is an array containing all the information about a local term.
+        // This method merges data from the local terms table and the common terms table so
+        // the results include the text of the common term for the local term's common term Id.
+
+        $db = get_db();
+        $select = $this->getSelect();
+        $select->reset(Zend_Db_Select::COLUMNS);
+        $select->columns(array(
+            'vocabulary_local_terms.id',
+            'vocabulary_local_terms.local_term',
+            'vocabulary_local_terms.common_term_id',
+            'vocabulary_common_terms.common_term'
+        ));
+        $select->where("vocabulary_local_terms.kind = $kind");
+
+        // Join with the Common Terms table where the common_term_id is the same.
+        $select->joinLeft(
+            array('vocabulary_common_terms' => "{$db->prefix}vocabulary_common_terms"),
+            'vocabulary_local_terms.common_term_id = vocabulary_common_terms.common_term_id',
+            array('common_term')
+        );
+
+        try
+        {
+            // Use fetchAll instead of fetchObjects to get only the values of the local_term and common_term columns.
+            $results = $db->query($select)->fetchAll();
+        }
+        catch (Exception $e)
+        {
+            return array();
+        }
+
+        // Find local terms that are the same as common terms and set the default term to the common term.
+        // This is necessary because the local terms table does not contain a local_term value when the
+        // local term is the same as the common term.
+        foreach ($results as $index => $result)
+        {
+            $results[$index]['default_term'] = $result['local_term'] ? $result['local_term'] : $result['common_term'];
+        }
+
+        // Sort the results by the default term.
+        usort($results, function($a, $b){ return strcmp($a['default_term'], $b['default_term']); });
+
+        return $results;
+    }
+
     public function getDuplicateLocalTermRecord($localTermRecord)
     {
         $select = $this->getSelect();
@@ -36,102 +84,18 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         return $result;
     }
 
-    public function getLocalTermItemsInOrder($kind)
-    {
-        // This method returns data from the local terms table joined with the common terms table
-        // so that the results include the text of the common term for the local term's common term Id.
-
-        $db = get_db();
-        $select = $this->getSelect();
-        $select->reset(Zend_Db_Select::COLUMNS);
-        $select->columns(array(
-            'vocabulary_local_terms.id',
-            'vocabulary_local_terms.local_term',
-            'vocabulary_local_terms.common_term_id',
-            'vocabulary_common_terms.common_term'
-        ));
-        $select->where("vocabulary_local_terms.kind = $kind");
-
-        // Join with the Common Terms table where the common_term_id is the same.
-        $select->joinLeft(
-            array('vocabulary_common_terms' => "{$db->prefix}vocabulary_common_terms"),
-            'vocabulary_local_terms.common_term_id = vocabulary_common_terms.common_term_id',
-            array('common_term')
-        );
-
-        $select->order('order');
-
-        try
-        {
-            // Use fetchAll instead of fetchObjects to get only the values of the local_term and common_term columns.
-            $results = $db->query($select)->fetchAll();
-        }
-        catch (Exception $e)
-        {
-            return array();
-        }
-
-        return $results;
-    }
-
     public function getLocalTerms($kind)
     {
         $terms = array();
-        $mappings = $this->getLocalToCommonTermMap($kind);
+        $mappings = $this->getLocalTermItems($kind);
 
-        // Return just the local terms.
+        // Return just the default term which is the local term if it exists, otherwise it's the common term.
         foreach ($mappings as $mapping)
         {
-            $term = $mapping['local_term'];
-            if (empty($term))
-                $term = $mapping['common_term'];
-            $terms[] = $term;
+            $terms[] = $mapping['default_term'];
         }
+
         return $terms;
-    }
-
-    public function getLocalToCommonTermMap($kind)
-    {
-        // This method joins the local and common terms table to return just the local and common term from each.
-        // so that the results include the text of the common term for the local term's common term Id.
-        $db = get_db();
-        $select = $this->getSelect();
-        $select->reset(Zend_Db_Select::COLUMNS);
-        $select->columns(array('local_term', 'vocabulary_common_terms.common_term'));
-        $select->where("vocabulary_local_terms.kind = $kind");
-
-        // Join with the Common Terms table where its common_term_id is the same as the local term common_term_id.
-        $select->joinLeft(
-            array('vocabulary_common_terms' => "{$db->prefix}vocabulary_common_terms"),
-            'vocabulary_local_terms.common_term_id = vocabulary_common_terms.common_term_id',
-            array('common_term')
-        );
-
-        $select->order('order');
-
-        // Use fetchAll instead of fetchObjects to get only the values of the local_term and common_term columns.
-        $results = $db->query($select)->fetchAll();
-
-
-        // Find local terms that are the same as common terms and set their text to the common term.
-        // This is necessary because the local terms table only contains local term text for mapped
-        // local terms where the local term text is different than the common term text.
-        foreach ($results as $index => $result)
-        {
-            if (empty($result['local_term']))
-                $results[$index]['local_term'] = $result['common_term'];
-        }
-
-        return $results;
-    }
-
-    public function getLocalTermRecordsInOrder($kind)
-    {
-        $select = $this->getSelect();
-        $select->where("kind = $kind");
-        $select->order('order');
-        $results = $this->fetchObjects($select);
-        return $results;
     }
 
     public function getRowCount()

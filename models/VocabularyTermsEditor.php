@@ -60,16 +60,6 @@ class VocabularyTermsEditor
         if (!$newLocalTermRecord->save())
             throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
 
-        // Reorder all of the terms so that this new term is the first.
-        $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
-        $localTermRecords = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsInOrder($kind);
-        foreach ($localTermRecords as $index => $localTermRecord)
-        {
-            $localTermRecord['order'] = $index + 1;
-            if (!$localTermRecord->save())
-                throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
-        }
-
         return json_encode(array('success'=>true, 'id'=>$newLocalTermRecord->id, 'localTerm'=>$localTerm, 'commonTerm'=>$commonTerm, 'commonTermId'=>$commonTermId));
     }
 

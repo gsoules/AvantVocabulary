@@ -72,7 +72,7 @@ echo "</div>";
 $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
 $commonTermCount = number_format($commonTermCount, 0, '.', ',');
 
-$localTermItems = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItemsInOrder($kind);
+$localTermItems = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItems($kind);
 $localTermCount = count($localTermItems);
 $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 
@@ -84,7 +84,7 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 </div>
 
 <div id="dialog-confirm-update-term" title="<?php echo __('Update term'); ?>">
-    <h2><?php echo __('Are you sure?'); ?></h2>
+    <h2><?php echo __('Are you sure?'); ?></h2>sort
     <p></p>
 </div>
 
