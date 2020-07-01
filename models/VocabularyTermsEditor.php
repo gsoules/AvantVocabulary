@@ -326,13 +326,26 @@ class VocabularyTermsEditor
         // Update the local term record with the new data.
         $localTermRecord['local_term'] = $newLocalTerm;
         $localTermRecord['common_term_id'] = $newCommonTermId;
-        if (!$localTermRecord->save())
-            throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
+
+        // Determine if the local term now exactly matches another.
+        $localTermId = $this->db->getTable('VocabularyLocalTerms')->getIdOfDuplicateLocalTerm($localTermRecord);
+        if ($localTermId)
+        {
+            // Delete this local term since it is now a duplicate of an existing local term. Return the Id of the
+            // existing term and let the Vocabulary Editor Javascript merge this item with the other.
+            $localTermRecord->delete();
+        }
+        else
+        {
+            $localTermId = $localTermRecord->id;
+            if (!$localTermRecord->save())
+                throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
+        }
 
         // Update the Elasticsearch indexes with the new data.
         $this->updateAndReindexItems($itemValues, $oldElementText, $newElementText);
 
-        return json_encode(array('success'=>true, 'localTerm'=>$newLocalTerm, 'commonTerm'=>$newCommonTerm, 'commonTermId'=>$newCommonTermId));
+        return json_encode(array('success'=>true, 'localTermId'=>$localTermId, 'localTerm'=>$newLocalTerm, 'commonTermId'=>$newCommonTermId, 'commonTerm'=>$newCommonTerm));
     }
 
     protected function updateTermOrder()

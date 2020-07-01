@@ -161,6 +161,34 @@
 
         if (data['success'])
         {
+            // Get the current Id minus the "item-" prefix.
+            let currentLocalTermId = item.attr('id');
+            currentLocalTermId = currentLocalTermId.substr(5);
+
+            let duplicateLocalTermId = data['localTermId'];
+            if (currentLocalTermId !== duplicateLocalTermId)
+            {
+                // The Id changed. This happens when the update creates an exact match of an existing local term.
+                // There are now two items for the same local term. Get the usage count from the duplicate item.
+                let duplicate = jQuery('#item-' + duplicateLocalTermId);
+                let duplicateItemUsageCount = duplicate.find('.vocabulary-term-count').text();
+                if (duplicateItemUsageCount === '')
+                    duplicateItemUsageCount = '0';
+                duplicateItemUsageCount = parseInt(duplicateItemUsageCount, 10);
+
+                // Get the usage count for this item.
+                let thisItemUsageCount = item.find('.vocabulary-term-count').text();
+                if (thisItemUsageCount === '')
+                    thisItemUsageCount = '0';
+                thisItemUsageCount = parseInt(thisItemUsageCount, 10);
+
+                // Update this item with the sum of the usage counts.
+                item.find('.vocabulary-term-count').text(thisItemUsageCount + duplicateItemUsageCount);
+
+                // Remove the duplicate item from the list.
+                duplicate.remove();
+            }
+
             // Set the common term Id for the updated item.
             item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', data['commonTermId']);
             item.find('.vocabulary-drawer-local-term').val(data['localTerm']);
