@@ -84,6 +84,19 @@ class AvantVocabulary
         return $kind == self::KIND_TYPE || $kind == self::KIND_SUBJECT;
     }
 
+    public static function normalizeLocalTerm($localTerm)
+    {
+        $normalizedLocalTerm = '';
+        $parts = array_map('trim', explode(',', $localTerm));
+        foreach ($parts as $index => $part)
+        {
+            if ($index > 0)
+                $normalizedLocalTerm .= ', ';
+            $normalizedLocalTerm .= ucwords(strtolower($part));
+        }
+        return $normalizedLocalTerm;
+    }
+
     public static function progressFileName()
     {
         return VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'progress-' . current_user()->id . '.txt';

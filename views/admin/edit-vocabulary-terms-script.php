@@ -163,13 +163,13 @@
         {
             // Get the current Id minus the "item-" prefix.
             let currentLocalTermId = item.attr('id');
-            currentLocalTermId = currentLocalTermId.substr(5);
 
-            let duplicateLocalTermId = data['localTermId'];
-            if (currentLocalTermId !== duplicateLocalTermId)
+            let duplicateLocalTermId = data['duplicateId'];
+            if (duplicateLocalTermId)
             {
-                // The Id changed. This happens when the update creates an exact match of an existing local term.
-                // There are now two items for the same local term. Get the usage count from the duplicate item.
+                // The update caused this term to become a duplicate of an existing local term which has now been
+                // deleted by the server-side updateTerm() logic. However, now both terms are being displayed.
+                // Get the usage count from the duplicate item.
                 let duplicate = jQuery('#item-' + duplicateLocalTermId);
                 let duplicateItemUsageCount = duplicate.find('.vocabulary-term-count').text();
                 if (duplicateItemUsageCount === '')
@@ -876,7 +876,15 @@
                     if (data['success'])
                     {
                         status = 'Build completed';
-                        window.setTimeout(function () { busyIndicator.fadeOut(); }, 2000)
+                        window.setTimeout(function ()
+                        {
+                            busyIndicator.fadeOut();
+                            if (tableName === 'local')
+                            {
+                                // Reload the page to show the results of the rebuild.
+                                location.reload();
+                            }
+                        }, 2000)
                     }
                     else
                     {

@@ -79,7 +79,7 @@ class AvantVocabularyTableBuilder
         }
         else
         {
-            $localTermRecord['local_term'] = $localTerm;
+            $localTermRecord['local_term'] = AvantVocabulary::normalizeLocalTerm($localTerm);
             $localTermRecord['common_term_id'] = 0;
         }
 

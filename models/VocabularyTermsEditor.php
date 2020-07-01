@@ -19,7 +19,7 @@ class VocabularyTermsEditor
         // This method is called via AJAX. Get the posed data.
         $itemValues = json_decode($_POST['itemValues'], true);
         $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
-        $localTerm = trim($itemValues['localTerm']);
+        $localTerm = AvantVocabulary::normalizeLocalTerm($itemValues['localTerm']);
         $commonTerm = $itemValues['commonTerm'];
 
         // Check to see if the term already exists.
@@ -267,16 +267,7 @@ class VocabularyTermsEditor
             throw new Exception($this->reportError(__FUNCTION__, ' get local term record failed'));
 
         $oldLocalTerm = $localTermRecord->local_term;
-        $newLocalTerm = $itemValues['localTerm'];
-
-        // Check to see if the new local term already exists.
-        if (!empty($newLocalTerm) && strtolower($newLocalTerm) != strtolower($oldLocalTerm))
-        {
-            if ($this->db->getTable('VocabularyLocalTerms')->localTermExists($kind, $newLocalTerm))
-            {
-                return json_encode(array('success'=>false, 'error'=>'local-term-exists'));
-            }
-        }
+        $newLocalTerm = AvantVocabulary::normalizeLocalTerm($itemValues['localTerm']);
 
         $oldCommonTermId = $localTermRecord->common_term_id;
         $newCommonTerm = $itemValues['commonTerm'];
@@ -328,16 +319,16 @@ class VocabularyTermsEditor
         $localTermRecord['common_term_id'] = $newCommonTermId;
 
         // Determine if the local term now exactly matches another.
-        $localTermId = $this->db->getTable('VocabularyLocalTerms')->getIdOfDuplicateLocalTerm($localTermRecord);
-        if ($localTermId)
+        $duplicateLocalTermRecord = $this->db->getTable('VocabularyLocalTerms')->getDuplicateLocalTermRecord($localTermRecord);
+        if ($duplicateLocalTermRecord)
         {
-            // Delete this local term since it is now a duplicate of an existing local term. Return the Id of the
-            // existing term and let the Vocabulary Editor Javascript merge this item with the other.
-            $localTermRecord->delete();
+            // Delete the duplicate term. Return its Id so the Vocabulary Editor Javascript knows to merge the two terms.
+            $duplicateId = $duplicateLocalTermRecord->id;
+            $duplicateLocalTermRecord->delete();
         }
         else
         {
-            $localTermId = $localTermRecord->id;
+            $duplicateId = 0;
             if (!$localTermRecord->save())
                 throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
         }
@@ -345,7 +336,7 @@ class VocabularyTermsEditor
         // Update the Elasticsearch indexes with the new data.
         $this->updateAndReindexItems($itemValues, $oldElementText, $newElementText);
 
-        return json_encode(array('success'=>true, 'localTermId'=>$localTermId, 'localTerm'=>$newLocalTerm, 'commonTermId'=>$newCommonTermId, 'commonTerm'=>$newCommonTerm));
+        return json_encode(array('success'=>true, 'duplicateId'=>$duplicateId, 'localTerm'=>$newLocalTerm, 'commonTermId'=>$newCommonTermId, 'commonTerm'=>$newCommonTerm));
     }
 
     protected function updateTermOrder()

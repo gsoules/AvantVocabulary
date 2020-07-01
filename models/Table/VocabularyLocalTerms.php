@@ -2,13 +2,12 @@
 
 class Table_VocabularyLocalTerms extends Omeka_Db_Table
 {
-    public function getIdOfDuplicateLocalTerm($localTermRecord)
+    public function getDuplicateLocalTermRecord($localTermRecord)
     {
         $select = $this->getSelect();
-        $select->columns('COUNT(*) AS count');
         $select->where("kind = $localTermRecord->kind AND LOWER(`local_term`) = LOWER('$localTermRecord->local_term') AND common_term_id = $localTermRecord->common_term_id");
         $result = $this->fetchObject($select);
-        return $result->count ? $result->id : 0;
+        return $result;
     }
 
     public function getLocalTermRecordsByCommonTermId($commonTermId)
