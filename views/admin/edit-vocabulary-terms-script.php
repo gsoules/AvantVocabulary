@@ -263,11 +263,6 @@
     {
         console.log('enableAllItems: ' + enable);
 
-        // Enable or disable dragging of an item to change its order.
-        jQuery('#vocabulary-terms-list').sortable('option', 'disabled', !enable);
-        let cursor = enable ? 'grab' : 'default';
-        jQuery('.sortable-item').css('cursor', cursor);
-
         let editIcons = jQuery('.vocabulary-term-edit-icon');
         if (enable)
         {
@@ -399,7 +394,7 @@
     {
         console.log('initializeItemControls');
 
-        // Set up the button and sortable handlers for all the items.
+        // Set up the button handlers for all the items.
 
         let drawerButtons = jQuery('.vocabulary-term-edit-icon');
         let updateButtons = jQuery('.update-item-button');
@@ -463,28 +458,6 @@
         {
             let item = getItemForButton(this);
             updateItemConfirmation(item);
-        });
-
-        jQuery('#vocabulary-terms-list').sortable({
-            listType: 'ul',
-            handle: '.main_link',
-            items: 'li',
-            revert: 200,
-            toleranceElement: '> div',
-            placeholder: 'ui-sortable-highlight',
-            forcePlaceholderSize: true,
-            containment: 'document',
-
-            start: function(event, ui)
-            {
-                jQuery(ui.item).data("startindex", ui.item.index());
-                showEditorMessage('<?php echo __('Moving a term...'); ?>');
-            },
-            stop: function(event, ui)
-            {
-                moveItem(ui.item);
-                showEditorMessage('');
-            }
         });
 
         // Disable the Update buttons and Erase buttons. They will get enabled by checkForItemUpdates when appropriate.

@@ -38,13 +38,14 @@
 
 #vocabulary-terms-list {
     margin-top: 8px;
+    padding: 0;
 }
 
-#vocabulary-terms-list .sortable-item {
+#vocabulary-terms-list .vocabulary-term-header {
     background: #fefefe;
     padding: 4px 10px 4px 10px;
     font-size: 14px;
-    border: 0;
+    border-bottom: solid 1px #ddd;
 }
 
 #vocabulary-terms-list .drawer-contents {
@@ -60,6 +61,10 @@
 
 #vocabulary-terms-list .drawer-contents label {
     padding-bottom: 2px;
+}
+
+.vocabulary-term-item {
+    list-style: none;
 }
 
 .vocabulary-drawer-common-term {

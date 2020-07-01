@@ -112,7 +112,7 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 </div>
 
 
-<ul id="vocabulary-terms-list" class="ui-sortable">
+<ul id="vocabulary-terms-list">
     <?php
     $vocabularyTermsEditor = new VocabularyTermsEditor();
     $elementId = ItemMetadata::getElementIdForElementName($kindName);
@@ -136,8 +136,8 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
         // code does not need to know how the header is supposed to be formatted.
         ?>
         <li id="item-<?php echo $localTermItem['id']; ?>" class="vocabulary-term-item" >
-            <div class="main_link ui-sortable-handle">
-                <div class="sortable-item sortable-item vocabulary-term-header">
+            <div class="main_link">
+                <div class="vocabulary-term-header">
                     <div class="vocabulary-term-left"></div>
                     <div class="vocabulary-term-mapping"></div>
                     <span class="vocabulary-term-edit-icon"></span>
