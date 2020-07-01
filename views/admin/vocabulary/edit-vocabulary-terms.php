@@ -84,7 +84,7 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
 </div>
 
 <div id="dialog-confirm-update-term" title="<?php echo __('Update term'); ?>">
-    <h2><?php echo __('Are you sure?'); ?></h2>sort
+    <h2><?php echo __('Are you sure?'); ?></h2>
     <p></p>
 </div>
 

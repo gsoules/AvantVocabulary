@@ -90,8 +90,16 @@ class AvantVocabulary
         $parts = array_map('trim', explode(',', $localTerm));
         foreach ($parts as $index => $part)
         {
+            if (!$part)
+                continue;
+
+            // Remove multiple spaces within the part.
+            $part = preg_replace('/\s+/', ' ', $part);
+
             if ($index > 0)
                 $normalizedLocalTerm .= ', ';
+
+            // Make each word have an uppercase first letter and all the rest lowercase.
             $normalizedLocalTerm .= ucwords(strtolower($part));
         }
         return $normalizedLocalTerm;

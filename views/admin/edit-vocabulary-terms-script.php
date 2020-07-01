@@ -39,8 +39,6 @@
 
     function addNewItem()
     {
-        console.log('addNewItem');
-
         // Create new item's header and drawer from a copy of the first item.
         let firstItem = jQuery('ul#vocabulary-terms-list > li:first-child');
         let newItem = firstItem.clone();
@@ -88,8 +86,6 @@
 
     function afterNewItemSaved(data, itemValues)
     {
-        console.log('afterNewItemSaved');
-
         // Stop watching for updates.
         clearTimeout(updateTimer);
 
@@ -116,15 +112,12 @@
                 updateItemConfirmation(item);
             });
 
-            // Allow the new item to be removed.
-            newItem.find('.remove-item-button').show();
-
             // Show the header for the newly added item.
             newItem.find('.vocabulary-term-header').show();
             setItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
 
             enableAllItems(true);
-            showEditorMessage('<?php echo __('New term added'); ?>');
+            showEditorMessage('<?php echo __('Added new term "'); ?>' + getDefaultTerm(itemValues.localTerm, itemValues.commonTerm) + '"');
         }
         else
         {
@@ -138,8 +131,6 @@
 
     function afterRemoveItem(item, data)
     {
-        console.log('afterRemoveItem');
-
         // Stop watching for updates.
         clearTimeout(updateTimer);
 
@@ -148,6 +139,7 @@
             let itemValues = getItemValues(item);
             jQuery('#item-' + itemValues['id']).remove();
             enableAllItems(true);
+            showEditorMessage('<?php echo __('Removed "'); ?>' + getDefaultTerm(itemValues.localTerm, itemValues.commonTerm) + "'");
         }
         else
         {
@@ -157,10 +149,10 @@
 
     function afterUpdateItem(item, data)
     {
-        console.log('afterUpdateItem');
-
         if (data['success'])
         {
+            let editorMessage = '';
+
             // Get the current Id minus the "item-" prefix.
             let currentLocalTermId = item.attr('id');
 
@@ -183,10 +175,18 @@
                 thisItemUsageCount = parseInt(thisItemUsageCount, 10);
 
                 // Update this item with the sum of the usage counts.
-                item.find('.vocabulary-term-count').text(thisItemUsageCount + duplicateItemUsageCount);
+                let newItemUsageCount = thisItemUsageCount + duplicateItemUsageCount;
+                item.find('.vocabulary-term-count').text(newItemUsageCount);
 
                 // Remove the duplicate item from the list.
                 duplicate.remove();
+
+                if (newItemUsageCount > 1 && thisItemUsageCount > 0)
+                {
+                    // Tell the user that the use of this term increased.
+                    editorMessage = newItemUsageCount + '<?php echo __(' items now use the term "{1}"'); ?>';
+                    editorMessage = editorMessage.replace('{1}', data['localTerm']);
+                }
             }
 
             // Set the common term Id for the updated item.
@@ -199,17 +199,13 @@
 
             // Close the drawer.
             openDrawer(item, false);
+            showEditorMessage(editorMessage);
         }
         else
         {
             let itemValues = getItemValues(item);
             reportAddOrUpdateError(data['error'], item, itemValues.localTerm);
         }
-    }
-
-    function afterUpdateItemOrder()
-    {
-        showEditorMessage('')
     }
 
     function cancelItemUpdate(item)
@@ -255,14 +251,11 @@
 
     function enableAddTermButton(enable)
     {
-        console.log('enableAddTermButton: ' + enable);
         addTermButton.prop('disabled', !enable);
     }
 
     function enableAllItems(enable, action)
     {
-        console.log('enableAllItems: ' + enable);
-
         let editIcons = jQuery('.vocabulary-term-edit-icon');
         if (enable)
         {
@@ -348,6 +341,13 @@
         });
     }
 
+    function getDefaultTerm(localTerm, commonTerm)
+    {
+        if (localTerm)
+            return localTerm;
+        return commonTerm;
+    }
+
     function getItemValues(item)
     {
         let localTerm = item.find('.vocabulary-drawer-local-term').val();
@@ -380,7 +380,6 @@
 
     function initialize()
     {
-        showEditorMessage('Get started');
         setItemTitles();
         enableSuggestions();
         initializePageControls();
@@ -392,8 +391,6 @@
 
     function initializeDrawerControls()
     {
-        console.log('initializeItemControls');
-
         // Set up the button handlers for all the items.
 
         let drawerButtons = jQuery('.vocabulary-term-edit-icon');
@@ -470,8 +467,6 @@
 
     function initializePageControls()
     {
-        console.log('initializePageControls');
-
         let vocabularyChooser = jQuery('#vocabulary-chooser');
         vocabularyChooser.val(kind);
         vocabularyChooser.change(function()
@@ -502,20 +497,8 @@
         });
     }
 
-    function moveItem(item)
-    {
-        let startIndex = item.data("startindex") + 1;
-        let newIndex = item.index() + 1;
-        if (newIndex !== startIndex)
-        {
-            updateItemOrder();
-        }
-    }
-
     function openDrawer(item, open)
     {
-        console.log('open drawer: ' + open);
-
         activeItemId = open ? item.attr('id') : 0;
 
         let header = item.find('.vocabulary-term-header');
@@ -523,7 +506,14 @@
 
         if (open)
         {
-            // Prevent the user from editing or dragging any items.
+            // Enable or disable the Remove button.
+            let itemValues = getItemValues(item);
+            if (itemValues.usageCount)
+                item.find('.remove-item-button').hide();
+            else
+                item.find('.remove-item-button').show();
+
+            // Prevent the user from editing any items.
             enableAllItems(false, '<?php echo __('Editing a term'); ?>');
 
             // Set the header to its open appearance.
@@ -543,7 +533,7 @@
         }
         else
         {
-            // Allow the user to edit or drag items.
+            // Allow the user to edit items.
             enableAllItems(true);
 
             // Set the header back to its normal appearance.
@@ -671,8 +661,6 @@
 
     function saveNewItem()
     {
-        console.log('saveNewItem');
-
         showBusyIndicator('<?php echo __('Adding new term to the database...'); ?>');
 
         let newItem = jQuery('#item-0');
@@ -920,9 +908,7 @@
 
     function updateItem(item, itemValues)
     {
-        console.log('updateItem');
-
-        showBusyIndicator('<?php echo __('Updating items in database...'); ?>');
+        showBusyIndicator('<?php echo __('Updating items in database - please wait...'); ?>');
 
         actionInProgress = true;
         progressTimer = setTimeout(reportProgress, 200);
@@ -961,22 +947,12 @@
         if (!validateItemValues(item, itemValues))
             return;
 
-        console.log('updateItemConfirmation: ' + usageCount);
-
         if (usageCount === '0')
         {
             updateItem(item, itemValues);
         }
         else
         {
-            // Form the update confirmation message. There are multiple cases:
-            // 1 : Mapped local term changed -> update all items to use changed term
-            // 2 : Mapped local term erased -> update all items to use common term
-            // 3 : Mapped local term added -> update all items to use local term
-            // 4 : Unmapped common term change -> update all items to use changed term
-            // 5 : Mapped common term changed -> reindex all items to use changed term
-            // 6 : Mapped common term removed -> reindex all items to remove common term
-
             let affected = usageCount === '1' ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
             let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
             let message1 = '<?php echo __('{1} will be updated'); ?>';
@@ -1002,42 +978,6 @@
                 }
             });
         }
-    }
-
-    function updateItemOrder()
-    {
-        showBusyIndicator('<?php echo __('Updating vocabulary term order in database...'); ?>');
-
-        let order = jQuery('ul#vocabulary-terms-list > li')
-            .map(function(i, e)
-            {
-                // Get the Id minus the "item-" prefix.
-                let id = e.id;
-                id = id.substr(5);
-                return id;
-            })
-            .get();
-
-        jQuery.ajax(
-            urlForTermEditor,
-            {
-                method: 'POST',
-                dataType: 'json',
-                data: {
-                    action: <?php echo VocabularyTermsEditor::UPDATE_VOCABULARY_LOCAL_TERMS_ORDER; ?>,
-                    order: order
-                },
-                success: function (data)
-                {
-                    showBusyIndicator('');
-                    afterUpdateItemOrder();
-                },
-                error: function (data)
-                {
-                    alert('AJAX Error on Update Order: ' + data.statusText);
-                }
-            }
-        );
     }
 
     function validateItemValues(item, itemValues)
