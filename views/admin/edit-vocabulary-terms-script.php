@@ -837,6 +837,9 @@
                     if (data['success'])
                     {
                         status = 'Build completed';
+                        if (tableName === 'local')
+                            status += '. The page will reload.'
+
                         window.setTimeout(function ()
                         {
                             busyIndicator.fadeOut();

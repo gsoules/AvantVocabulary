@@ -62,20 +62,50 @@ class AvantVocabularyTableBuilder
             $newTermRecords[] = $this->databaseInsertRecordForLocalTerm($kind, $localTerm);
         }
 
-        // Add any unused and/or mapped terms from the old table that will be missing from the new table.
+        // Add any unused and/or mapped terms from the old table to the new table.
         // Unused terms will be missing because they will not have been returned by fetchUniqueLocalTerms().
-        // Mapped terms will be missing because when creating a new table from the terms returned by
-        // fetchUniqueLocalTerms(), there is knowledge of how the terms were previously mapped.
+        // Mapped terms won't match new terms because all new terms are unmapped.
         foreach ($oldTermItems as $oldTermItem)
         {
+            $oldTermFoundInNewTable = false;
+            $newTermUpdated = false;
+
             foreach ($newTermRecords as $newTermRecord)
             {
-                $found = $newTermRecord->local_term == $oldTermItem['local_term'] && $newTermRecord->common_term_id == $oldTermItem['common_term_id'];
-                if ($found)
-                    break;
+                if (empty($newTermRecord->local_term))
+                {
+                    // The new record has no local term which means it's a common term.
+                    if (empty($oldTermItem['local_term']) && $newTermRecord->common_term_id == $oldTermItem['common_term_id'])
+                    {
+                        // The old term is also common and has the same common term Id as the same as the new term.
+                        $oldTermFoundInNewTable = true;
+                        break;
+                    }
+                }
+                elseif ($newTermRecord->local_term == $oldTermItem['local_term'])
+                {
+                    // The new and old local terms are the same. The new term is unmapped by virtue of being new.
+                    if ($oldTermItem['common_term_id'] == 0)
+                    {
+                        // The old term is also unmapped.
+                        $oldTermFoundInNewTable = true;
+                        break;
+                    }
+                    else
+                    {
+                        // The old term is mapped. Add the mapping to the term in the new table.
+                        $newTermRecord['common_term_id'] = $oldTermItem['common_term_id'];
+                        if (!$newTermRecord->save())
+                            throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
+                        $newTermUpdated = true;
+                        break;
+                    }
+                }
             }
-            if (!$found)
+
+            if (!($newTermUpdated || $oldTermFoundInNewTable))
             {
+                // This term existed in the old table, but was not in use. Add it to the new table.
                 $this->databaseInsertRecordForOldLocalTerm($kind, $oldTermItem['local_term'], $oldTermItem['common_term_id']);
             }
         }
