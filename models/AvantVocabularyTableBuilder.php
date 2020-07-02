@@ -28,27 +28,56 @@ class AvantVocabularyTableBuilder
 
     protected function buildLocalTermsTable()
     {
+        $fields = AvantVocabulary::getVocabularyFields();
+
+        // Get the current terms from the local terms table in order to save terms that are unused and/or mapped.
+        $oldTermItems = array();
+        foreach ($fields as $elementName => $kind)
+        {
+            $oldTermItems[$kind] = $this->db->getTable('VocabularyLocalTerms')->getLocalTermItems($kind);
+        }
+
+        // Create a new, empty local terms table. It will only contain terms that are in use and not mapped.
         VocabularyTableFactory::dropVocabularyLocalTermsTable();
         VocabularyTableFactory::createVocabularyLocalTermsTable();
 
-        $fields = AvantVocabulary::getVocabularyFields();
+        // Create new terms for each kind.
         foreach ($fields as $elementName => $kind)
         {
-            $this->createLocalTerms($elementName, $kind);
+            $this->createLocalTerms($elementName, $kind, $oldTermItems[$kind]);
         }
     }
 
-    protected function createLocalTerms($elementName, $kind)
+    protected function createLocalTerms($elementName, $kind, $oldTermItems)
     {
         // Get the set of unique text values for this element.
         $elementId = ItemMetadata::getElementIdForElementName($elementName);
         $localTerms = $this->fetchUniqueLocalTerms($elementId);
 
+        // Add the terms to the table.
+        $newTermRecords = array();
         foreach ($localTerms as $index => $term)
         {
-            // Add the term to the local terms table.
             $localTerm = $term['text'];
-            $this->databaseInsertRecordForLocalTerm($kind, $localTerm, $index + 1);
+            $newTermRecords[] = $this->databaseInsertRecordForLocalTerm($kind, $localTerm);
+        }
+
+        // Add any unused and/or mapped terms from the old table that will be missing from the new table.
+        // Unused terms will be missing because they will not have been returned by fetchUniqueLocalTerms().
+        // Mapped terms will be missing because when creating a new table from the terms returned by
+        // fetchUniqueLocalTerms(), there is knowledge of how the terms were previously mapped.
+        foreach ($oldTermItems as $oldTermItem)
+        {
+            foreach ($newTermRecords as $newTermRecord)
+            {
+                $found = $newTermRecord->local_term == $oldTermItem['local_term'] && $newTermRecord->common_term_id == $oldTermItem['common_term_id'];
+                if ($found)
+                    break;
+            }
+            if (!$found)
+            {
+                $this->databaseInsertRecordForOldLocalTerm($kind, $oldTermItem['local_term'], $oldTermItem['common_term_id']);
+            }
         }
     }
 
@@ -65,10 +94,20 @@ class AvantVocabularyTableBuilder
         return $commonTermRecord;
     }
 
-    protected function databaseInsertRecordForLocalTerm($kind, $localTerm, $order)
+    protected function databaseInsertRecordForOldLocalTerm($kind, $localTerm, $commonTermId)
     {
         $localTermRecord = new VocabularyLocalTerms();
-        $localTermRecord['order'] = $order;
+        $localTermRecord['kind'] = $kind;
+        $localTermRecord['local_term'] = $localTerm;
+        $localTermRecord['common_term_id'] = $commonTermId;
+
+        if (!$localTermRecord->save())
+            throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
+    }
+
+    protected function databaseInsertRecordForLocalTerm($kind, $localTerm)
+    {
+        $localTermRecord = new VocabularyLocalTerms();
         $localTermRecord['kind'] = $kind;
 
         $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
@@ -85,6 +124,8 @@ class AvantVocabularyTableBuilder
 
         if (!$localTermRecord->save())
             throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
+
+        return $localTermRecord;
     }
 
     protected function databaseRemoveCommonTerm($commonTermRecord)
