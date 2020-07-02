@@ -490,7 +490,7 @@
 
         rebuildLocalTermsButton.on("click", function(event)
         {
-            if (!confirm('Are you sure you want to rebuild the Local Terms table?\n\nALL MAPPED AND UNUSED TERMS WILL BE LOST.'))
+            if (!confirm('Are you sure you want to rebuild the Local Terms table?'))
                 return;
             tableName = 'local';
             startRebuild();
@@ -908,7 +908,7 @@
 
     function updateItem(item, itemValues)
     {
-        showBusyIndicator('<?php echo __('Updating items in database - please wait...'); ?>');
+        showBusyIndicator('<?php echo __('Please wait while the database is updated...'); ?>');
 
         actionInProgress = true;
         progressTimer = setTimeout(reportProgress, 200);
