@@ -48,37 +48,6 @@ class AvantVocabularyTableBuilder
         }
     }
 
-    protected function convertLocalTermToNewCommonTerm($commonTermKind, $term, $commonTermId)
-    {
-        // See if a local term exists that has the same name as a new common term.
-        $localTermRecords = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsByLocalTerm($term);
-
-        foreach ($localTermRecords as $localTermRecord)
-        {
-            $localTermKind = $localTermRecord->kind;
-
-            // See if the local term's kind is compatible with the common term's kind.
-            $compatible = (
-                $commonTermKind == $localTermKind ||
-                AvantVocabulary::kindIsTypeOrSubject($localTermKind) && $commonTermKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT);
-            if (!$compatible)
-                continue;
-
-            // A local term with the common term's text exists. If it is mapped to a common term, leave the mapping
-            // alone even though that violates the rule that a common term cannot be used as a local term. That's better
-            // however, than trashing the existing mapping without the site administrator being made aware of the change.
-            $mapped = $localTermRecord['common_term_id'] > 0;
-            if ($mapped)
-                continue;
-
-            // Update the local term record to use the common term.
-            $localTermRecord['common_term_id'] = $commonTermId;
-            $localTermRecord['local_term'] = '';
-            if (!$localTermRecord->save())
-                throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
-        }
-    }
-
     protected function convertLocalTermsToUnmapped($commonTermId)
     {
         // Get all the local records that use the common term.
@@ -344,6 +313,34 @@ class AvantVocabularyTableBuilder
         return ($count == 1 ? '1 term' : "$count terms") . ' refreshed';
     }
 
+    protected function removeRedundantLocalTerm($commonTermKind, $term, $commonTermId)
+    {
+        // See if a local term exists that has the same name as a new common term.
+        $localTermRecords = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsByLocalTerm($term);
+
+        foreach ($localTermRecords as $localTermRecord)
+        {
+            $localTermKind = $localTermRecord->kind;
+
+            // See if the local term's kind is compatible with the common term's kind.
+            $compatible = (
+                $commonTermKind == $localTermKind ||
+                AvantVocabulary::kindIsTypeOrSubject($localTermKind) && $commonTermKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT);
+            if (!$compatible)
+                continue;
+
+            // A local term with the common term's text exists. If it is mapped to another common term, leave the mapping
+            // alone even though it violates the rule that a common term cannot be used as a local term. That's better
+            // however, than trashing the existing mapping without the site administrator being made aware of the change.
+            $mapped = $localTermRecord['common_term_id'] != 0 && $localTermRecord['common_term_id'] != $commonTermId;
+            if ($mapped)
+                continue;
+
+            // Remove the redundant local term
+            $localTermRecord->delete();
+        }
+    }
+
     protected function readDataRowsFromRemoteCsvFile($url)
     {
         $response = AvantAdmin::requestRemoteAsset($url);
@@ -410,20 +407,6 @@ class AvantVocabularyTableBuilder
                 throw new Exception($this->reportError('Unsupported action ' . $action, __FUNCTION__, __LINE__));
         }
 
-        if ($action == 'ADD' || $action == 'UPDATE')
-        {
-            // See if the added or updated common term is the same as a local term, and if so, make the local term common.
-            if ($action == 'ADD' && $termKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT)
-            {
-                $this->convertLocalTermToNewCommonTerm(AvantVocabulary::KIND_TYPE, $newTerm, $commonTermRecord->common_term_id);
-                $this->convertLocalTermToNewCommonTerm(AvantVocabulary::KIND_SUBJECT, $newTerm, $commonTermRecord->common_term_id);
-            }
-            else
-            {
-                $this->convertLocalTermToNewCommonTerm($termKind, $newTerm, $commonTermRecord->common_term_id);
-            }
-        }
-
         // Update items affect by the actions above.
         if ($action == 'ADD' && $termKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT)
         {
@@ -433,6 +416,20 @@ class AvantVocabularyTableBuilder
         else
         {
             $this->refreshItems($action, $termKind, $commonTermId, $oldTerm, $newTerm);
+        }
+
+        if ($action == 'ADD' || $action == 'UPDATE')
+        {
+            // See if the added or updated common term is the same as a local term, and if so, remove the local term common.
+            if ($action == 'ADD' && $termKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT)
+            {
+                $this->removeRedundantLocalTerm(AvantVocabulary::KIND_TYPE, $newTerm, $commonTermRecord->common_term_id);
+                $this->removeRedundantLocalTerm(AvantVocabulary::KIND_SUBJECT, $newTerm, $commonTermRecord->common_term_id);
+            }
+            else
+            {
+                $this->removeRedundantLocalTerm($termKind, $newTerm, $commonTermRecord->common_term_id);
+            }
         }
     }
 
@@ -504,7 +501,9 @@ class AvantVocabularyTableBuilder
 
     protected function updateItemIndexes($itemId)
     {
-        $item = ItemMetadata::getItemFromId($itemId);
+        // Fetch the item directly from the DB in case it is private (ItemMetadata::getItemFromId() would return null).
+        $db = get_db();
+        $item = $db->getTable('Item')->find($itemId);
 
         $avantElasticsearchIndexBuilder = new AvantElasticsearchIndexBuilder();
         $sharedIndexIsEnabled = (bool)get_option(ElasticsearchConfig::OPTION_ES_SHARE) == true;
