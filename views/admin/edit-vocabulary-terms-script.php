@@ -741,22 +741,26 @@
         item.find('.vocabulary-term-mapping').html(mappingIndicator);
 
         let usageCount = itemValues.usageCount;
-        if (usageCount !== 0)
+        let usageAttributes = '';
+
+        let href;
+        if (usageCount === 0)
         {
-            // The term is in use. Display it as a link to search results of the items that use it.
-            let href = '../../find?advanced[0][element_id]=' + kindName + '&advanced[0][type]=is+exactly&advanced[0][terms]=' + usageTerm;
-
-            // Make the link search only the local site since that's what the usages are for.
-            href += '&site=0'
-
-            let altText = '<?php echo __('View the items that use this term'); ?>';
-            let usageCountLink = "<a href='" + href + "' target='_blank' title='" + altText + "'>" + usageCount + "</a>";
-            item.find('.vocabulary-term-count').html(usageCountLink);
+            href = '';
+            usageAttributes = " onclick='return false;' class='vocabulary-term-count-zero'"
         }
         else
         {
-            item.find('.vocabulary-term-count').html('');
+            // The term is in use. Display it as a link to search results of the items that use it.
+            href = '../../find?advanced[0][element_id]=' + kindName + '&advanced[0][type]=is+exactly&advanced[0][terms]=' + usageTerm;
+
+            // Make the link search only the local site since that's what the usages are for.
+            href += '&site=0'
         }
+
+        let altText = usageCount ? '<?php echo __('View the items that use this term'); ?>' : '';
+        let usageCountLink = "<a href='" + href + "'" + usageAttributes + " target='_blank' title='" + altText + "'>" + usageCount + "</a>";
+        item.find('.vocabulary-term-count').html(usageCountLink);
     }
 
     function setItemTitles()
