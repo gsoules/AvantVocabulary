@@ -19,7 +19,7 @@ class VocabularyTermsEditor
         // This method is called via AJAX. Get the posed data.
         $itemValues = json_decode($_POST['itemValues'], true);
         $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
-        $localTerm = AvantVocabulary::normalizeLocalTerm($itemValues['localTerm']);
+        $localTerm = AvantVocabulary::normalizeLocalTerm($itemValues['localTerm'], $kind);
         $commonTerm = $itemValues['commonTerm'];
 
         // Check to see if the term already exists.
@@ -265,7 +265,7 @@ class VocabularyTermsEditor
             throw new Exception($this->reportError(__FUNCTION__, ' get local term record failed'));
 
         $oldLocalTerm = $localTermRecord->local_term;
-        $newLocalTerm = AvantVocabulary::normalizeLocalTerm($itemValues['localTerm']);
+        $newLocalTerm = AvantVocabulary::normalizeLocalTerm($itemValues['localTerm'], $kind);
 
         // Check if the local term has changed.
         $newLocalTermAlreadyExists = false;
