@@ -34,7 +34,7 @@ class AvantVocabularyTableBuilder
         $oldTermItems = array();
         foreach ($fields as $elementName => $kind)
         {
-            $oldTermItems[$kind] = $this->db->getTable('VocabularyLocalTerms')->getLocalTermItems($kind);
+            $oldTermItems[$kind] = $this->getLocalTermsForKind($kind);
         }
 
         // Create a new, empty local terms table. It will only contain terms that are in use and not mapped.
@@ -68,7 +68,6 @@ class AvantVocabularyTableBuilder
                     throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
             }
         }
-
     }
 
     protected function createLocalTerms($elementName, $kind, $oldTermItems)
@@ -81,7 +80,7 @@ class AvantVocabularyTableBuilder
         $newTermRecords = array();
         foreach ($localTerms as $index => $term)
         {
-            $localTerm = AvantVocabulary::normalizeLocalTerm($term['text'], $kind);
+            $localTerm = $term['text'];
             $newTermRecords[] = $this->databaseInsertRecordForLocalTerm($kind, $localTerm);
         }
 
@@ -160,7 +159,7 @@ class AvantVocabularyTableBuilder
         }
         else
         {
-            $localTermRecord['local_term'] = AvantVocabulary::normalizeLocalTerm($localTerm, $kind);
+            $localTermRecord['local_term'] = $localTerm;
             $localTermRecord['common_term_id'] = 0;
         }
 
@@ -339,6 +338,67 @@ class AvantVocabularyTableBuilder
             // Remove the redundant local term
             $localTermRecord->delete();
         }
+    }
+
+    protected function getLocalTermsForKind($kind)
+    {
+        // This method gets terms from the local terms table and filters out any that are no longer valid.
+        $localTermsItems = $this->db->getTable('VocabularyLocalTerms')->getLocalTermItems($kind);
+        $hashList = array();
+        foreach ($localTermsItems as $index => $localTermsItem)
+        {
+            $skip = false;
+            $commonTermId = $localTermsItem['common_term_id'];
+            $localTerm = $localTermsItem['local_term'];
+            if (empty($localTerm) && $commonTermId == 0)
+            {
+                // Both the local term and common term Id are missing. This should never happen, but if it did
+                // due to bug in previous code, this will clean it up.
+                $skip = true;
+            }
+            elseif ($commonTermId)
+            {
+                // Verify that the common terms table contains a term matching the kind and common term Id.
+                if (!$this->getCommonTermRecordByKindAndCommonTermId($kind, $commonTermId))
+                {
+                    // No common term was found for the specific kind.
+                    if (AvantVocabulary::kindIsTypeOrSubject($kind))
+                    {
+                        // Check to see if there's a common term that works for either Type or Subject.
+                        if (!$this->getCommonTermRecordByKindAndCommonTermId(AvantVocabulary::KIND_TYPE_OR_SUBJECT, $commonTermId))
+                        {
+                            $skip = true;
+                        }
+                    }
+                }
+            }
+
+            if (!$skip && $commonTermId == 0)
+            {
+                // See if the local term is a common term which somehow was not automatically converted to a common term.
+                $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $localTerm);
+                if ($commonTermRecord)
+                    $skip = true;
+            }
+
+            if (!$skip)
+            {
+                // Check if this term is a duplicate of another.
+                $hash = "$commonTermId-$localTerm";
+                if (in_array($hash, $hashList))
+                    $skip = true;
+                else
+                    $hashList[] = $hash;
+            }
+
+            if ($skip)
+            {
+                // Remove this term from the list.
+                unset($localTermsItems[$index]);
+            }
+        }
+
+        return $localTermsItems;
     }
 
     protected function readDataRowsFromRemoteCsvFile($url)

@@ -52,6 +52,7 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
 
     public function getDuplicateLocalTermRecord($localTermRecord)
     {
+        // This method looks for a local term record that matches the one passed as a parameter.
         $select = $this->getSelect();
         $select->where("kind = $localTermRecord->kind AND LOWER(`local_term`) = LOWER('$localTermRecord->local_term') AND common_term_id = $localTermRecord->common_term_id");
         $result = $this->fetchObject($select);
