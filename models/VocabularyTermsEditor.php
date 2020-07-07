@@ -19,7 +19,7 @@ class VocabularyTermsEditor
         // This method is called via AJAX. Get the posed data.
         $itemValues = json_decode($_POST['itemValues'], true);
         $kind = isset($_POST['kind']) ? $_POST['kind'] : 0;
-        $localTerm = AvantVocabulary::normalizeLocalTerm($itemValues['localTerm'], $kind);
+        $localTerm = AvantVocabulary::normalizeLocalTerm($kind, $itemValues['localTerm']);
         $commonTerm = $itemValues['commonTerm'];
 
         // Check to see if the term already exists.
@@ -264,8 +264,21 @@ class VocabularyTermsEditor
         if (!$localTermRecord)
             throw new Exception($this->reportError(__FUNCTION__, ' get local term record failed'));
 
+        $oldCommonTermId = $localTermRecord->common_term_id;
+        $newCommonTerm = $itemValues['commonTerm'];
+        $newCommonTermId = $newCommonTerm ? $this->getIdForCommonTerm($kind, $newCommonTerm) : 0;
+
         $oldLocalTerm = $localTermRecord->local_term;
-        $newLocalTerm = AvantVocabulary::normalizeLocalTerm($itemValues['localTerm'], $kind);
+        $newLocalTermRaw = $itemValues['localTerm'];
+        $newLocalTerm = AvantVocabulary::normalizeLocalTerm($kind, $newLocalTermRaw);
+
+        if ($oldLocalTerm != $newLocalTermRaw && $oldLocalTerm == $newLocalTerm && $oldCommonTermId == $newCommonTermId)
+        {
+            // The user edited the local term in a way that did not alter it's normalized form e.g. they changed
+            // letter casing, or added/removed spaces or commas. As such, the old and new term are identical so
+            // simply return the term with no further analysis.
+            return json_encode(array('success'=>true, 'duplicateId'=>0, 'localTerm'=>$newLocalTerm, 'commonTermId'=>$newCommonTermId, 'commonTerm'=>$newCommonTerm));
+        }
 
         // Check if the local term has changed.
         $newLocalTermAlreadyExists = false;
@@ -277,10 +290,6 @@ class VocabularyTermsEditor
                 $newLocalTermAlreadyExists = true;
             }
         }
-
-        $oldCommonTermId = $localTermRecord->common_term_id;
-        $newCommonTerm = $itemValues['commonTerm'];
-        $newCommonTermId = $newCommonTerm ? $this->getIdForCommonTerm($kind, $newCommonTerm) : 0;
 
         // Determine if the local term is a common term.
         $commonTermIdForLocalTerm = $this->getIdForCommonTerm($kind, $newLocalTerm);

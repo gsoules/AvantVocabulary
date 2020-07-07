@@ -92,19 +92,25 @@ class AvantVocabularyTableBuilder
             $oldTermFoundInNewTable = false;
             $newTermUpdated = false;
 
+            $oldLocalTerm = $oldTermItem['local_term'];
+            $oldCommonTermId = $oldTermItem['common_term_id'];
+
             foreach ($newTermRecords as $newTermRecord)
             {
-                if (empty($newTermRecord->local_term))
+                $newLocalTerm = $newTermRecord->local_term;
+                if (empty($newLocalTerm))
                 {
                     // The new record has no local term which means it's a common term.
-                    if (empty($oldTermItem['local_term']) && $newTermRecord->common_term_id == $oldTermItem['common_term_id'])
+                    if (empty($oldLocalTerm) && $newTermRecord->common_term_id == $oldCommonTermId)
                     {
                         // The old term is also common and has the same common term Id as the same as the new term.
                         $oldTermFoundInNewTable = true;
                         break;
                     }
                 }
-                elseif ($newTermRecord->local_term == $oldTermItem['local_term'])
+                elseif (
+                    $newLocalTerm == $oldLocalTerm ||
+                    AvantVocabulary::normalizeLocalTerm($kind, $newLocalTerm) == AvantVocabulary::normalizeLocalTerm($kind, $oldLocalTerm))
                 {
                     // The new and old local terms are the same. The new term is unmapped by virtue of being new.
                     if ($oldTermItem['common_term_id'] == 0)
@@ -116,7 +122,7 @@ class AvantVocabularyTableBuilder
                     else
                     {
                         // The old term is mapped. Add the mapping to the term in the new table.
-                        $newTermRecord['common_term_id'] = $oldTermItem['common_term_id'];
+                        $newTermRecord['common_term_id'] = $oldCommonTermId;
                         if (!$newTermRecord->save())
                             throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
                         $newTermUpdated = true;
@@ -127,8 +133,15 @@ class AvantVocabularyTableBuilder
 
             if (!($newTermUpdated || $oldTermFoundInNewTable))
             {
-                // This term existed in the old table, but was not in use. Add it to the new table.
-                $this->databaseInsertRecordForOldLocalTerm($kind, $oldTermItem['local_term'], $oldTermItem['common_term_id']);
+                // This term existed in the old table, but was not in use. See if it's normalized form matches an
+                // existing term. If it does, then don't add it to the table.
+                $normalizedLocalTerm = AvantVocabulary::normalizeLocalTerm($kind, $oldLocalTerm);
+                $exists =  $this->db->getTable('VocabularyLocalTerms')->localTermExists($kind, $normalizedLocalTerm);
+                if ($exists)
+                {
+                    // Add this term to the local terms table.
+                    $this->databaseInsertRecordForOldLocalTerm($kind, $oldLocalTerm, $oldTermItem['common_term_id']);
+                }
             }
         }
     }

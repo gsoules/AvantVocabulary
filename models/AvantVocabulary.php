@@ -13,11 +13,6 @@ class AvantVocabulary
     // Common terms with an Id higher than this do not come from Nomenclature 4.0.
     const VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID = 20000;
 
-    public static function createResponseToRemoteRequest($response)
-    {
-        return '[' . ElasticsearchConfig::getOptionValueForContributorId() . '] ' . $response;
-    }
-
     public static function emitVocabularyKindChooser()
     {
         $html = '';
@@ -89,7 +84,7 @@ class AvantVocabulary
         return $kind == self::KIND_TYPE || $kind == self::KIND_SUBJECT;
     }
 
-    public static function normalizeLocalTerm($localTerm, $kind)
+    public static function normalizeLocalTerm($kind, $localTerm)
     {
         $normalizedLocalTerm = '';
         $parts = array_map('trim', explode(',', $localTerm));
@@ -101,27 +96,36 @@ class AvantVocabulary
             // Remove multiple spaces within the part.
             $part = preg_replace('/\s+/', ' ', $part);
 
+            // Remove disallowed characters leaving only A-Z, hyphen, ampersand, comma, and space.
+            $part = preg_replace('/[^a-zA-Z \-\&]/', '', $part);
+
             if ($normalizedLocalTerm)
                 $normalizedLocalTerm .= ', ';
 
             // Make each word have an uppercase first letter and all the rest lowercase, with some exceptions.
             $termParts = explode(' ', $part);
             $normalizedTermPart = '';
-            $alwaysLowercase = array('and', 'or', 'of', 'a');
-            foreach ($termParts as $termPart)
+            $alwaysLowercase = array('and', 'or', 'of', 'a', 'the');
+            foreach ($termParts as $index => $termPart)
             {
                 if ($normalizedTermPart)
                     $normalizedTermPart .= ' ';
-                if (ctype_upper($termPart) || $kind == AvantVocabulary::KIND_PLACE)
+                if (ctype_upper($termPart) || !ctype_alpha($termPart) || $kind == AvantVocabulary::KIND_PLACE)
                 {
-                    // The term is all uppercase or is a place, so assume that's how it's supposed to be.
+                    // The term is all uppercase, or contains non-alpha characters (e.g. B&B) or is a place,
+                    // so assume that's how it's supposed to be.
                     $normalizedTermPart .= $termPart;
                 }
                 else
                 {
+                    // Make all the text lower case.
                     $termPart = strtolower($termPart);
-                    if (!in_array($termPart, $alwaysLowercase))
+
+                    // Make the first letter uppercase unless it's a word that should always
+                    // be lower case except if it's the first word.
+                    if ($index == 0 || !in_array($termPart, $alwaysLowercase))
                         $termPart = ucwords($termPart);
+
                     $normalizedTermPart .= $termPart;
                 }
             }
@@ -135,29 +139,34 @@ class AvantVocabulary
         return VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'progress-' . current_user()->id . '.txt';
     }
 
-    public static function rebuildCommonAndLocalVocabularies($password)
-    {
-        $tableBuilder = new AvantVocabularyTableBuilder();
-
-        try
-        {
-            $tableBuilder->buildCommonTermsTable();
-            $tableBuilder->buildLocalTermsTable();
-            $response = 'Vocabulary tables rebuilt';
-        }
-        catch (Exception $e)
-        {
-            $response = 'Request failed: ' . $e->getMessage();
-        }
-
-        return self::createResponseToRemoteRequest($response);
-    }
-
-    public static function refreshCommonVocabulary($password)
+    public static function rebuildCommonAndLocalVocabularies($siteId, $password)
     {
         $response = 'Request denied';
 
-        if (self::passwordIsValid($password))
+        if (self::requestIsValid($siteId, $password))
+        {
+            $tableBuilder = new AvantVocabularyTableBuilder();
+
+            try
+            {
+                $tableBuilder->buildCommonTermsTable();
+                $tableBuilder->buildLocalTermsTable();
+                $response = 'Vocabulary tables rebuilt';
+            }
+            catch (Exception $e)
+            {
+                $response = 'Request failed: ' . $e->getMessage();
+            }
+        }
+
+        return $response;
+    }
+
+    public static function refreshCommonVocabulary($siteId, $password)
+    {
+        $response = 'Request denied';
+
+        if (self::requestIsValid($siteId, $password))
         {
             $tableBuilder = new AvantVocabularyTableBuilder();
 
@@ -171,17 +180,17 @@ class AvantVocabulary
             }
         }
 
-        return self::createResponseToRemoteRequest($response);
+        return $response;
     }
 
-    public static function passwordIsValid($password)
+    public static function requestIsValid($siteId, $password)
     {
         // Use the last six characters of the Elasticsearch key as the password for remote access to AvantVocabulary.
         // This is simpler/safer than the remote caller having to know an Omeka user name and password. Though the
         // key is public anyway, using just the tail end of it means the caller does not know the entire key.
         $key = ElasticsearchConfig::getOptionValueForKey();
-        $tail = substr($key, strlen($key) - 6);
-        return $password == $tail;
+        $keySuffix = substr($key, strlen($key) - 6);
+        return $password == $keySuffix && $siteId == ElasticsearchConfig::getOptionValueForContributorId();
     }
 
     public static function vocabulary_diff_url()

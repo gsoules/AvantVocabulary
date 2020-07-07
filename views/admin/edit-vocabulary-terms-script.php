@@ -238,7 +238,7 @@
         else if (itemValues['commonTerm'] !== originalCommonTerm)
             termChanged = true;
 
-        console.log('checkForItemUpdates: [' + itemValues['localTerm'] + '] [' + originalLocalTerm + '] [' + itemValues['commonTerm'] + '] [' + originalCommonTerm + ']' + termChanged);
+        // console.log('checkForItemUpdates: [' + itemValues['localTerm'] + '] [' + originalLocalTerm + '] [' + itemValues['commonTerm'] + '] [' + originalCommonTerm + ']' + termChanged);
         updateButton.prop('disabled', !termChanged);
 
         // Determine whether to show and enable/disable the Erase button.
@@ -736,6 +736,9 @@
             mappingIndicator = '<?php echo __('common'); ?>';
             usageTerm = commonTerm;
         }
+
+        // Encode special characters like '&' so that they work in an href.
+        usageTerm = encodeURIComponent(usageTerm);
 
         item.find('.vocabulary-term-left').html(leftTerm);
         item.find('.vocabulary-term-mapping').html(mappingIndicator);
