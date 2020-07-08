@@ -79,21 +79,62 @@ class AvantVocabulary
         return $kindTable;
     }
 
+    public static function handleRebuildCommonAndLocalVocabularies()
+    {
+        $tableBuilder = new AvantVocabularyTableBuilder();
+
+        try
+        {
+            $tableBuilder->buildCommonTermsTable();
+            $tableBuilder->buildLocalTermsTable();
+            $response = 'Vocabulary tables rebuilt';
+        }
+        catch (Exception $e)
+        {
+            $response = 'Request failed: ' . $e->getMessage();
+        }
+
+        return $response;
+    }
+
+    public static function handleRefreshCommonVocabulary()
+    {
+        $tableBuilder = new AvantVocabularyTableBuilder();
+
+        try
+        {
+            $response = $tableBuilder->refreshCommonTerms();
+        }
+        catch (Exception $e)
+        {
+            $response = 'Request failed: ' . $e->getMessage();
+        }
+
+        return $response;
+    }
+
     public static function handleRemoteRequest($action, $siteId, $password)
     {
-        switch ($action)
+        if (AvantElasticsearch::remoteRequestIsValid($siteId, $password))
         {
-            case 'vocab-update':
-                $response = AvantVocabulary::refreshCommonVocabulary($siteId, $password);
-                break;
+            switch ($action)
+            {
+                case 'vocab-update':
+                    $response = AvantVocabulary::handleRefreshCommonVocabulary();
+                    break;
 
-            case 'vocab-rebuild':
-                $response = AvantVocabulary::rebuildCommonAndLocalVocabularies($siteId, $password);
-                break;
+                case 'vocab-rebuild':
+                    $response = AvantVocabulary::handleRebuildCommonAndLocalVocabularies();
+                    break;
 
-            default:
-                $response = 'Unsupported vocabulary action: ' . $action;
-                break;
+                default:
+                    $response = 'Unsupported AvantVocabulary action: ' . $action;
+                    break;
+            }
+        }
+        else
+        {
+            $response = '';
         }
 
         return $response;
@@ -157,60 +198,6 @@ class AvantVocabulary
     public static function progressFileName()
     {
         return VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'progress-' . current_user()->id . '.txt';
-    }
-
-    public static function rebuildCommonAndLocalVocabularies($siteId, $password)
-    {
-        $response = 'Request denied';
-
-        if (AvantElasticsearch::remoteRequestIsValid($siteId, $password))
-        {
-            $tableBuilder = new AvantVocabularyTableBuilder();
-
-            try
-            {
-                $tableBuilder->buildCommonTermsTable();
-                $tableBuilder->buildLocalTermsTable();
-                $response = 'Vocabulary tables rebuilt';
-            }
-            catch (Exception $e)
-            {
-                $response = 'Request failed: ' . $e->getMessage();
-            }
-        }
-
-        return $response;
-    }
-
-    public static function refreshCommonVocabulary($siteId, $password)
-    {
-        $response = 'Request denied';
-
-        if (AvantElasticsearch::remoteRequestIsValid($siteId, $password))
-        {
-            $tableBuilder = new AvantVocabularyTableBuilder();
-
-            try
-            {
-                $response = $tableBuilder->refreshCommonTerms();
-            }
-            catch (Exception $e)
-            {
-                $response = 'Request failed: ' . $e->getMessage();
-            }
-        }
-
-        return $response;
-    }
-
-    public static function requestIsValid($siteId, $password)
-    {
-        // Use the last six characters of the Elasticsearch key as the password for remote access to AvantVocabulary.
-        // This is simpler/safer than the remote caller having to know an Omeka user name and password. Though the
-        // key is public anyway, using just the tail end of it means the caller does not know the entire key.
-        $key = ElasticsearchConfig::getOptionValueForKey();
-        $keySuffix = substr($key, strlen($key) - 6);
-        return $password == $keySuffix && $siteId == ElasticsearchConfig::getOptionValueForContributorId();
     }
 
     public static function vocabulary_diff_url()
