@@ -79,6 +79,26 @@ class AvantVocabulary
         return $kindTable;
     }
 
+    public static function handleRemoteRequest($action, $siteId, $password)
+    {
+        switch ($action)
+        {
+            case 'vocab-update':
+                $response = AvantVocabulary::refreshCommonVocabulary($siteId, $password);
+                break;
+
+            case 'vocab-rebuild':
+                $response = AvantVocabulary::rebuildCommonAndLocalVocabularies($siteId, $password);
+                break;
+
+            default:
+                $response = 'Unsupported vocabulary action: ' . $action;
+                break;
+        }
+
+        return $response;
+    }
+
     public static function kindIsTypeOrSubject($kind)
     {
         return $kind == self::KIND_TYPE || $kind == self::KIND_SUBJECT;
@@ -143,7 +163,7 @@ class AvantVocabulary
     {
         $response = 'Request denied';
 
-        if (self::requestIsValid($siteId, $password))
+        if (AvantElasticsearch::remoteRequestIsValid($siteId, $password))
         {
             $tableBuilder = new AvantVocabularyTableBuilder();
 
@@ -166,7 +186,7 @@ class AvantVocabulary
     {
         $response = 'Request denied';
 
-        if (self::requestIsValid($siteId, $password))
+        if (AvantElasticsearch::remoteRequestIsValid($siteId, $password))
         {
             $tableBuilder = new AvantVocabularyTableBuilder();
 
