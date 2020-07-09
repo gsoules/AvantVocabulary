@@ -416,7 +416,7 @@ class AvantVocabularyTableBuilder
 
     protected function readDataRowsFromRemoteCsvFile($url)
     {
-        $response = AvantAdmin::requestRemoteAsset($url);
+        $response = AvantCommon::requestRemoteAsset($url);
         if ($response['response-code'] != 200)
             throw new Exception("Could not read $url");
 
