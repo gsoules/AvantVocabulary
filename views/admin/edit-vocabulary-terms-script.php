@@ -621,6 +621,7 @@
 
     function reportAjaxError(request, action)
     {
+        // Strip away HMTL tags.
         let message = JSON.stringify(request);
         message = message.replace(/(<([^>]+)>)/ig,"");
         message = message.replace(/\\n/g, '\n');
@@ -964,12 +965,20 @@
         else
         {
             let affected = usageCount === '1' ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
-            let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
             let message1 = '<?php echo __('{1} will be updated'); ?>';
             let message2 = '<?php echo __('The {2} will be set to "{3}"'); ?>';
             message1 = message1.replace('{1}', affected);
-            message2 = message2.replace('{3}', term);
-            message2 = message2.replace('{2}', kindName);
+
+            if (itemValues['localTerm'] && itemValues['localTerm'] !== originalItemValues['localTerm'])
+            {
+                message2 = message2.replace('{3}', itemValues['localTerm']);
+                message2 = message2.replace('{2}', kindName);
+            }
+            else
+            {
+                message2 = message2.replace('{3}', itemValues['commonTerm']);
+                message2 = message2.replace('{2}', '<?php echo __('Common Term'); ?>');
+            }
 
             jQuery("#dialog-confirm-update-term h2").text(message1);
             jQuery("#dialog-confirm-update-term p").text(message2);
