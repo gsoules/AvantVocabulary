@@ -55,6 +55,12 @@ class AvantVocabulary
         return array($kind, $kindName);
     }
 
+    public static function getLeafFromTerm($term)
+    {
+        $parts = array_map('trim', explode(',', strtolower($term)));
+        return $parts[count($parts) - 1];
+    }
+
     public static function getVocabularyFields()
     {
         return array(

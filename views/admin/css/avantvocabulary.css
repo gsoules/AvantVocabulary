@@ -184,6 +184,31 @@
     cursor: pointer;
 }
 
+.vocabulary-term-suggestion {
+    display: none;
+}
+
+.use-suggestion-button {
+    color: var(--term-link);
+    background: rgba(153, 184, 222, 0.64);
+    border: solid 1px #819bba;
+    border-radius: 4px;
+    box-shadow: unset;
+    text-shadow: unset;
+    margin: 0 0 0 12px;
+    padding: 0px 4px;
+}
+
+.use-suggestion-button:hover {
+    color: var(--term-link);
+    background: rgba(153, 184, 222, 0.28);
+    box-shadow: unset;
+}
+
+.vocabulary-term-left span.unmapped span.suggestion {
+    color: green;
+}
+
 body.vocabulary-terms-page .ui-autocomplete {
     max-height: 1000%;
     overflow-y: visible;

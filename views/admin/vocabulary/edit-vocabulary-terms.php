@@ -69,12 +69,29 @@ echo "<a class='vocabulary-view-toggle' href='../vocabulary/tree?kind=$kind'>" .
 
 echo "</div>";
 
-$commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
-$commonTermCount = number_format($commonTermCount, 0, '.', ',');
+$commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getAllCommonTermRecordsForKind($kind);
+$commonTermCount = number_format(count($commonTermRecords), 0, '.', ',');
 
 $localTermItems = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItems($kind);
 $localTermCount = count($localTermItems);
 $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
+
+// Look for common terms that have the same leaf as the unmapped local terms.
+foreach ($localTermItems as $index => $localTermItem)
+{
+    if ($localTermItem['common_term_id'])
+        continue;
+    $localLeafTerm = AvantVocabulary::getLeafFromTerm($localTermItem['local_term']);
+    foreach ($commonTermRecords as $commonTermRecord)
+    {
+        $commonLeafTerm = AvantVocabulary::getLeafFromTerm($commonTermRecord['common_term']);
+        if ($localLeafTerm == $commonLeafTerm)
+        {
+            $localTermItems[$index]['suggestion'] = $commonTermRecord['common_term'];
+            break;
+        }
+    }
+}
 
 // The HTML that follows displays the choose vocabulary.
 ?>
@@ -95,7 +112,7 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
     <div id="vocabulary-modal-dialog" class="modal-dialog">
         <div class="modal-header">
             <div class="modal-header-title"><?php echo __('Search for a %s in the Common Vocabulary', $kindName); ?></div>
-            <button type="button" class="action-button close-chooser-dialog-button"><?php echo __('Close'); ?></button>
+            <button class="action-button close-chooser-dialog-button"><?php echo __('Close'); ?></button>
         </div>
         <section class="modal-content">
             <div id="vocabulary-term-message"></div>
@@ -126,6 +143,8 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
         $commonTermId = $localTermItem['common_term_id'];
         $commonTerm = $localTermItem['common_term'];
 
+        $suggestion = isset($localTermItem['suggestion']) ? $localTermItem['suggestion'] : '';
+
         $term = $localTerm ? $localTerm : $commonTerm;
         $usageCount = $vocabularyTermsEditor->getLocalTermUsageCount($elementId, $term);
         $hideRemoveItemButton = $usageCount != 0 ? ' hide' : '';
@@ -145,17 +164,20 @@ $verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
                 </div>
                 <div class="drawer-contents" style="display:none;">
                     <div class="drawer-message"></div>
-                    <label><?php echo __('Local Term'); ?></label><input class="vocabulary-drawer-local-term" type="text" value="<?php echo $localTerm; ?>">
-                    <label><?php echo __('Common Term'); ?></label><div data-common-term-id="<?php echo $commonTermId;?>" class="vocabulary-drawer-common-term"><?php echo $commonTerm; ?></div>
+                    <label><?php echo __('Local Term'); ?></label>
+                    <input class="vocabulary-drawer-local-term" type="text" value="<?php echo $localTerm; ?>">
+                    <label><?php echo __('Common Term'); ?></label>
+                    <div class="vocabulary-term-suggestion"><?php echo $suggestion; ?></div>
+                    <div data-common-term-id="<?php echo $commonTermId; ?>" class="vocabulary-drawer-common-term"><?php echo $commonTerm; ?></div>
                     <div class="vocabulary-drawer-buttons" >
                         <div class="vocabulary-drawer-buttons-left">
-                            <button type="button" class="action-button choose-common-term-button"><?php echo __('Choose Common Term'); ?></button>
-                            <button type="button" class="action-button erase-common-term-button"><?php echo __('Erase Common Term'); ?></button>
+                            <button class="action-button choose-common-term-button"><?php echo __('Choose Common Term'); ?></button>
+                            <button class="action-button erase-common-term-button"><?php echo __('Erase Common Term'); ?></button>
                         </div>
                         <div class="vocabulary-drawer-buttons-right">
-                            <button type="button" class="action-button update-item-button"><?php echo __('Update'); ?></button>
-                            <button type="button" class="action-button remove-item-button red<?php echo $hideRemoveItemButton; ?>"><?php echo __('Remove Term'); ?></button>
-                            <button type="button" class="action-button cancel-update-button"><?php echo __('Cancel'); ?></button>
+                            <button class="action-button update-item-button"><?php echo __('Update'); ?></button>
+                            <button class="action-button remove-item-button red<?php echo $hideRemoveItemButton; ?>"><?php echo __('Remove Term'); ?></button>
+                            <button class="action-button cancel-update-button"><?php echo __('Cancel'); ?></button>
                         </div>
                     </div>
                 </div>

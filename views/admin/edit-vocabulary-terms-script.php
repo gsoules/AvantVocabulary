@@ -357,6 +357,7 @@
         if (usageCount === '')
             usageCount = '0';
         usageCount = parseInt(usageCount, 10);
+        let suggestion = item.find('.vocabulary-term-suggestion').text();
 
         // Get the Id minus the "item-" prefix.
         let id = item.attr('id');
@@ -369,7 +370,8 @@
             localTerm: localTerm,
             commonTerm: commonTerm,
             commonTermId: commonTermId,
-            usageCount: usageCount
+            usageCount: usageCount,
+            suggestion: suggestion
         };
     }
 
@@ -399,6 +401,7 @@
         let removeButtons = jQuery('.remove-item-button');
         let chooseButtons = jQuery('.choose-common-term-button');
         let eraseButtons = jQuery('.erase-common-term-button');
+        let useSuggestionButtons = jQuery('.use-suggestion-button');
         let closeButton = jQuery('.close-chooser-dialog-button');
 
         // Remove all the click event handlers.
@@ -454,6 +457,15 @@
         updateButtons.click(function(event)
         {
             let item = getItemForButton(this);
+            updateItemConfirmation(item);
+        });
+
+        useSuggestionButtons.click(function(event)
+        {
+            let item = getItemForButton(this);
+            let itemValues = getItemValues(item);
+            rememberOriginalValues(item);
+            item.find('.vocabulary-drawer-common-term').text(itemValues.suggestion);
             updateItemConfirmation(item);
         });
 
@@ -700,6 +712,9 @@
         let commonTermId = itemValues.commonTermId;
         let commonTermLink = commonTerm;
 
+        let suggestion = itemValues.suggestion;
+        let suggestionLink = suggestion;
+
         let isNomenclatureTerm = commonTermId < <?php echo AvantVocabulary::VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID; ?>;
         if (commonTerm && isNomenclatureTerm)
         {
@@ -722,6 +737,15 @@
         {
             leftTerm = localTerm + '<span class="mapped">(' + commonTermLink + ')<span>';
             mappingIndicator = '<?php echo __('mapped'); ?>';
+            usageTerm = localTerm;
+        }
+        else if (localTerm && !commonTerm && suggestion)
+        {
+            let altText = '<?php echo __('Map the local term to this common term'); ?>';
+            suggestionLink = "<button class='use-suggestion-button' title='" + altText + "'>" + suggestion + "</button>";
+            leftTerm = localTerm + '<span class="suggestion">' + suggestionLink + '<span>';
+            leftTerm = '<span class="unmapped">' + leftTerm + '<span>';
+            mappingIndicator = '<span><?php echo __('unmapped'); ?><span>';
             usageTerm = localTerm;
         }
         else if (localTerm && !commonTerm)
@@ -989,6 +1013,7 @@
                 height: "auto",
                 width: 600,
                 modal: true,
+                close: function( event, ui ) {cancelItemUpdate(item);},
                 buttons: {
                     '<?php echo __('Update'); ?>': function() {
                         jQuery(this).dialog( "close" );
