@@ -574,9 +574,9 @@ class AvantVocabularyTableBuilder
 
     protected function updateItemIndexes($itemId)
     {
-        // Fetch the item directly from the DB in case it is private (ItemMetadata::getItemFromId() would return null).
-        $db = get_db();
-        $item = $db->getTable('Item')->find($itemId);
+        $item = AvantCommon::fetchItemForRemoteRequest($itemId);
+        if (!$item)
+            throw new Exception($this->reportError('Item Id not found: ' . $itemId, __FUNCTION__, __LINE__));
 
         $avantElasticsearchIndexBuilder = new AvantElasticsearchIndexBuilder();
         $sharedIndexIsEnabled = (bool)get_option(ElasticsearchConfig::OPTION_ES_SHARE) == true;
