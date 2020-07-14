@@ -76,6 +76,16 @@ class AvantVocabularyTableBuilder
         $elementId = ItemMetadata::getElementIdForElementName($elementName);
         $localTerms = $this->fetchUniqueLocalTerms($elementId);
 
+        if ($kind == AvantVocabulary::KIND_PLACE)
+        {
+            $placeTerms = $this->db->getTable('VocabularyCommonTerms')->getAllCommonTermRecordsForKind($kind);
+            foreach ($placeTerms as $index => $placeTerm)
+            {
+                if (!in_array($placeTerm->common_term, $localTerms))
+                    $localTerms[$index]['text'] = $placeTerm->common_term;
+            }
+        }
+
         // Add the terms to the table.
         $newTermRecords = array();
         foreach ($localTerms as $index => $term)
@@ -137,7 +147,7 @@ class AvantVocabularyTableBuilder
                 // existing term. If it does, then don't add it to the table.
                 $normalizedLocalTerm = AvantVocabulary::normalizeLocalTerm($kind, $oldLocalTerm);
                 $exists =  $this->db->getTable('VocabularyLocalTerms')->localTermExists($kind, $normalizedLocalTerm);
-                if ($exists)
+                if (!$exists)
                 {
                     // Add this term to the local terms table.
                     $this->databaseInsertRecordForOldLocalTerm($kind, $oldLocalTerm, $oldTermItem['common_term_id']);
@@ -152,6 +162,7 @@ class AvantVocabularyTableBuilder
         $commonTermRecord['kind'] = $kind;
         $commonTermRecord['common_term_id'] = $id;
         $commonTermRecord['common_term'] = $term;
+        $commonTermRecord['leaf'] = AvantVocabulary::getLeafFromTerm($term);
 
         if (!$commonTermRecord->save())
             throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
