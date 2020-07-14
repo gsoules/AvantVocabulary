@@ -84,6 +84,15 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         return $result;
     }
 
+    public function getLocalTermRecordsByKindAndLocalTerm($kind, $localTerm)
+    {
+        $localTerm = AvantCommon::escapeQuotes($localTerm);
+        $select = $this->getSelect();
+        $select->where("kind = $kind AND local_term = '$localTerm'");
+        $result = $this->fetchObject($select);
+        return $result;
+    }
+
     public function getLocalTerms($kind)
     {
         $terms = array();
