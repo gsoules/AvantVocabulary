@@ -14,15 +14,14 @@ class Table_VocabularyLocalTerms extends Omeka_Db_Table
         $select->columns(array(
             'vocabulary_local_terms.id',
             'vocabulary_local_terms.local_term',
-            'vocabulary_local_terms.common_term_id',
-            'vocabulary_common_terms.common_term'
+            'vocabulary_local_terms.common_term_id'
         ));
         $select->where("vocabulary_local_terms.kind = $kind");
 
         // Join with the Common Terms table where the common_term_id is the same.
         $select->joinLeft(
             array('vocabulary_common_terms' => "{$db->prefix}vocabulary_common_terms"),
-            'vocabulary_local_terms.common_term_id = vocabulary_common_terms.common_term_id',
+            "vocabulary_local_terms.common_term_id = vocabulary_common_terms.common_term_id AND vocabulary_common_terms.kind =  $kind",
             array('common_term')
         );
 
