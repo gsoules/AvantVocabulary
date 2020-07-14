@@ -11,6 +11,7 @@ class VocabularyTableFactory
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `kind` int(10) unsigned NOT NULL,
             `common_term` varchar(512) DEFAULT NULL,
+            `leaf` varchar(128) DEFAULT NULL,
             `common_term_id` int(10) unsigned NOT NULL,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
