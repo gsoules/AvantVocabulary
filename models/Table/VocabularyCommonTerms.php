@@ -4,11 +4,10 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 {
     public function commonTermCount($kind)
     {
-        $whereKind = $this->getWhereKind($kind);
         $select = $this->getSelect();
         $select->reset(Zend_Db_Select::COLUMNS);
         $select->columns('COUNT(*) AS count');
-        $select->where($whereKind);
+        $select->where("kind = $kind");
 
         try
         {
@@ -23,12 +22,10 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 
     public function getAllCommonTermRecordsForKind($kind)
     {
-        $whereKind = $this->getWhereKind($kind);
-
         try
         {
             $select = $this->getSelect();
-            $select->where($whereKind);
+            $select->where("kind = $kind");
             $select->order('common_term');
             $result = $this->fetchObjects($select);
         }
@@ -44,12 +41,10 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
     {
         $commonTerm = AvantCommon::escapeQuotes($commonTerm);
 
-        $whereKind = $this->getWhereKind($kind);
-
         try
         {
             $select = $this->getSelect();
-            $select->where("$whereKind AND common_term = '$commonTerm'");
+            $select->where("kind = $kind AND common_term = '$commonTerm'");
             $result = $this->fetchObject($select);
         }
         catch (Exception $e)
@@ -94,13 +89,12 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 
     public function getCommonTermSuggestions($kind, $term)
     {
-        $whereKind = $this->getWhereKind($kind);
         $query = $this->getQueryForLike($term);
 
         try
         {
             $select = $this->getSelect();
-            $select->where("$whereKind AND $query");
+            $select->where("kind = $kind AND $query");
             $result = $this->fetchObjects($select);
         }
         catch (Exception $e)
@@ -139,26 +133,5 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         $select->columns('COUNT(*) AS count');
         $result = $this->fetchObject($select);
         return $result->count;
-    }
-
-    protected function getWhereKind($kind)
-    {
-        // This method treats kind as a bit mask. If either the Type or the Subject bit is set, it creates
-        // part of a SQL Where clause that tests kind against the single bit passed in (0001 or 0010) and
-        // and also tests against both bits being set (0011). This somewhat cumbersome approach addresses
-        // the fact that the Common Facets vocabulary contains thousands of terms that apply to both
-        // Type and Subject elements. Rather than duplicate them in the common terms table so that each has
-        // its own kind, they only appear once, but their kind is VOCABULARY_TERM_KIND_TYPE_AND_SUBJECT.
-
-        if (AvantVocabulary::kindIsTypeOrSubject($kind))
-        {
-            $typeOrSubject = AvantVocabulary::KIND_TYPE_OR_SUBJECT;
-            $whereKind = "(kind = $kind OR kind = $typeOrSubject)";
-        }
-        else
-        {
-            $whereKind = "kind = $kind";
-        }
-        return $whereKind;
     }
 }
