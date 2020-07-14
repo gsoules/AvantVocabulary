@@ -195,7 +195,7 @@ if (AvantCommon::userIsSuper())
     if (isset($_COOKIE['XDEBUG_SESSION']))
     {
         echo '<div class="health-report-error">';
-        echo '<a href="http://localhost/omeka-2.6/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
+        echo '<a href="http://localhost/omeka/?XDEBUG_SESSION_STOP" target="_blank">Click here to stop debugging</a>';
         echo '</div>';
     }
     echo "<div>" . __('These are super user options. Do not use them unless you understand what they are for.') . "</div><br/>";
