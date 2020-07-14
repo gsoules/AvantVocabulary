@@ -783,16 +783,20 @@
         let usageCountLink = "<a href='" + href + "'" + usageAttributes + " target='_blank' title='" + altText + "'>" + usageCount + "</a>";
         item.find('.vocabulary-term-count').html(usageCountLink);
 
-        let useSuggestionButtons = jQuery('.use-suggestion-button');
-        useSuggestionButtons.off('click');
-        useSuggestionButtons.click(function(event)
+        // Add a click handler to the suggestion button.
+        if (suggestion)
         {
-            let item = getItemForButton(this);
-            let itemValues = getItemValues(item);
-            rememberOriginalValues(item);
-            item.find('.vocabulary-drawer-common-term').text(itemValues.suggestion);
-            updateItemConfirmation(item);
-        });
+            let useSuggestionButton = item.find('.use-suggestion-button');
+            useSuggestionButton.off('click');
+            useSuggestionButton.click(function(event)
+            {
+                let item = getItemForButton(this);
+                let itemValues = getItemValues(item);
+                rememberOriginalValues(item);
+                item.find('.vocabulary-drawer-common-term').text(itemValues.suggestion);
+                updateItemConfirmation(item);
+            });
+        }
     }
 
     function setItemTitles()
@@ -986,46 +990,39 @@
         if (!validateItemValues(item, itemValues))
             return;
 
-        if (usageCount === '0')
+        let affected = usageCount === '1' ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
+        let message1 = '<?php echo __('{1} will be updated'); ?>';
+        let message2 = '<?php echo __('The {2} will be set to "{3}"'); ?>';
+        message1 = message1.replace('{1}', affected);
+
+        if (itemValues['localTerm'] && itemValues['localTerm'] !== originalItemValues['localTerm'])
         {
-            updateItem(item, itemValues);
+            message2 = message2.replace('{3}', itemValues['localTerm']);
+            message2 = message2.replace('{2}', kindName);
         }
         else
         {
-            let affected = usageCount === '1' ? '<?php echo __('1 item'); ?>' : usageCount + ' <?php echo __('items'); ?>';
-            let message1 = '<?php echo __('{1} will be updated'); ?>';
-            let message2 = '<?php echo __('The {2} will be set to "{3}"'); ?>';
-            message1 = message1.replace('{1}', affected);
-
-            if (itemValues['localTerm'] && itemValues['localTerm'] !== originalItemValues['localTerm'])
-            {
-                message2 = message2.replace('{3}', itemValues['localTerm']);
-                message2 = message2.replace('{2}', kindName);
-            }
-            else
-            {
-                message2 = message2.replace('{3}', itemValues['commonTerm']);
-                message2 = message2.replace('{2}', '<?php echo __('Common Term'); ?>');
-            }
-
-            jQuery("#dialog-confirm-update-term h2").text(message1);
-            jQuery("#dialog-confirm-update-term p").text(message2);
-
-            jQuery("#dialog-confirm-update-term").dialog({
-                autoOpen: true,
-                resizable: false,
-                height: "auto",
-                width: 600,
-                modal: true,
-                close: function( event, ui ) {cancelItemUpdate(item);},
-                buttons: {
-                    '<?php echo __('Update'); ?>': function() {
-                        jQuery(this).dialog( "close" );
-                        updateItem(item, itemValues);
-                    }
-                }
-            });
+            message2 = message2.replace('{3}', itemValues['commonTerm']);
+            message2 = message2.replace('{2}', '<?php echo __('Common Term'); ?>');
         }
+
+        jQuery("#dialog-confirm-update-term h2").text(usageCount === '0' ? '' : message1);
+        jQuery("#dialog-confirm-update-term p").text(message2);
+
+        jQuery("#dialog-confirm-update-term").dialog({
+            autoOpen: true,
+            resizable: false,
+            height: "auto",
+            width: 600,
+            modal: true,
+            close: function( event, ui ) {cancelItemUpdate(item);},
+            buttons: {
+                '<?php echo __('Update'); ?>': function() {
+                    jQuery(this).dialog( "close" );
+                    updateItem(item, itemValues);
+                }
+            }
+        });
     }
 
     function validateItemValues(item, itemValues)
