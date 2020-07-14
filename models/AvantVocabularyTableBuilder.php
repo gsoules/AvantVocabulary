@@ -376,30 +376,24 @@ class AvantVocabularyTableBuilder
             $localTerm = $localTermsItem['local_term'];
             if (empty($localTerm) && $commonTermId == 0)
             {
-                // Both the local term and common term Id are missing. This should never happen, but if it did
-                // due to bug in previous code, this will clean it up.
+                // Both the local term and common term Id are missing. This should never happen, but if it does, clean it up.
                 $skip = true;
             }
             elseif ($commonTermId)
             {
-                // Verify that the common terms table contains a term matching the kind and common term Id.
+                // The local term has a common term Id. Verify that the common term exists in the common terms table.
                 if (!$this->getCommonTermRecordByKindAndCommonTermId($kind, $commonTermId))
                 {
-                    // No common term was found for the specific kind.
-                    if (AvantVocabulary::kindIsTypeOrSubject($kind))
-                    {
-                        // Check to see if there's a common term that works for either Type or Subject.
-                        if (!$this->getCommonTermRecordByKindAndCommonTermId(AvantVocabulary::KIND_TYPE_OR_SUBJECT, $commonTermId))
-                        {
-                            $skip = true;
-                        }
-                    }
+                    // The common term Id does not exist. This could happen if the term was removed from the common
+                    // vocabulary or it's Id was changed. Keep the local term, but change it to unmapped.
+                    $localTermsItems[$index]['common_term_id'] = 0;
                 }
             }
 
             if (!$skip && $commonTermId == 0)
             {
-                // See if the local term is a common term which somehow was not automatically converted to a common term.
+                // See if this unmapped local term is a common term. This could happen if a common term got renamed
+                // and somehow the local term did not get updated when the vocabulary was refreshed.
                 $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $localTerm);
                 if ($commonTermRecord)
                     $skip = true;
