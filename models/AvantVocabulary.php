@@ -5,8 +5,8 @@ class AvantVocabulary
     # These values represent a bit map of flags which can be combined e.g. type & subject.
     const KIND_TYPE = 1;            # 0001
     const KIND_SUBJECT = 2;         # 0010
+    const KIND_RESERVED = 3;        # 0011 Used by Common Vocabulary generator for terms that can be types or subjects.
     const KIND_PLACE = 4;           # 0100
-    const KIND_TYPE_OR_SUBJECT = 3; # 0011
 
     const VOCABULARY_TERM_COOKIE = 'VOCAB-KIND';
 
