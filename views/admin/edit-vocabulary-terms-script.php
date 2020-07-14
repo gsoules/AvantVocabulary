@@ -57,6 +57,7 @@
         newItem.find('.vocabulary-term-count').text('0');
         newItem.find('.vocabulary-drawer-common-term').text('');
         newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', 0);
+        newItem.find('.vocabulary-term-suggestion').text('');
 
         // Hide buttons that are not needed when adding an item.
         newItem.find('.remove-item-button').hide();
@@ -97,10 +98,11 @@
             newItem.attr('id', 'item-' + data['id']);
             newItem.find('.drawer-contents').hide();
 
-            // Set the common term Id for the new item.
+            // Set the values for the new item.
             newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', data['commonTermId']);
             newItem.find('.vocabulary-drawer-local-term').val(data['localTerm']);
             newItem.find('.vocabulary-drawer-common-term').text(data['commonTerm']);
+            newItem.find('.vocabulary-term-suggestion').text(data['suggestion']);
 
             // Convert the Save button back into the Update button.
             let updateButton = newItem.find('.update-item-button');
@@ -189,10 +191,11 @@
                 }
             }
 
-            // Set the common term Id for the updated item.
+            // Set the values for the updated item.
             item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', data['commonTermId']);
             item.find('.vocabulary-drawer-local-term').val(data['localTerm']);
             item.find('.vocabulary-drawer-common-term').text(data['commonTerm']);
+            item.find('.vocabulary-term-suggestion').text(data['suggestion']);
 
             // Update the item's title with the updated local and/or common terms.
             setItemTitle(item);
@@ -401,7 +404,6 @@
         let removeButtons = jQuery('.remove-item-button');
         let chooseButtons = jQuery('.choose-common-term-button');
         let eraseButtons = jQuery('.erase-common-term-button');
-        let useSuggestionButtons = jQuery('.use-suggestion-button');
         let closeButton = jQuery('.close-chooser-dialog-button');
 
         // Remove all the click event handlers.
@@ -457,15 +459,6 @@
         updateButtons.click(function(event)
         {
             let item = getItemForButton(this);
-            updateItemConfirmation(item);
-        });
-
-        useSuggestionButtons.click(function(event)
-        {
-            let item = getItemForButton(this);
-            let itemValues = getItemValues(item);
-            rememberOriginalValues(item);
-            item.find('.vocabulary-drawer-common-term').text(itemValues.suggestion);
             updateItemConfirmation(item);
         });
 
@@ -789,6 +782,17 @@
         let altText = usageCount ? '<?php echo __('View the items that use this term'); ?>' : '';
         let usageCountLink = "<a href='" + href + "'" + usageAttributes + " target='_blank' title='" + altText + "'>" + usageCount + "</a>";
         item.find('.vocabulary-term-count').html(usageCountLink);
+
+        let useSuggestionButtons = jQuery('.use-suggestion-button');
+        useSuggestionButtons.off('click');
+        useSuggestionButtons.click(function(event)
+        {
+            let item = getItemForButton(this);
+            let itemValues = getItemValues(item);
+            rememberOriginalValues(item);
+            item.find('.vocabulary-drawer-common-term').text(itemValues.suggestion);
+            updateItemConfirmation(item);
+        });
     }
 
     function setItemTitles()

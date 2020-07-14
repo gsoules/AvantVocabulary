@@ -87,6 +87,22 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         return $result;
     }
 
+    public function getCommonTermRecordByLeaf($kind, $leaf)
+    {
+        try
+        {
+            $select = $this->getSelect();
+            $select->where("leaf = '$leaf' AND kind = '$kind'");
+            $result = $this->fetchObject($select);
+        }
+        catch (Exception $e)
+        {
+            $result = null;
+        }
+
+        return $result;
+    }
+
     public function getCommonTermSuggestions($kind, $term)
     {
         $query = $this->getQueryForLike($term);

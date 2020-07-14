@@ -55,20 +55,38 @@ class VocabularyTermsEditor
         $newLocalTermRecord['local_term'] = $localTerm;
         $newLocalTermRecord['common_term_id'] = $commonTermId;
 
+        $suggestion = '';
+        if ($commonTermId == 0)
+        {
+            // There's no common term. See if the we can offer a suggestion.
+            $suggestion = AvantVocabulary::getCommonTermSuggestionFromLocalTerm($kind, $localTerm);
+        }
+
         // Determine if the local term now exactly matches another. This can happen if the local term
         // is a common term and the record has no common term, but another record has that same common
         // term and no local term.
         $duplicateLocalTermRecord = $this->db->getTable('VocabularyLocalTerms')->getDuplicateLocalTermRecord($newLocalTermRecord);
         if ($duplicateLocalTermRecord)
         {
-            return json_encode(array('success'=>false, 'id'=>0, 'error'=>'local-term-exists'));
+            return json_encode(array(
+                'success'=>false,
+                'id'=>0,
+                'error'=>'local-term-exists'
+            ));
         }
 
         // Add the new term by updating the new record to insert it into the database.
         if (!$newLocalTermRecord->save())
             throw new Exception($this->reportError(__FUNCTION__, ' save failed'));
 
-        return json_encode(array('success'=>true, 'id'=>$newLocalTermRecord->id, 'localTerm'=>$localTerm, 'commonTerm'=>$commonTerm, 'commonTermId'=>$commonTermId));
+        return json_encode(array(
+            'success'=>true,
+            'id'=>$newLocalTermRecord->id,
+            'localTerm'=>$localTerm,
+            'commonTerm'=>$commonTerm,
+            'commonTermId'=>$commonTermId,
+            'suggestion'=>$suggestion
+        ));
     }
 
     protected function getElementTextsThatUseTerm($elementId, $oldTerm)
@@ -282,9 +300,11 @@ class VocabularyTermsEditor
 
         // Check if the local term has changed.
         $newLocalTermAlreadyExists = false;
+        $localTermChanged = false;
         if ($newLocalTerm && $newLocalTerm != $oldLocalTerm)
         {
-            // Check if the new local term already exists.
+            // The local term has changed. Check if the new local term already exists.
+            $localTermChanged = true;
             if ($this->db->getTable('VocabularyLocalTerms')->localTermExists($kind, $newLocalTerm))
             {
                 $newLocalTermAlreadyExists = true;
@@ -336,6 +356,13 @@ class VocabularyTermsEditor
         $localTermRecord['local_term'] = $newLocalTerm;
         $localTermRecord['common_term_id'] = $newCommonTermId;
 
+        $suggestion = '';
+        if ($localTermChanged && $newCommonTermId == 0)
+        {
+            // There's no common term. See if the we can offer a suggestion.
+            $suggestion = AvantVocabulary::getCommonTermSuggestionFromLocalTerm($kind, $newLocalTerm);
+        }
+
         // Determine if the local term now exactly matches another.
         $duplicateLocalTermRecord = $this->db->getTable('VocabularyLocalTerms')->getDuplicateLocalTermRecord($localTermRecord);
         if ($duplicateLocalTermRecord)
@@ -362,7 +389,14 @@ class VocabularyTermsEditor
         // Update the Elasticsearch indexes with the new data.
         $this->updateAndReindexItems($itemValues, $oldElementText, $newElementText);
 
-        return json_encode(array('success'=>true, 'duplicateId'=>$duplicateId, 'localTerm'=>$newLocalTerm, 'commonTermId'=>$newCommonTermId, 'commonTerm'=>$newCommonTerm));
+        return json_encode(array(
+            'success'=>true,
+            'duplicateId'=>$duplicateId,
+            'localTerm'=>$newLocalTerm,
+            'commonTermId'=>$newCommonTermId,
+            'commonTerm'=>$newCommonTerm,
+            'suggestion'=>$suggestion
+        ));
     }
 
     protected function updateTermOrder()

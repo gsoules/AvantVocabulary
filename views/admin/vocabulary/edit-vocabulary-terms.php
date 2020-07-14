@@ -69,8 +69,8 @@ echo "<a class='vocabulary-view-toggle' href='../vocabulary/tree?kind=$kind'>" .
 
 echo "</div>";
 
-$commonTermRecords = get_db()->getTable('VocabularyCommonTerms')->getAllCommonTermRecordsForKind($kind);
-$commonTermCount = number_format(count($commonTermRecords), 0, '.', ',');
+$commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
+$commonTermCount = number_format($commonTermCount, 0, '.', ',');
 
 $localTermItems = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItems($kind);
 $localTermCount = count($localTermItems);
@@ -81,16 +81,10 @@ foreach ($localTermItems as $index => $localTermItem)
 {
     if ($localTermItem['common_term_id'])
         continue;
-    $localLeafTerm = AvantVocabulary::getLeafFromTerm($localTermItem['local_term']);
-    foreach ($commonTermRecords as $commonTermRecord)
-    {
-        $commonLeafTerm = AvantVocabulary::getLeafFromTerm($commonTermRecord['common_term']);
-        if ($localLeafTerm == $commonLeafTerm)
-        {
-            $localTermItems[$index]['suggestion'] = $commonTermRecord['common_term'];
-            break;
-        }
-    }
+
+    $suggestion = AvantVocabulary::getCommonTermSuggestionFromLocalTerm($kind, $localTermItem['local_term']);
+    if ($suggestion)
+        $localTermItems[$index]['suggestion'] = $suggestion;
 }
 
 // The HTML that follows displays the choose vocabulary.

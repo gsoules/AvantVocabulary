@@ -30,6 +30,13 @@ class AvantVocabulary
         return $html;
     }
 
+    public static function getCommonTermSuggestionFromLocalTerm($kind, $localTerm)
+    {
+        $localLeafTerm = AvantVocabulary::getLeafFromTerm($localTerm);
+        $commonTermRecord = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecordByLeaf($kind, $localLeafTerm);
+        return $commonTermRecord ? $commonTermRecord->common_term : '';
+    }
+
     public static function getDefaultKindFromQueryOrCookie()
     {
         $kinds = self::getVocabularyKinds();
