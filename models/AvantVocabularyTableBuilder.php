@@ -345,11 +345,8 @@ class AvantVocabularyTableBuilder
         {
             $localTermKind = $localTermRecord->kind;
 
-            // See if the local term's kind is compatible with the common term's kind.
-            $compatible = (
-                $commonTermKind == $localTermKind ||
-                AvantVocabulary::kindIsTypeOrSubject($localTermKind) && $commonTermKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT);
-            if (!$compatible)
+            // Ignore if the local term's kind is not the same as the common term's kind.
+            if ($commonTermKind != $localTermKind)
                 continue;
 
             // A local term with the common term's text exists. If it is mapped to another common term, leave the mapping
@@ -449,20 +446,45 @@ class AvantVocabularyTableBuilder
         // action in a diff file. If the same diff file gets processed more than once, or if a previous action was
         // equivalent to a subsequent action (e.g. the action was for both a Type and Subject), some parts of some
         // actions will get skipped (e.g. a common term that was added for Type won't get added again for Subject).
+
+        $refreshItems = false;
         switch ($action)
         {
             case 'ADD':
                 $commonTermRecord = $this->getCommonTermRecordByKindAndCommonTermId($termKind, $commonTermId);
+
+                // Make sure the common term does not already exist. It will exist
+                // if the refresh is requested multiple times using the same diff file.
                 if (!$commonTermRecord)
+                {
+                    // Add the new common term to the common terms table.
                     $commonTermRecord = $this->databaseInsertRecordForCommonTerm($termKind, $commonTermId, $newTerm);
+
+                    // Determine if the added term turns a local term into a common term.
+                    $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsByKindAndLocalTerm($termKind, $newTerm);
+                    if ($localTermRecord && $localTermRecord->common_term_id == 0)
+                    {
+                        // The common term matches and unmapped local term. Change the local term to the common term.
+                        $localTermRecord['local_term'] = '';
+                        $localTermRecord['common_term_id'] = $commonTermId;
+                        if (!$localTermRecord->save())
+                            throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
+                        $refreshItems = true;
+                    }
+                }
                 break;
 
             case 'DELETE':
+                // Delete the common term from the common terms table.
                 $commonTermRecord = $this->getCommonTermRecordByKindAndCommonTermId($termKind, $commonTermId);
+
+                // Make sure the common term exists. It won't exist if the
+                // refresh is requested multiple times using the same diff file.
                 if ($commonTermRecord)
                 {
                     $this->convertLocalTermsToUnmapped($commonTermId);
                     $this->databaseRemoveCommonTerm($commonTermRecord);
+                    $refreshItems = true;
                 }
                 break;
 
@@ -472,13 +494,19 @@ class AvantVocabularyTableBuilder
                 if (!$commonTermRecord)
                     throw new Exception($this->reportError('Get common term record failed', __FUNCTION__, __LINE__));
 
+                // Make sure the common term text has not already been updated. It will have been
+                // updated already if the refresh is requested multiple times using the same diff file.
                 if ($commonTermRecord->common_term != $newTerm)
                 {
-                    // Update the common term's record with the new text.
+                    // Update the common term's text in the common term table.
                     $commonTermRecord['common_term'] = $newTerm;
                     if (!$commonTermRecord->save())
                         throw new Exception($this->reportError('Save common term failed',  __FUNCTION__, __LINE__));
+                    $refreshItems = true;
                 }
+
+                // See if the updated common term is the same as a local term, and if so, remove the local term.
+                $this->removeRedundantLocalTerm($termKind, $newTerm, $commonTermRecord->common_term_id);
                 break;
 
             default:
@@ -486,29 +514,8 @@ class AvantVocabularyTableBuilder
         }
 
         // Update items affect by the actions above.
-        if ($action == 'ADD' && $termKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT)
-        {
-            $this->refreshItems($action, AvantVocabulary::KIND_TYPE, $commonTermId, $oldTerm, $newTerm);
-            $this->refreshItems($action, AvantVocabulary::KIND_SUBJECT, $commonTermId, $oldTerm, $newTerm);
-        }
-        else
-        {
+        if ($refreshItems)
             $this->refreshItems($action, $termKind, $commonTermId, $oldTerm, $newTerm);
-        }
-
-        if ($action == 'ADD' || $action == 'UPDATE')
-        {
-            // See if the added or updated common term is the same as a local term, and if so, remove the local term common.
-            if ($action == 'ADD' && $termKind == AvantVocabulary::KIND_TYPE_OR_SUBJECT)
-            {
-                $this->removeRedundantLocalTerm(AvantVocabulary::KIND_TYPE, $newTerm, $commonTermRecord->common_term_id);
-                $this->removeRedundantLocalTerm(AvantVocabulary::KIND_SUBJECT, $newTerm, $commonTermRecord->common_term_id);
-            }
-            else
-            {
-                $this->removeRedundantLocalTerm($termKind, $newTerm, $commonTermRecord->common_term_id);
-            }
-        }
     }
 
     protected function refreshItems($action, $kind, $commonTermId, $oldTerm, $newTerm)
