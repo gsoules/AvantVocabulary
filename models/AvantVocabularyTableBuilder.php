@@ -217,6 +217,34 @@ class AvantVocabularyTableBuilder
         }
     }
 
+    protected function fetchElementTextsHavingTerm($elementId, $term)
+    {
+        $term = AvantCommon::escapeQuotes($term);
+
+        try
+        {
+            $table = "{$this->db->prefix}element_texts";
+
+            $sql = "
+                SELECT
+                  id,
+                  record_id
+                FROM
+                  $table
+                WHERE
+                  element_id = $elementId AND text = '$term'
+            ";
+
+            $results = $this->db->query($sql)->fetchAll();
+        }
+        catch (Exception $e)
+        {
+            $results = array();
+        }
+
+        return $results;
+    }
+
     protected function fetchUniqueLocalTerms($elementId)
     {
         try
@@ -252,113 +280,6 @@ class AvantVocabularyTableBuilder
     protected function getCommonTermRecordByKindAndCommonTermId($kind, $commonTermId)
     {
         return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByKindAndCommonTermId($kind, $commonTermId);
-    }
-
-    public function handleAjaxRequest($tableName)
-    {
-        // This method is called in response to Ajax requests from the client. For more information, see the comments
-        // for this same method in AvantElasticSearchIndexBuilder.
-
-        $success = true;
-        $error = '';
-
-        try
-        {
-            switch ($tableName)
-            {
-                case 'common':
-                    $this->buildCommonTermsTable();
-                    break;
-
-                 case 'local':
-                    $this->buildLocalTermsTable();
-                    break;
-
-                default:
-                    $success = false;
-                    $error = 'Unexpected table name: ' . $tableName;
-            }
-        }
-        catch (Exception $e)
-        {
-            $success = false;
-            $error = $e->getMessage();
-        }
-
-        $response = json_encode(array('success'=>$success, 'error'=>$error));
-        echo $response;
-    }
-
-    protected function fetchElementTextsHavingTerm($elementId, $term)
-    {
-        $term = AvantCommon::escapeQuotes($term);
-
-        try
-        {
-            $table = "{$this->db->prefix}element_texts";
-
-            $sql = "
-                SELECT
-                  id,
-                  record_id
-                FROM
-                  $table
-                WHERE
-                  element_id = $elementId AND text = '$term'
-            ";
-
-            $results = $this->db->query($sql)->fetchAll();
-        }
-        catch (Exception $e)
-        {
-            $results = array();
-        }
-
-        return $results;
-    }
-
-    public function refreshCommonTerms()
-    {
-        $rows = $this->readDataRowsFromRemoteCsvFile(AvantVocabulary::vocabulary_diff_url());
-
-        foreach ($rows as $row)
-        {
-            $action = $row[0];
-            $kind = $row[1];
-            $id = intval($row[2]);
-            $oldTerm = $row[3];
-            $newTerm = $row[4];
-
-            $this->refreshCommonTerm($action, $kind, $id, $oldTerm, $newTerm);
-        }
-
-        $count = count($rows);
-        return ($count == 1 ? '1 term' : "$count terms") . ' refreshed';
-    }
-
-    protected function removeRedundantLocalTerm($commonTermKind, $term, $commonTermId)
-    {
-        // See if a local term exists that has the same name as a new common term.
-        $localTermRecords = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsByLocalTerm($term);
-
-        foreach ($localTermRecords as $localTermRecord)
-        {
-            $localTermKind = $localTermRecord->kind;
-
-            // Ignore if the local term's kind is not the same as the common term's kind.
-            if ($commonTermKind != $localTermKind)
-                continue;
-
-            // A local term with the common term's text exists. If it is mapped to another common term, leave the mapping
-            // alone even though it violates the rule that a common term cannot be used as a local term. That's better
-            // however, than trashing the existing mapping without the site administrator being made aware of the change.
-            $mapped = $localTermRecord['common_term_id'] != 0 && $localTermRecord['common_term_id'] != $commonTermId;
-            if ($mapped)
-                continue;
-
-            // Remove the redundant local term
-            $localTermRecord->delete();
-        }
     }
 
     protected function getLocalTermsForKind($kind)
@@ -416,6 +337,60 @@ class AvantVocabularyTableBuilder
         return $localTermsItems;
     }
 
+    public function handleAjaxRequest($tableName)
+    {
+        // This method is called in response to Ajax requests from the client. For more information, see the comments
+        // for this same method in AvantElasticSearchIndexBuilder.
+
+        $success = true;
+        $error = '';
+
+        try
+        {
+            switch ($tableName)
+            {
+                case 'common':
+                    $this->buildCommonTermsTable();
+                    break;
+
+                case 'local':
+                    $this->buildLocalTermsTable();
+                    break;
+
+                default:
+                    $success = false;
+                    $error = 'Unexpected table name: ' . $tableName;
+            }
+        }
+        catch (Exception $e)
+        {
+            $success = false;
+            $error = $e->getMessage();
+        }
+
+        $response = json_encode(array('success'=>$success, 'error'=>$error));
+        echo $response;
+    }
+
+    public function refreshCommonTerms()
+    {
+        $rows = $this->readDataRowsFromRemoteCsvFile(AvantVocabulary::vocabulary_diff_url());
+        $itemsRefreshed = 0;
+
+        foreach ($rows as $row)
+        {
+            $action = $row[0];
+            $kind = $row[1];
+            $id = intval($row[2]);
+            $oldTerm = $row[3];
+            $newTerm = $row[4];
+
+            $itemsRefreshed += $this->refreshCommonTerm($action, $kind, $id, $oldTerm, $newTerm);
+        }
+
+        return "Commands processed: " . count($rows) . ".  Items refreshed: $itemsRefreshed";
+    }
+
     protected function readDataRowsFromRemoteCsvFile($url)
     {
         $response = AvantCommon::requestRemoteAsset($url);
@@ -460,15 +435,12 @@ class AvantVocabularyTableBuilder
                     // Add the new common term to the common terms table.
                     $commonTermRecord = $this->databaseInsertRecordForCommonTerm($termKind, $commonTermId, $newTerm);
 
-                    // Determine if the added term turns a local term into a common term.
-                    $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsByKindAndLocalTerm($termKind, $newTerm);
+                    // Determine if the added term turns an unmapped local term into a common term.
+                    $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordByKindAndLocalTerm($termKind, $newTerm);
                     if ($localTermRecord && $localTermRecord->common_term_id == 0)
                     {
                         // The common term matches and unmapped local term. Change the local term to the common term.
-                        $localTermRecord['local_term'] = '';
-                        $localTermRecord['common_term_id'] = $commonTermId;
-                        if (!$localTermRecord->save())
-                            throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
+                        $this->updateLocalTermToBecomeCommonTerm($localTermRecord, $commonTermId);
                         $refreshItems = true;
                     }
                 }
@@ -505,8 +477,23 @@ class AvantVocabularyTableBuilder
                     $refreshItems = true;
                 }
 
-                // See if the updated common term is the same as a local term, and if so, remove the local term.
-                $this->removeRedundantLocalTerm($termKind, $newTerm, $commonTermRecord->common_term_id);
+                // See if the updated common term is the same as a local term.
+                $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordByKindAndLocalTerm($termKind, $newTerm);
+                if ($localTermRecord)
+                {
+                    // A local term now has the same text as the updated common term.
+                    if ($localTermRecord['common_term_id'] == 0)
+                    {
+                        // The local term is unmapped. Change it be the common term.
+                        $this->updateLocalTermToBecomeCommonTerm($localTermRecord, $commonTermId);
+                    }
+                    elseif ($localTermRecord['common_term_id'] == $commonTermId)
+                    {
+                        // This local term is mapped to the updated common term which means the local term's text
+                        // is the same as the common term text. Change the mapped local to be the common term.
+                        $this->updateLocalTermToBecomeCommonTerm($localTermRecord, $commonTermId);
+                    }
+                }
                 break;
 
             default:
@@ -514,8 +501,10 @@ class AvantVocabularyTableBuilder
         }
 
         // Update items affect by the actions above.
+        $itemsRefreshed = 0;
         if ($refreshItems)
-            $this->refreshItems($action, $termKind, $commonTermId, $oldTerm, $newTerm);
+            $itemsRefreshed = $this->refreshItems($action, $termKind, $commonTermId, $oldTerm, $newTerm);
+        return $itemsRefreshed;
     }
 
     protected function refreshItems($action, $kind, $commonTermId, $oldTerm, $newTerm)
@@ -571,6 +560,8 @@ class AvantVocabularyTableBuilder
         {
             $this->updateItemIndexes($itemId);
         }
+
+        return count($itemIds);
     }
 
     private function reportError($message, $function, $line)
@@ -596,5 +587,15 @@ class AvantVocabularyTableBuilder
 
         $avantElasticsearch = new AvantElasticsearch();
         $avantElasticsearch->updateIndexForItem($item, $avantElasticsearchIndexBuilder, $sharedIndexIsEnabled, $localIndexIsEnabled);
+    }
+
+    protected function updateLocalTermToBecomeCommonTerm($localTermRecord, $commonTermId)
+    {
+        $localTermRecord['local_term'] = '';
+        $localTermRecord['common_term_id'] = $commonTermId;
+        if (!$localTermRecord->save())
+        {
+            throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
+        }
     }
 }
