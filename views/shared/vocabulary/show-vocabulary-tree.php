@@ -93,7 +93,7 @@ echo head(array('title' => $pageTitle, 'bodyclass' => 'vocabulary-tree-page'));
 list($kind, $kindName) = AvantVocabulary::getDefaultKindFromQueryOrCookie();
 
 $requestUri = $_SERVER['REQUEST_URI'];
-$onAdminPage = strpos($requestUri, '/admin');
+$onAdminPage = strpos($requestUri, '/admin') !== false;
 $parent = $onAdminPage ? '/admin' : '';
 
 $url = WEB_ROOT . $parent . '/vocabulary';

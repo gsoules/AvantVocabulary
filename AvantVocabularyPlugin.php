@@ -56,7 +56,7 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
     public function hookInstall()
     {
         VocabularyTableFactory::createVocabularyCommonTermsTable();
-        VocabularyTableFactory::createVocabularyLocalTermsTable();
+        VocabularyTableFactory::createVocabularySiteTermsTable();
     }
 
     public function hookPublicHead($args)
@@ -71,7 +71,7 @@ class AvantVocabularyPlugin extends Omeka_Plugin_AbstractPlugin
             return;
 
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
-        VocabularyTableFactory::dropVocabularyLocalTermsTable();
+        VocabularyTableFactory::dropVocabularySiteTermsTable();
 
         VocabularyConfig::removeConfiguration();
     }

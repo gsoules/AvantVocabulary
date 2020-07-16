@@ -26,92 +26,92 @@ class AvantVocabularyTableBuilder
         }
     }
 
-    public function buildLocalTermsTable()
+    public function buildSiteTermsTable()
     {
         $fields = AvantVocabulary::getVocabularyFields();
 
-        // Get the current terms from the local terms table in order to save terms that are unused and/or mapped.
+        // Get the current terms from the site terms table in order to save terms that are unused and/or mapped.
         $oldTermItems = array();
         foreach ($fields as $elementName => $kind)
         {
-            $oldTermItems[$kind] = $this->getLocalTermsForKind($kind);
+            $oldTermItems[$kind] = $this->getSiteTermsForKind($kind);
         }
 
-        // Create a new, empty local terms table. It will only contain terms that are in use and not mapped.
-        VocabularyTableFactory::dropVocabularyLocalTermsTable();
-        VocabularyTableFactory::createVocabularyLocalTermsTable();
+        // Create a new, empty site terms table. It will only contain terms that are in use and not mapped.
+        VocabularyTableFactory::dropVocabularySiteTermsTable();
+        VocabularyTableFactory::createVocabularySiteTermsTable();
 
         // Create new terms for each kind.
         foreach ($fields as $elementName => $kind)
         {
-            $this->createLocalTerms($elementName, $kind, $oldTermItems[$kind]);
+            $this->createSiteTerms($elementName, $kind, $oldTermItems[$kind]);
         }
     }
 
-    protected function convertLocalTermsToUnmapped($commonTermId)
+    protected function convertSiteTermsToUnmapped($commonTermId)
     {
         // Get all the local records that use the common term.
-        $localTermRecords = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsByCommonTermId($commonTermId);
+        $siteTermRecords = $this->db->getTable('VocabularySiteTerms')->getSiteTermRecordsByCommonTermId($commonTermId);
 
-        if ($localTermRecords)
+        if ($siteTermRecords)
         {
             // Get the common term text.
             $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTermId($commonTermId);
             $commonTerm = $commonTermRecord->common_term;
 
-            // Change each local term record to be unmapped (has a local term that is not mapped to a common term).
-            foreach ($localTermRecords as $localTermRecord)
+            // Change each site term record to be unmapped (has a site term that is not mapped to a common term).
+            foreach ($siteTermRecords as $siteTermRecord)
             {
-                $localTermRecord['local_term'] = $commonTerm;
-                $localTermRecord['common_term_id'] = 0;
-                if (!$localTermRecord->save())
-                    throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
+                $siteTermRecord['site_term'] = $commonTerm;
+                $siteTermRecord['common_term_id'] = 0;
+                if (!$siteTermRecord->save())
+                    throw new Exception($this->reportError('Save site term failed', __FUNCTION__, __LINE__));
             }
         }
     }
 
-    protected function createLocalTerms($elementName, $kind, $oldTermItems)
+    protected function createSiteTerms($elementName, $kind, $oldTermItems)
     {
         // Get the set of unique text values for this element.
         $elementId = ItemMetadata::getElementIdForElementName($elementName);
-        $localTerms = $this->fetchUniqueLocalTerms($elementId);
+        $siteTerms = $this->fetchUniqueSiteTerms($elementId);
 
         if ($kind == AvantVocabulary::KIND_PLACE)
         {
             $placeTerms = $this->db->getTable('VocabularyCommonTerms')->getAllCommonTermRecordsForKind($kind);
             foreach ($placeTerms as $index => $placeTerm)
             {
-                if (!in_array($placeTerm->common_term, $localTerms))
-                    $localTerms[$index]['text'] = $placeTerm->common_term;
+                if (!in_array($placeTerm->common_term, $siteTerms))
+                    $siteTerms[$index]['text'] = $placeTerm->common_term;
             }
         }
 
         // Add the terms to the table.
         $newTermRecords = array();
-        foreach ($localTerms as $index => $term)
+        foreach ($siteTerms as $index => $term)
         {
-            $localTerm = $term['text'];
-            $newTermRecords[] = $this->databaseInsertRecordForLocalTerm($kind, $localTerm);
+            $siteTerm = $term['text'];
+            $newTermRecords[] = $this->databaseInsertRecordForSiteTerm($kind, $siteTerm);
         }
 
         // Add any unused and/or mapped terms from the old table to the new table.
-        // Unused terms will be missing because they will not have been returned by fetchUniqueLocalTerms().
+        // Unused terms will be missing because they will not have been returned by fetchUniqueSiteTerms().
         // Mapped terms won't match new terms because all new terms are unmapped.
         foreach ($oldTermItems as $oldTermItem)
         {
             $oldTermFoundInNewTable = false;
             $newTermUpdated = false;
 
-            $oldLocalTerm = $oldTermItem['local_term'];
+            $oldSiteTerm = $oldTermItem['site_term'];
             $oldCommonTermId = $oldTermItem['common_term_id'];
 
             foreach ($newTermRecords as $newTermRecord)
             {
-                $newLocalTerm = $newTermRecord->local_term;
-                if (empty($newLocalTerm))
+                $newSiteTerm = $newTermRecord->site_term;
+                if (empty($newSiteTerm))
                 {
-                    // The new record has no local term which means it's a common term.
-                    if (empty($oldLocalTerm) && $newTermRecord->common_term_id == $oldCommonTermId)
+                    // The new record has no site term which means it's a common term.
+                    if (empty($oldSiteTerm) && $newTermRecord->common_term_id == $oldCommonTermId)
                     {
                         // The old term is also common and has the same common term Id as the same as the new term.
                         $oldTermFoundInNewTable = true;
@@ -119,10 +119,10 @@ class AvantVocabularyTableBuilder
                     }
                 }
                 elseif (
-                    $newLocalTerm == $oldLocalTerm ||
-                    AvantVocabulary::normalizeLocalTerm($kind, $newLocalTerm) == AvantVocabulary::normalizeLocalTerm($kind, $oldLocalTerm))
+                    $newSiteTerm == $oldSiteTerm ||
+                    AvantVocabulary::normalizeSiteTerm($kind, $newSiteTerm) == AvantVocabulary::normalizeSiteTerm($kind, $oldSiteTerm))
                 {
-                    // The new and old local terms are the same. The new term is unmapped by virtue of being new.
+                    // The new and old site terms are the same. The new term is unmapped by virtue of being new.
                     if ($oldTermItem['common_term_id'] == 0)
                     {
                         // The old term is also unmapped.
@@ -145,12 +145,12 @@ class AvantVocabularyTableBuilder
             {
                 // This term existed in the old table, but was not in use. See if it's normalized form matches an
                 // existing term. If it does, then don't add it to the table.
-                $normalizedLocalTerm = AvantVocabulary::normalizeLocalTerm($kind, $oldLocalTerm);
-                $exists =  $this->db->getTable('VocabularyLocalTerms')->localTermExists($kind, $normalizedLocalTerm);
+                $normalizedSiteTerm = AvantVocabulary::normalizeSiteTerm($kind, $oldSiteTerm);
+                $exists =  $this->db->getTable('VocabularySiteTerms')->siteTermExists($kind, $normalizedSiteTerm);
                 if (!$exists)
                 {
-                    // Add this term to the local terms table.
-                    $this->databaseInsertRecordForOldLocalTerm($kind, $oldLocalTerm, $oldTermItem['common_term_id']);
+                    // Add this term to the site terms table.
+                    $this->databaseInsertRecordForOldSiteTerm($kind, $oldSiteTerm, $oldTermItem['common_term_id']);
                 }
             }
         }
@@ -170,37 +170,37 @@ class AvantVocabularyTableBuilder
         return $commonTermRecord;
     }
 
-    protected function databaseInsertRecordForLocalTerm($kind, $localTerm)
+    protected function databaseInsertRecordForSiteTerm($kind, $siteTerm)
     {
-        $localTermRecord = new VocabularyLocalTerms();
-        $localTermRecord['kind'] = $kind;
+        $siteTermRecord = new VocabularySiteTerms();
+        $siteTermRecord['kind'] = $kind;
 
-        $commonTermRecord = $this->getCommonTermRecord($kind, $localTerm);
+        $commonTermRecord = $this->getCommonTermRecord($kind, $siteTerm);
         if ($commonTermRecord)
         {
-            $localTermRecord['local_term'] = '';
-            $localTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
+            $siteTermRecord['site_term'] = '';
+            $siteTermRecord['common_term_id'] = $commonTermRecord->common_term_id;
         }
         else
         {
-            $localTermRecord['local_term'] = $localTerm;
-            $localTermRecord['common_term_id'] = 0;
+            $siteTermRecord['site_term'] = $siteTerm;
+            $siteTermRecord['common_term_id'] = 0;
         }
 
-        if (!$localTermRecord->save())
+        if (!$siteTermRecord->save())
             throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
 
-        return $localTermRecord;
+        return $siteTermRecord;
     }
 
-    protected function databaseInsertRecordForOldLocalTerm($kind, $localTerm, $commonTermId)
+    protected function databaseInsertRecordForOldSiteTerm($kind, $siteTerm, $commonTermId)
     {
-        $localTermRecord = new VocabularyLocalTerms();
-        $localTermRecord['kind'] = $kind;
-        $localTermRecord['local_term'] = $localTerm;
-        $localTermRecord['common_term_id'] = $commonTermId;
+        $siteTermRecord = new VocabularySiteTerms();
+        $siteTermRecord['kind'] = $kind;
+        $siteTermRecord['site_term'] = $siteTerm;
+        $siteTermRecord['common_term_id'] = $commonTermId;
 
-        if (!$localTermRecord->save())
+        if (!$siteTermRecord->save())
             throw new Exception($this->reportError('Save failed', __FUNCTION__, __LINE__));
     }
 
@@ -245,7 +245,7 @@ class AvantVocabularyTableBuilder
         return $results;
     }
 
-    protected function fetchUniqueLocalTerms($elementId)
+    protected function fetchUniqueSiteTerms($elementId)
     {
         try
         {
@@ -282,37 +282,37 @@ class AvantVocabularyTableBuilder
         return $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByKindAndCommonTermId($kind, $commonTermId);
     }
 
-    protected function getLocalTermsForKind($kind)
+    protected function getSiteTermsForKind($kind)
     {
-        // This method gets terms from the local terms table and filters out any that are no longer valid.
-        $localTermsItems = $this->db->getTable('VocabularyLocalTerms')->getLocalTermItems($kind);
+        // This method gets terms from the site terms table and filters out any that are no longer valid.
+        $siteTermsItems = $this->db->getTable('VocabularySiteTerms')->getSiteTermItems($kind);
         $hashList = array();
-        foreach ($localTermsItems as $index => $localTermsItem)
+        foreach ($siteTermsItems as $index => $siteTermsItem)
         {
             $skip = false;
-            $commonTermId = $localTermsItem['common_term_id'];
-            $localTerm = $localTermsItem['local_term'];
-            if (empty($localTerm) && $commonTermId == 0)
+            $commonTermId = $siteTermsItem['common_term_id'];
+            $siteTerm = $siteTermsItem['site_term'];
+            if (empty($siteTerm) && $commonTermId == 0)
             {
-                // Both the local term and common term Id are missing. This should never happen, but if it does, clean it up.
+                // Both the site term and common term Id are missing. This should never happen, but if it does, clean it up.
                 $skip = true;
             }
             elseif ($commonTermId)
             {
-                // The local term has a common term Id. Verify that the common term exists in the common terms table.
+                // The site term has a common term Id. Verify that the common term exists in the common terms table.
                 if (!$this->getCommonTermRecordByKindAndCommonTermId($kind, $commonTermId))
                 {
                     // The common term Id does not exist. This could happen if the term was removed from the common
-                    // vocabulary or it's Id was changed. Keep the local term, but change it to unmapped.
-                    $localTermsItems[$index]['common_term_id'] = 0;
+                    // vocabulary or it's Id was changed. Keep the site term, but change it to unmapped.
+                    $siteTermsItems[$index]['common_term_id'] = 0;
                 }
             }
 
             if (!$skip && $commonTermId == 0)
             {
-                // See if this unmapped local term is a common term. This could happen if a common term got renamed
-                // and somehow the local term did not get updated when the vocabulary was refreshed.
-                $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $localTerm);
+                // See if this unmapped site term is a common term. This could happen if a common term got renamed
+                // and somehow the site term did not get updated when the vocabulary was refreshed.
+                $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $siteTerm);
                 if ($commonTermRecord)
                     $skip = true;
             }
@@ -320,7 +320,7 @@ class AvantVocabularyTableBuilder
             if (!$skip)
             {
                 // Check if this term is a duplicate of another.
-                $hash = "$commonTermId-$localTerm";
+                $hash = "$commonTermId-$siteTerm";
                 if (in_array($hash, $hashList))
                     $skip = true;
                 else
@@ -330,11 +330,11 @@ class AvantVocabularyTableBuilder
             if ($skip)
             {
                 // Remove this term from the list.
-                unset($localTermsItems[$index]);
+                unset($siteTermsItems[$index]);
             }
         }
 
-        return $localTermsItems;
+        return $siteTermsItems;
     }
 
     public function handleAjaxRequest($tableName)
@@ -354,7 +354,7 @@ class AvantVocabularyTableBuilder
                     break;
 
                 case 'local':
-                    $this->buildLocalTermsTable();
+                    $this->buildSiteTermsTable();
                     break;
 
                 default:
@@ -435,12 +435,12 @@ class AvantVocabularyTableBuilder
                     // Add the new common term to the common terms table.
                     $commonTermRecord = $this->databaseInsertRecordForCommonTerm($kind, $commonTermId, $newTerm);
 
-                    // Determine if the added term turns an unmapped local term into a common term.
-                    $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordByKindAndLocalTerm($kind, $newTerm);
-                    if ($localTermRecord && $localTermRecord->common_term_id == 0)
+                    // Determine if the added term turns an unmapped site term into a common term.
+                    $siteTermRecord = $this->db->getTable('VocabularySiteTerms')->getSiteTermRecordByKindAndSiteTerm($kind, $newTerm);
+                    if ($siteTermRecord && $siteTermRecord->common_term_id == 0)
                     {
-                        // The common term matches and unmapped local term. Change the local term to the common term.
-                        $this->updateLocalTermToBecomeCommonTerm($localTermRecord, $commonTermId);
+                        // The common term matches and unmapped site term. Change the site term to the common term.
+                        $this->updateSiteTermToBecomeCommonTerm($siteTermRecord, $commonTermId);
                         $refreshItems = true;
                     }
                 }
@@ -454,7 +454,7 @@ class AvantVocabularyTableBuilder
                 // refresh is requested multiple times using the same diff file.
                 if ($commonTermRecord)
                 {
-                    $this->convertLocalTermsToUnmapped($commonTermId);
+                    $this->convertSiteTermsToUnmapped($commonTermId);
                     $this->databaseRemoveCommonTerm($commonTermRecord);
                     $refreshItems = true;
                 }
@@ -477,25 +477,25 @@ class AvantVocabularyTableBuilder
                     $refreshItems = true;
                 }
 
-                // See if the updated common term is the same as a local term.
-                $localTermRecord = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordByKindAndLocalTerm($kind, $newTerm);
-                if ($localTermRecord)
+                // See if the updated common term is the same as a site term.
+                $siteTermRecord = $this->db->getTable('VocabularySiteTerms')->getSiteTermRecordByKindAndSiteTerm($kind, $newTerm);
+                if ($siteTermRecord)
                 {
-                    $updateLocalTerm = false;
-                    // A local term now has the same text as the updated common term.
-                    if ($localTermRecord['common_term_id'] == 0)
+                    $updateSiteTerm = false;
+                    // A site term now has the same text as the updated common term.
+                    if ($siteTermRecord['common_term_id'] == 0)
                     {
-                        // The local term is unmapped. Change it be the common term.
-                        $updateLocalTerm = true;
+                        // The site term is unmapped. Change it be the common term.
+                        $updateSiteTerm = true;
                     }
-                    elseif ($localTermRecord['common_term_id'] == $commonTermId)
+                    elseif ($siteTermRecord['common_term_id'] == $commonTermId)
                     {
-                        // This local term is mapped to the updated common term which means the local term's text
+                        // This site term is mapped to the updated common term which means the site term's text
                         // is the same as the common term text. Change the mapped local to be the common term.
-                        $updateLocalTerm = true;
+                        $updateSiteTerm = true;
                     }
-                    if ($updateLocalTerm)
-                        $this->updateLocalTermToBecomeCommonTerm($localTermRecord, $commonTermId);
+                    if ($updateSiteTerm)
+                        $this->updateSiteTermToBecomeCommonTerm($siteTermRecord, $commonTermId);
                 }
                 break;
 
@@ -536,14 +536,14 @@ class AvantVocabularyTableBuilder
 
         if ($action == 'UPDATE')
         {
-            // Get all local terms that are mapped to the common term. For example, the local terms "Birds, Songbirds"
+            // Get all site terms that are mapped to the common term. For example, the site terms "Birds, Songbirds"
             // and "Birds, Raptors" could be mapped to the common term "Nature, Animals, Birds".
-            $localTermRecords = $this->db->getTable('VocabularyLocalTerms')->getLocalTermRecordsByCommonTermId($commonTermId);
+            $siteTermRecords = $this->db->getTable('VocabularySiteTerms')->getSiteTermRecordsByCommonTermId($commonTermId);
 
-            foreach ($localTermRecords as $localTermRecord)
+            foreach ($siteTermRecords as $siteTermRecord)
             {
                 // Query the database to get all elements that use this local mapped term.
-                $elementTexts = $this->fetchElementTextsHavingTerm($elementId, $localTermRecord->local_term);
+                $elementTexts = $this->fetchElementTextsHavingTerm($elementId, $siteTermRecord->site_term);
 
                 // Examine the results. Each contains the element text's Id and the Id of the element's item.
                 foreach ($elementTexts as $elementText)
@@ -592,13 +592,13 @@ class AvantVocabularyTableBuilder
         $avantElasticsearch->updateIndexForItem($item, $avantElasticsearchIndexBuilder, $sharedIndexIsEnabled, $localIndexIsEnabled);
     }
 
-    protected function updateLocalTermToBecomeCommonTerm($localTermRecord, $commonTermId)
+    protected function updateSiteTermToBecomeCommonTerm($siteTermRecord, $commonTermId)
     {
-        $localTermRecord['local_term'] = '';
-        $localTermRecord['common_term_id'] = $commonTermId;
-        if (!$localTermRecord->save())
+        $siteTermRecord['site_term'] = '';
+        $siteTermRecord['common_term_id'] = $commonTermId;
+        if (!$siteTermRecord->save())
         {
-            throw new Exception($this->reportError('Save local term failed', __FUNCTION__, __LINE__));
+            throw new Exception($this->reportError('Save site term failed', __FUNCTION__, __LINE__));
         }
     }
 }

@@ -29,9 +29,9 @@ class AvantVocabularyTableBuilderProgress
             {
                 if ($tableName == 'local')
                 {
-                    $count = $this->db->getTable('VocabularyLocalTerms')->getRowCount();
+                    $count = $this->db->getTable('VocabularySiteTerms')->getRowCount();
                     $count = number_format($count, 0, '.', ',');
-                    $message = $count . __(' records written to the local terms table');
+                    $message = $count . __(' records written to the site terms table');
                 }
                 else
                 {

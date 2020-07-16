@@ -30,10 +30,10 @@ class AvantVocabulary
         return $html;
     }
 
-    public static function getCommonTermSuggestionFromLocalTerm($kind, $localTerm)
+    public static function getCommonTermSuggestionFromSiteTerm($kind, $siteTerm)
     {
-        $localLeafTerm = AvantVocabulary::getLeafFromTerm($localTerm);
-        $commonTermRecord = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecordByLeaf($kind, $localLeafTerm);
+        $siteLeafTerm = AvantVocabulary::getLeafFromTerm($siteTerm);
+        $commonTermRecord = get_db()->getTable('VocabularyCommonTerms')->getCommonTermRecordByLeaf($kind, $siteLeafTerm);
         return $commonTermRecord ? $commonTermRecord->common_term : '';
     }
 
@@ -99,7 +99,7 @@ class AvantVocabulary
         try
         {
             $tableBuilder->buildCommonTermsTable();
-            $tableBuilder->buildLocalTermsTable();
+            $tableBuilder->buildSiteTermsTable();
             $response = 'Vocabulary tables rebuilt';
         }
         catch (Exception $e)
@@ -158,10 +158,10 @@ class AvantVocabulary
         return $kind == self::KIND_TYPE || $kind == self::KIND_SUBJECT;
     }
 
-    public static function normalizeLocalTerm($kind, $localTerm)
+    public static function normalizeSiteTerm($kind, $siteTerm)
     {
-        $normalizedLocalTerm = '';
-        $parts = array_map('trim', explode(',', $localTerm));
+        $normalizedSiteTerm = '';
+        $parts = array_map('trim', explode(',', $siteTerm));
         foreach ($parts as $part)
         {
             if (!$part)
@@ -173,8 +173,8 @@ class AvantVocabulary
             // Remove disallowed characters leaving only A-Z, hyphen, ampersand, comma, and space.
             $part = preg_replace('/[^a-zA-Z0-9 \-\&]/', '', $part);
 
-            if ($normalizedLocalTerm)
-                $normalizedLocalTerm .= ', ';
+            if ($normalizedSiteTerm)
+                $normalizedSiteTerm .= ', ';
 
             // Make each word have an uppercase first letter and all the rest lowercase, with some exceptions.
             $termParts = explode(' ', $part);
@@ -203,9 +203,9 @@ class AvantVocabulary
                     $normalizedTermPart .= $termPart;
                 }
             }
-            $normalizedLocalTerm .= $normalizedTermPart;
+            $normalizedSiteTerm .= $normalizedTermPart;
         }
-        return $normalizedLocalTerm;
+        return $normalizedSiteTerm;
     }
 
     public static function progressFileName()

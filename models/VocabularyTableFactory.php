@@ -19,15 +19,15 @@ class VocabularyTableFactory
         $db->query($sql);
     }
 
-    public static function createVocabularyLocalTermsTable()
+    public static function createVocabularySiteTermsTable()
     {
         $db = get_db();
 
         $sql = "
-        CREATE TABLE IF NOT EXISTS `{$db->prefix}vocabulary_local_terms` (
+        CREATE TABLE IF NOT EXISTS `{$db->prefix}vocabulary_site_terms` (
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `kind` int(10) unsigned NOT NULL,
-            `local_term` varchar(512) DEFAULT NULL,
+            `site_term` varchar(512) DEFAULT NULL,
             `common_term_id` int(10) unsigned NOT NULL,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
@@ -42,10 +42,12 @@ class VocabularyTableFactory
         $db->query($sql);
     }
 
-    public static function dropVocabularyLocalTermsTable()
+    public static function dropVocabularySiteTermsTable()
     {
         $db = get_db();
         $sql = "DROP TABLE IF EXISTS `{$db->prefix}vocabulary_local_terms`";
+        $db->query($sql);
+        $sql = "DROP TABLE IF EXISTS `{$db->prefix}vocabulary_site_terms`";
         $db->query($sql);
     }
 }

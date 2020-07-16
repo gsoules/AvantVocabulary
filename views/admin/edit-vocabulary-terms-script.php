@@ -7,7 +7,7 @@
     const kind = <?php echo $kind; ?>;
     const kindName = '<?php echo $kindName; ?>';
     const rebuildCommonTermsButton = jQuery("#rebuild-common-terms-button").button();
-    const rebuildLocalTermsButton = jQuery("#rebuild-local-terms-button").button();
+    const rebuildSiteTermsButton = jQuery("#rebuild-site-terms-button").button();
     const termChooserDialogInput = jQuery("#vocabulary-term-input");
     const termChooserDialogMessage = jQuery('#vocabulary-term-message');
     const urlForEditorPage = '<?php echo $url; ?>/terms';
@@ -53,7 +53,7 @@
         newItem.find('.drawer-contents').show();
 
         // Set the new item's values nothing.
-        newItem.find('.vocabulary-drawer-local-term').val('');
+        newItem.find('.vocabulary-drawer-site-term').val('');
         newItem.find('.vocabulary-term-count').text('0');
         newItem.find('.vocabulary-drawer-common-term').text('');
         newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', 0);
@@ -100,7 +100,7 @@
 
             // Set the values for the new item.
             newItem.find('.vocabulary-drawer-common-term').attr('data-common-term-id', data['commonTermId']);
-            newItem.find('.vocabulary-drawer-local-term').val(data['localTerm']);
+            newItem.find('.vocabulary-drawer-site-term').val(data['siteTerm']);
             newItem.find('.vocabulary-drawer-common-term').text(data['commonTerm']);
             newItem.find('.vocabulary-term-suggestion').text(data['suggestion']);
 
@@ -116,15 +116,15 @@
 
             // Show the header for the newly added item.
             newItem.find('.vocabulary-term-header').show();
-            setItemTitle(newItem, itemValues.localTerm, itemValues.commonTerm, 999);
+            setItemTitle(newItem, itemValues.siteTerm, itemValues.commonTerm, 999);
 
             enableAllItems(true);
-            showEditorMessage('<?php echo __('Added new term "'); ?>' + getDefaultTerm(itemValues.localTerm, itemValues.commonTerm) + '"');
+            showEditorMessage('<?php echo __('Added new term "'); ?>' + getDefaultTerm(itemValues.siteTerm, itemValues.commonTerm) + '"');
         }
         else
         {
             // Report that the add was not accepted which because the new term is the same as an existing term.
-            let term = itemValues.localTerm ? itemValues.localTerm : itemValues.commonTerm;
+            let term = itemValues.siteTerm ? itemValues.siteTerm : itemValues.commonTerm;
             showErrorTermAlreadyExists(newItem, term, kindName);
 
             reportAddOrUpdateError(data['error'], newItem, term)
@@ -141,7 +141,7 @@
             let itemValues = getItemValues(item);
             jQuery('#item-' + itemValues['id']).remove();
             enableAllItems(true);
-            showEditorMessage('<?php echo __('Removed "'); ?>' + getDefaultTerm(itemValues.localTerm, itemValues.commonTerm) + "'");
+            showEditorMessage('<?php echo __('Removed "'); ?>' + getDefaultTerm(itemValues.siteTerm, itemValues.commonTerm) + "'");
         }
         else
         {
@@ -156,15 +156,15 @@
             let editorMessage = '';
 
             // Get the current Id minus the "item-" prefix.
-            let currentLocalTermId = item.attr('id');
+            let currentSiteTermId = item.attr('id');
 
-            let duplicateLocalTermId = data['duplicateId'];
-            if (duplicateLocalTermId)
+            let duplicateSiteTermId = data['duplicateId'];
+            if (duplicateSiteTermId)
             {
-                // The update caused this term to become a duplicate of an existing local term which has now been
+                // The update caused this term to become a duplicate of an existing iste term which has now been
                 // deleted by the server-side updateTerm() logic. However, now both terms are being displayed.
                 // Get the usage count from the duplicate item.
-                let duplicate = jQuery('#item-' + duplicateLocalTermId);
+                let duplicate = jQuery('#item-' + duplicateSiteTermId);
                 let duplicateItemUsageCount = duplicate.find('.vocabulary-term-count').text();
                 if (duplicateItemUsageCount === '')
                     duplicateItemUsageCount = '0';
@@ -187,13 +187,13 @@
                 {
                     // Tell the user that the use of this term increased.
                     editorMessage = newItemUsageCount + '<?php echo __(' items now use the term "{1}"'); ?>';
-                    editorMessage = editorMessage.replace('{1}', data['localTerm']);
+                    editorMessage = editorMessage.replace('{1}', data['siteTerm']);
                 }
             }
 
             // Set the values for the updated item.
             item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', data['commonTermId']);
-            item.find('.vocabulary-drawer-local-term').val(data['localTerm']);
+            item.find('.vocabulary-drawer-site-term').val(data['siteTerm']);
             item.find('.vocabulary-drawer-common-term').text(data['commonTerm']);
             item.find('.vocabulary-term-suggestion').text(data['suggestion']);
 
@@ -207,7 +207,7 @@
         else
         {
             let itemValues = getItemValues(item);
-            reportAddOrUpdateError(data['error'], item, itemValues.localTerm);
+            reportAddOrUpdateError(data['error'], item, itemValues.siteTerm);
         }
     }
 
@@ -215,7 +215,7 @@
     {
         if (originalItemValues)
         {
-            item.find('.vocabulary-drawer-local-term').val(originalItemValues['localTerm']);
+            item.find('.vocabulary-drawer-site-term').val(originalItemValues['siteTerm']);
             item.find('.vocabulary-drawer-common-term').text(originalItemValues['commonTerm']);
             item.find('.vocabulary-drawer-common-term').attr('data-common-term-id', originalItemValues['commonTermId']);
             originalItemValues = null;
@@ -230,18 +230,18 @@
         let item = jQuery('#' + activeItemId);
         let itemValues = getItemValues(item);
 
-        let originalLocalTerm = originalItemValues ? originalItemValues['localTerm'] : '';
+        let originalSiteTerm = originalItemValues ? originalItemValues['siteTerm'] : '';
         let originalCommonTerm = originalItemValues ? originalItemValues['commonTerm'] : '';
 
         // Determine whether any values have changed and enable/disable the Update or Save button accordingly.
         let updateButton = item.find('.update-item-button');
         let termChanged = false;
-        if (itemValues['localTerm'] !== originalLocalTerm)
+        if (itemValues['siteTerm'] !== originalSiteTerm)
             termChanged = true;
         else if (itemValues['commonTerm'] !== originalCommonTerm)
             termChanged = true;
 
-        // console.log('checkForItemUpdates: [' + itemValues['localTerm'] + '] [' + originalLocalTerm + '] [' + itemValues['commonTerm'] + '] [' + originalCommonTerm + ']' + termChanged);
+        // console.log('checkForItemUpdates: [' + itemValues['siteTerm'] + '] [' + originalSiteTerm + '] [' + itemValues['commonTerm'] + '] [' + originalCommonTerm + ']' + termChanged);
         updateButton.prop('disabled', !termChanged);
 
         // Determine whether to show and enable/disable the Erase button.
@@ -331,7 +331,7 @@
     function enableRebuildButtons(enable)
     {
         rebuildCommonTermsButton.button("option", {disabled: !enable});
-        rebuildLocalTermsButton.button("option", {disabled: !enable});
+        rebuildSiteTermsButton.button("option", {disabled: !enable});
     }
 
     function eraseCommonTerm(item)
@@ -344,16 +344,16 @@
         });
     }
 
-    function getDefaultTerm(localTerm, commonTerm)
+    function getDefaultTerm(siteTerm, commonTerm)
     {
-        if (localTerm)
-            return localTerm;
+        if (siteTerm)
+            return siteTerm;
         return commonTerm;
     }
 
     function getItemValues(item)
     {
-        let localTerm = item.find('.vocabulary-drawer-local-term').val();
+        let siteTerm = item.find('.vocabulary-drawer-site-term').val();
         let commonTerm = item.find('.vocabulary-drawer-common-term').text();
         let commonTermId = item.find('.vocabulary-drawer-common-term').attr('data-common-term-id');
         let usageCount = item.find('.vocabulary-term-count').text();
@@ -370,7 +370,7 @@
             id: id,
             kind: kind,
             elementId: elementId,
-            localTerm: localTerm,
+            siteTerm: siteTerm,
             commonTerm: commonTerm,
             commonTermId: commonTermId,
             usageCount: usageCount,
@@ -493,9 +493,9 @@
             startRebuild();
         });
 
-        rebuildLocalTermsButton.on("click", function(event)
+        rebuildSiteTermsButton.on("click", function(event)
         {
-            if (!confirm('Are you sure you want to rebuild the Local Terms table?'))
+            if (!confirm('Are you sure you want to rebuild the Site Terms table?'))
                 return;
             tableName = 'local';
             startRebuild();
@@ -586,7 +586,7 @@
     {
         let itemValues = getItemValues(item);
 
-        let term = itemValues['localTerm'] ? itemValues['localTerm'] : itemValues['commonTerm'];
+        let term = itemValues['siteTerm'] ? itemValues['siteTerm'] : itemValues['commonTerm'];
         let message = '<?php echo __('This will remove "{1}" from the {2} vocabulary. This action is harmless since no items are using this term.'); ?>';
         message = message.replace('{1}', term);
         message = message.replace('{2}', kindName);
@@ -610,13 +610,13 @@
 
     function reportAddOrUpdateError(error, item, term)
     {
-        if (error === 'local-term-exists')
+        if (error === 'site-term-exists')
         {
             showErrorTermAlreadyExists(item, term, kindName);
         }
-        else if (error === 'local-term-is-common-term')
+        else if (error === 'site-term-is-common-term')
         {
-            showErrorLocalTermIsCommonTerm(item, term, kindName);
+            showErrorSiteTermIsCommonTerm(item, term, kindName);
         }
         else
         {
@@ -700,7 +700,7 @@
     {
         let itemValues = getItemValues(item);
 
-        let localTerm = itemValues.localTerm;
+        let siteTerm = itemValues.siteTerm;
         let commonTerm = itemValues.commonTerm;
         let commonTermId = itemValues.commonTermId;
         let commonTermLink = commonTerm;
@@ -726,27 +726,27 @@
         let mappingIndicator;
         let usageTerm;
 
-        if (localTerm && commonTerm && localTerm !== commonTerm)
+        if (siteTerm && commonTerm && siteTerm !== commonTerm)
         {
-            leftTerm = localTerm + '<span class="mapped">(' + commonTermLink + ')<span>';
+            leftTerm = siteTerm + '<span class="mapped">(' + commonTermLink + ')<span>';
             mappingIndicator = '<?php echo __('mapped'); ?>';
-            usageTerm = localTerm;
+            usageTerm = siteTerm;
         }
-        else if (localTerm && !commonTerm && suggestion)
+        else if (siteTerm && !commonTerm && suggestion)
         {
-            let altText = '<?php echo __('Map the local term to this common term'); ?>';
+            let altText = '<?php echo __('Suggestion: Change the site term to this common term'); ?>';
             suggestionLink = "<button class='use-suggestion-button' title='" + altText + "'>" + suggestion + "</button>";
-            leftTerm = localTerm + '<span class="suggestion">' + suggestionLink + '<span>';
+            leftTerm = siteTerm + '<span class="suggestion">' + suggestionLink + '<span>';
             leftTerm = '<span class="unmapped">' + leftTerm + '<span>';
             mappingIndicator = '<span><?php echo __('unmapped'); ?><span>';
-            usageTerm = localTerm;
+            usageTerm = siteTerm;
         }
-        else if (localTerm && !commonTerm)
+        else if (siteTerm && !commonTerm)
         {
-            leftTerm = localTerm;
+            leftTerm = siteTerm;
             leftTerm = '<span class="unmapped">' + leftTerm + '<span>';
             mappingIndicator = '<span><?php echo __('unmapped'); ?><span>';
-            usageTerm = localTerm;
+            usageTerm = siteTerm;
         }
         else
         {
@@ -793,6 +793,7 @@
                 let item = getItemForButton(this);
                 let itemValues = getItemValues(item);
                 rememberOriginalValues(item);
+                item.find('.vocabulary-drawer-site-term').val('');
                 item.find('.vocabulary-drawer-common-term').text(itemValues.suggestion);
                 updateItemConfirmation(item);
             });
@@ -841,9 +842,9 @@
         showDrawerErrorMessage(item, message);
     }
 
-    function showErrorLocalTermIsCommonTerm(item, term, kindName)
+    function showErrorSiteTermIsCommonTerm(item, term, kindName)
     {
-        let message = '<?php echo __('"{1}" is a common term and cannot be used as a local term'); ?>';
+        let message = '<?php echo __('"{1}" is a common term and cannot be used as a site term'); ?>';
         message = message.replace('{1}', term);
         showDrawerErrorMessage(item, message);
     }
@@ -995,9 +996,9 @@
         let message2 = '<?php echo __('The {2} will be set to "{3}"'); ?>';
         message1 = message1.replace('{1}', affected);
 
-        if (itemValues['localTerm'] && itemValues['localTerm'] !== originalItemValues['localTerm'])
+        if (itemValues['siteTerm'] && itemValues['siteTerm'] !== originalItemValues['siteTerm'])
         {
-            message2 = message2.replace('{3}', itemValues['localTerm']);
+            message2 = message2.replace('{3}', itemValues['siteTerm']);
             message2 = message2.replace('{2}', kindName);
         }
         else
@@ -1027,15 +1028,15 @@
 
     function validateItemValues(item, itemValues)
     {
-        if (itemValues.localTerm.trim().length === 0 && itemValues.commonTerm.length === 0)
+        if (itemValues.siteTerm.trim().length === 0 && itemValues.commonTerm.length === 0)
         {
-            showDrawerErrorMessage(item, '<?php echo __('The Local Term and Common Term cannot both be blank'); ?>');
+            showDrawerErrorMessage(item, '<?php echo __('The Site Term and Common Term cannot both be blank'); ?>');
             return false;
         }
 
-        if (itemValues.localTerm.trim() === itemValues.commonTerm)
+        if (itemValues.siteTerm.trim() === itemValues.commonTerm)
         {
-            showDrawerErrorMessage(item, '<?php echo __('The Local Term and Common Term cannot be the same'); ?>');
+            showDrawerErrorMessage(item, '<?php echo __('The Site Term and Common Term cannot be the same'); ?>');
             return false;
         }
         return true;

@@ -72,19 +72,19 @@ echo "</div>";
 $commonTermCount = get_db()->getTable('VocabularyCommonTerms')->commonTermCount($kind);
 $commonTermCount = number_format($commonTermCount, 0, '.', ',');
 
-$localTermItems = get_db()->getTable('VocabularyLocalTerms')->getLocalTermItems($kind);
-$localTermCount = count($localTermItems);
-$verb = $localTermCount == 1 ? __('term is defined') : __('terms are defined');
+$siteTermItems = get_db()->getTable('VocabularySiteTerms')->getSiteTermItems($kind);
+$siteTermCount = count($siteTermItems);
+$verb = $siteTermCount == 1 ? __('term is defined') : __('terms are defined');
 
-// Look for common terms that have the same leaf as the unmapped local terms.
-foreach ($localTermItems as $index => $localTermItem)
+// Look for common terms that have the same leaf as the unmapped site terms.
+foreach ($siteTermItems as $index => $siteTermItem)
 {
-    if ($localTermItem['common_term_id'])
+    if ($siteTermItem['common_term_id'])
         continue;
 
-    $suggestion = AvantVocabulary::getCommonTermSuggestionFromLocalTerm($kind, $localTermItem['local_term']);
+    $suggestion = AvantVocabulary::getCommonTermSuggestionFromSiteTerm($kind, $siteTermItem['site_term']);
     if ($suggestion)
-        $localTermItems[$index]['suggestion'] = $suggestion;
+        $siteTermItems[$index]['suggestion'] = $suggestion;
 }
 
 // The HTML that follows displays the choose vocabulary.
@@ -128,19 +128,19 @@ foreach ($localTermItems as $index => $localTermItem)
     $vocabularyTermsEditor = new VocabularyTermsEditor();
     $elementId = ItemMetadata::getElementIdForElementName($kindName);
 
-    foreach ($localTermItems as $localTermItem)
+    foreach ($siteTermItems as $siteTermItem)
     {
         $hideClass = '';
-        $identifier = $localTermItem['common_term_id'];
+        $identifier = $siteTermItem['common_term_id'];
 
-        $localTerm = $localTermItem['local_term'];
-        $commonTermId = $localTermItem['common_term_id'];
-        $commonTerm = $localTermItem['common_term'];
+        $siteTerm = $siteTermItem['site_term'];
+        $commonTermId = $siteTermItem['common_term_id'];
+        $commonTerm = $siteTermItem['common_term'];
 
-        $suggestion = isset($localTermItem['suggestion']) ? $localTermItem['suggestion'] : '';
+        $suggestion = isset($siteTermItem['suggestion']) ? $siteTermItem['suggestion'] : '';
 
-        $term = $localTerm ? $localTerm : $commonTerm;
-        $usageCount = $vocabularyTermsEditor->getLocalTermUsageCount($elementId, $term);
+        $term = $siteTerm ? $siteTerm : $commonTerm;
+        $usageCount = $vocabularyTermsEditor->getSiteTermUsageCount($elementId, $term);
         $hideRemoveItemButton = $usageCount != 0 ? ' hide' : '';
 
         // The HTML below provides the structure for each term. The drawer area provides the local and common term
@@ -148,7 +148,7 @@ foreach ($localTermItems as $index => $localTermItem)
         // responsible for creating and modifying the header when the user adds or edits a term. This way, this PHP
         // code does not need to know how the header is supposed to be formatted.
         ?>
-        <li id="item-<?php echo $localTermItem['id']; ?>" class="vocabulary-term-item" >
+        <li id="item-<?php echo $siteTermItem['id']; ?>" class="vocabulary-term-item" >
             <div class="main_link">
                 <div class="vocabulary-term-header">
                     <div class="vocabulary-term-left"></div>
@@ -158,8 +158,8 @@ foreach ($localTermItems as $index => $localTermItem)
                 </div>
                 <div class="drawer-contents" style="display:none;">
                     <div class="drawer-message"></div>
-                    <label><?php echo __('Local Term'); ?></label>
-                    <input class="vocabulary-drawer-local-term" type="text" value="<?php echo $localTerm; ?>">
+                    <label><?php echo __('Site Term'); ?></label>
+                    <input class="vocabulary-drawer-site-term" type="text" value="<?php echo $siteTerm; ?>">
                     <label><?php echo __('Common Term'); ?></label>
                     <div class="vocabulary-term-suggestion"><?php echo $suggestion; ?></div>
                     <div data-common-term-id="<?php echo $commonTermId; ?>" class="vocabulary-drawer-common-term"><?php echo $commonTerm; ?></div>
@@ -195,7 +195,7 @@ if (AvantCommon::userIsSuper())
     echo "<div>" . __('These are super user options. Do not use them unless you understand what they are for.') . "</div><br/>";
     echo "<button id='rebuild-common-terms-button'>Rebuild Common Terms table</button>";
     echo "&nbsp;&nbsp;";
-    echo "<button id='rebuild-local-terms-button'>Rebuild Local Terms table</button>";
+    echo "<button id='rebuild-site-terms-button'>Rebuild Site Terms table</button>";
     echo "</div>";
     echo "<div id='vocabulary-editor-busy'></div>";
 }
