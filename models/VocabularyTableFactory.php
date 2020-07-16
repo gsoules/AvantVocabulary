@@ -45,8 +45,6 @@ class VocabularyTableFactory
     public static function dropVocabularySiteTermsTable()
     {
         $db = get_db();
-        $sql = "DROP TABLE IF EXISTS `{$db->prefix}vocabulary_local_terms`";
-        $db->query($sql);
         $sql = "DROP TABLE IF EXISTS `{$db->prefix}vocabulary_site_terms`";
         $db->query($sql);
     }
