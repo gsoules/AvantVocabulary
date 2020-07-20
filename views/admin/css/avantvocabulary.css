@@ -140,18 +140,22 @@
     color: var(--unmapped-term);
 }
 
-.vocabulary-term-left span.mapped {
+.mapped-common-term {
     padding-left: 8px;
-    font-weight: normal;
+    /*font-weight: normal;*/
 }
 
-.vocabulary-term-left span.mapped a,
-.vocabulary-term-left span.mapped a:visited {
+.mapped-common-term a,
+.mapped-common-term a:visited {
     color: var(--term-link);
 }
 
-.vocabulary-term-left span.mapped a:hover {
+.mapped-common-term a:hover {
     color: var(--term-link-hover);
+}
+
+.mapped-site-term {
+    color:black;
 }
 
 .vocabulary-term-count {

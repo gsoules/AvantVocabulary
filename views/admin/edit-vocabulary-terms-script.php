@@ -728,7 +728,7 @@
 
         if (siteTerm && commonTerm && siteTerm !== commonTerm)
         {
-            leftTerm = siteTerm + '<span class="mapped">(' + commonTermLink + ')<span>';
+            leftTerm = '<span class="mapped-site-term">' + siteTerm + '</span><span class="mapped-common-term">(' + commonTermLink + ')<span>';
             mappingIndicator = '<?php echo __('mapped'); ?>';
             usageTerm = siteTerm;
         }
