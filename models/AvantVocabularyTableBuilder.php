@@ -78,19 +78,19 @@ class AvantVocabularyTableBuilder
 
         if ($kind == AvantVocabulary::KIND_PLACE)
         {
+            // Find any place terms that are not in use and add them to the site table.
             $placeTerms = $this->db->getTable('VocabularyCommonTerms')->getAllCommonTermRecordsForKind($kind);
             foreach ($placeTerms as $index => $placeTerm)
             {
                 if (!in_array($placeTerm->common_term, $siteTerms))
-                    $siteTerms[$index]['text'] = $placeTerm->common_term;
+                    $siteTerms[] = $placeTerm->common_term;
             }
         }
 
         // Add the terms to the table.
         $newTermRecords = array();
-        foreach ($siteTerms as $index => $term)
+        foreach ($siteTerms as $siteTerm)
         {
-            $siteTerm = $term['text'];
             $newTermRecords[] = $this->databaseInsertRecordForSiteTerm($kind, $siteTerm);
         }
 
@@ -269,7 +269,10 @@ class AvantVocabularyTableBuilder
             $results = null;
         }
 
-        return $results;
+        $siteTerms  = array();
+        foreach ($results as $result)
+            $siteTerms[] = $result['text'];
+        return $siteTerms;
     }
 
     protected function getCommonTermRecord($kind, $commonTerm)
