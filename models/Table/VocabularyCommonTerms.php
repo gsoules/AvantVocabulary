@@ -37,6 +37,31 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
         return $result;
     }
 
+    public function getAllCommonTermsForKind($kind)
+    {
+        $terms = array();
+        $db = get_db();
+        $select = $this->getSelect();
+        $select->reset(Zend_Db_Select::COLUMNS);
+        $select->columns(array('vocabulary_common_terms.common_term'));
+        $select->where("vocabulary_common_terms.kind = $kind");
+
+        try
+        {
+            // Use fetchAll instead of fetchObjects to get only the values of the site_term and common_term columns.
+            $results = $db->query($select)->fetchAll();
+        }
+        catch (Exception $e)
+        {
+            return $terms();
+        }
+
+        foreach ($results as $result)
+            $terms[] = $result['common_term'];
+
+        return $terms;
+    }
+
     public function getCommonTermRecordByCommonTerm($kind, $commonTerm)
     {
         $commonTerm = AvantCommon::escapeQuotes($commonTerm);

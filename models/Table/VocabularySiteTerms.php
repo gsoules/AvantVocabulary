@@ -2,6 +2,15 @@
 
 class Table_VocabularySiteTerms extends Omeka_Db_Table
 {
+    public function getDuplicateSiteTermRecord($siteTermRecord)
+    {
+        // This method looks for a site term record that matches the one passed as a parameter.
+        $select = $this->getSelect();
+        $select->where("kind = $siteTermRecord->kind AND LOWER(`site_term`) = LOWER('$siteTermRecord->site_term') AND common_term_id = $siteTermRecord->common_term_id");
+        $result = $this->fetchObject($select);
+        return $result;
+    }
+
     public function getSiteTermItems($kind)
     {
         // A site term "item" is an array containing all the information about a site term.
@@ -35,7 +44,7 @@ class Table_VocabularySiteTerms extends Omeka_Db_Table
             return array();
         }
 
-        // Find sitesite terms that are the same as common terms and set the default term to the common term.
+        // Find site terms that are the same as common terms and set the default term to the common term.
         // This is necessary because the site terms table does not contain a site_term value when the
         // site term is the same as the common term.
         foreach ($results as $index => $result)
@@ -49,29 +58,10 @@ class Table_VocabularySiteTerms extends Omeka_Db_Table
         return $results;
     }
 
-    public function getDuplicateSiteTermRecord($siteTermRecord)
-    {
-        // This method looks for a site term record that matches the one passed as a parameter.
-        $select = $this->getSelect();
-        $select->where("kind = $siteTermRecord->kind AND LOWER(`site_term`) = LOWER('$siteTermRecord->site_term') AND common_term_id = $siteTermRecord->common_term_id");
-        $result = $this->fetchObject($select);
-        return $result;
-    }
-
     public function getSiteTermRecordsByCommonTermId($commonTermId)
     {
         $select = $this->getSelect();
         $select->where("common_term_id = $commonTermId");
-        $results = $this->fetchObjects($select);
-        return $results;
-    }
-
-    public function getSiteTermRecordsBySiteTerm($siteTerm)
-    {
-        // This method gets all site terms of any kind that match a term.
-        $siteTerm = AvantCommon::escapeQuotes($siteTerm);
-        $select = $this->getSelect();
-        $select->where("site_term = '$siteTerm'");
         $results = $this->fetchObjects($select);
         return $results;
     }
