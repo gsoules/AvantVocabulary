@@ -171,7 +171,7 @@ class AvantVocabulary
             $part = preg_replace('/\s+/', ' ', $part);
 
             // Remove disallowed characters leaving only A-Z, hyphen, ampersand, comma, and space.
-            $part = preg_replace('/[^a-zA-Z0-9 \-\&]/', '', $part);
+            $part = preg_replace('/[^a-zA-Z0-9 \/\-\&]/', '', $part);
 
             if ($normalizedSiteTerm)
                 $normalizedSiteTerm .= ', ';
