@@ -106,7 +106,7 @@ foreach ($commonTermRecords as $commonTermRecord)
     $terms[$commonTerm] = $commonTermRecord->common_term_id;
 }
 
-$learnMoreLink = '<a href="https://digitalarchive.avantlogic.net/docs/archivist/common-vocabulary" target="_blank">Learn about the Common Vocabulary.</a>';
+$learnMoreLink = '<a href="https://digitalarchive.us/archivist/common-vocabulary" target="_blank">Learn about the Common Vocabulary.</a>';
 $instructions = '<div>' . __('This page displays the entire %s vocabulary hierarchy. ', $kindName) . $learnMoreLink . '</div>';
 $instructions .= '<div>' . __('Terms that come from Nomenclature 4.0 are followed by their identifier number. Click the identifier to see the Nomenclature definition of the term.') . '</div>';
 

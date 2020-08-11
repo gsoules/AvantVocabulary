@@ -2,7 +2,7 @@
     const addTermButton = jQuery('#add-vocabulary-term-button');
     const busyIndicator = jQuery('#vocabulary-editor-busy');
     const commonTermCount = '<?php echo $commonTermCount; ?>';
-    const defaultMessage = '<?php echo __('To edit a term, click its pencil icon.&nbsp;&nbsp;<a href="https://digitalarchive.avantlogic.net/docs/archivist/vocabulary-editor" target="_blank">Learn more</a>'); ?>';
+    const defaultMessage = '<?php echo __('To edit a term, click its pencil icon.&nbsp;&nbsp;<a href="https://digitalarchive.us/archivist/vocabulary-editor" target="_blank">Learn more</a>.'); ?>';
     const elementId = <?php echo $elementId; ?>;
     const kind = <?php echo $kind; ?>;
     const kindName = '<?php echo $kindName; ?>';
