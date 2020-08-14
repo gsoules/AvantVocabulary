@@ -96,13 +96,14 @@ class VocabularyTermsEditor
         {
             $table = "{$this->db->prefix}element_texts";
 
+            // Use BINARY in the WHERE clause to force case-sensitive comparison.
             $sql = "
                 SELECT
                   id, record_id
                 FROM
                   $table
                 WHERE
-                  record_type = 'Item' AND element_id = $elementId AND text = '$oldTerm'
+                  record_type = 'Item' AND element_id = $elementId AND BINARY text = '$oldTerm'
             ";
 
             $results = $this->db->query($sql)->fetchAll();
@@ -136,13 +137,14 @@ class VocabularyTermsEditor
         {
             $table = "{$this->db->prefix}element_texts";
 
+            // Use BINARY in the WHERE clause to force case-sensitive comparison.
             $sql = "
                 SELECT
                   COUNT(*)
                 FROM
                   $table
                 WHERE
-                  element_id = $elementId AND text = '$siteTerm'
+                  element_id = $elementId AND BINARY text = '$siteTerm'
             ";
 
             $count = $this->db->fetchOne($sql);
@@ -214,7 +216,7 @@ class VocabularyTermsEditor
 
     protected function updateAndReindexItems($itemValues, $oldTerm, $newTerm)
     {
-        // Update every Omeka item that uses the old.
+        // Update every Omeka item that uses the old term.
         $elementId = $itemValues['elementId'];
         $elementTexts = $this->getElementTextsThatUseTerm($elementId, $oldTerm);
 

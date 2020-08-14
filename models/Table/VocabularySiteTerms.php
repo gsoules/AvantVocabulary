@@ -53,7 +53,7 @@ class Table_VocabularySiteTerms extends Omeka_Db_Table
         }
 
         // Sort the results by the default term.
-        usort($results, function($a, $b){ return strcmp($a['default_term'], $b['default_term']); });
+        usort($results, function($a, $b){ return strcmp(strtolower($a['default_term']), strtolower($b['default_term'])); });
 
         return $results;
     }

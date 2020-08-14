@@ -118,9 +118,7 @@ class AvantVocabularyTableBuilder
                         break;
                     }
                 }
-                elseif (
-                    $newSiteTerm == $oldSiteTerm ||
-                    AvantVocabulary::normalizeSiteTerm($kind, $newSiteTerm) == AvantVocabulary::normalizeSiteTerm($kind, $oldSiteTerm))
+                elseif ($newSiteTerm == $oldSiteTerm)
                 {
                     // The new and old site terms are the same. The new term is unmapped by virtue of being new.
                     if ($oldTermItem['common_term_id'] == 0)
@@ -143,15 +141,8 @@ class AvantVocabularyTableBuilder
 
             if (!($newTermUpdated || $oldTermFoundInNewTable))
             {
-                // This term existed in the old table, but was not in use. See if it's normalized form matches an
-                // existing term. If it does, then don't add it to the table.
-                $normalizedSiteTerm = AvantVocabulary::normalizeSiteTerm($kind, $oldSiteTerm);
-                $exists =  $this->db->getTable('VocabularySiteTerms')->siteTermExists($kind, $normalizedSiteTerm);
-                if (!$exists)
-                {
-                    // Add this term to the site terms table.
-                    $this->databaseInsertRecordForOldSiteTerm($kind, $oldSiteTerm, $oldTermItem['common_term_id']);
-                }
+                // This term existed in the old table, but was not in use. Add it to the site terms table.
+                $this->databaseInsertRecordForOldSiteTerm($kind, $oldSiteTerm, $oldTermItem['common_term_id']);
             }
         }
     }
@@ -253,7 +244,7 @@ class AvantVocabularyTableBuilder
 
             $sql = "
                 SELECT
-                  DISTINCT text
+                  text
                 FROM
                   $table
                 WHERE
@@ -269,10 +260,16 @@ class AvantVocabularyTableBuilder
             $results = null;
         }
 
+        // Extract just the text from the results array of arrays.
         $siteTerms  = array();
         foreach ($results as $result)
             $siteTerms[] = $result['text'];
-        return $siteTerms;
+
+        // Get rid of duplicates. We do it like this because use of DISTINCT in the SQL query is case-insensitive
+        // and won't distinguish between two terms that are the same except for letter casing.
+        $uniqueSiteTerms = array_unique($siteTerms);
+
+        return $uniqueSiteTerms;
     }
 
     protected function getCommonTermRecord($kind, $commonTerm)

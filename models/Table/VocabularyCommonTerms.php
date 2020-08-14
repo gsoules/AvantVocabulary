@@ -68,8 +68,9 @@ class Table_VocabularyCommonTerms extends Omeka_Db_Table
 
         try
         {
+            // Use BINARY in the WHERE clause to force case-sensitive comparison.
             $select = $this->getSelect();
-            $select->where("kind = $kind AND common_term = '$commonTerm'");
+            $select->where("kind = $kind AND BINARY common_term = '$commonTerm'");
             $result = $this->fetchObject($select);
         }
         catch (Exception $e)
