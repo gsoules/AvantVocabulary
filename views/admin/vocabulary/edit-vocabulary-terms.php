@@ -137,6 +137,12 @@ foreach ($siteTermItems as $index => $siteTermItem)
         $commonTermId = $siteTermItem['common_term_id'];
         $commonTerm = $siteTermItem['common_term'];
 
+        if ($commonTerm == ElementValidator::VALIDATION_NONE)
+        {
+            // Don't show the special term 'none'.
+            continue;
+        }
+
         $suggestion = isset($siteTermItem['suggestion']) ? $siteTermItem['suggestion'] : '';
 
         $term = $siteTerm ? $siteTerm : $commonTerm;
