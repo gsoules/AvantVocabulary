@@ -135,10 +135,10 @@ class AvantVocabulary
                 case 'vocab-update':
                     $response = AvantVocabulary::handleRefreshCommonVocabulary();
                     break;
-
-                case 'vocab-rebuild':
-                    $response = AvantVocabulary::handleRebuildCommonAndLocalVocabularies();
-                    break;
+//
+//                case 'vocab-rebuild':
+//                    $response = AvantVocabulary::handleRebuildCommonAndLocalVocabularies();
+//                    break;
 
                 default:
                     $response = 'Unsupported AvantVocabulary action: ' . $action;
