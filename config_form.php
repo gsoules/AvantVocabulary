@@ -16,7 +16,7 @@ $deleteTable = intval(get_option(VocabularyConfig::OPTION_DELETE_VOCABULARY_TABL
         <p class="explanation"><?php echo __(" WARNING: Checking this box will cause all common vocabulary data to be
         permanently deleted if you uninstall this plugin. 
         Click <a href=\"https://digitalarchive.us/plugins/avantvocabulary/\" target=\"_blank\" style=\"color:red;\">
-        here</a> to read the documentation for the Delete Table option before unchecking the box."); ?></p>
+        here</a> to read the documentation for the Delete Tables option before unchecking the box."); ?></p>
         <?php echo $view->formCheckbox(VocabularyConfig::OPTION_DELETE_VOCABULARY_TABLE, true, array('checked' => $deleteTable)); ?>
     </div>
 </div>
