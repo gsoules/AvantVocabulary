@@ -13,6 +13,18 @@ class AvantVocabulary
     // Common terms with an Id higher than this do not come from Nomenclature 4.0.
     const VOCABULARY_FIRST_NON_NOMENCLATURE_COMMON_TERM_ID = 20000;
 
+    public static function addNewUnmappedSiteTerm($kind, $term)
+    {
+        if (!($kind == self::KIND_TYPE || $kind == self::KIND_SUBJECT))
+            return;
+        $siteTermRecord = new VocabularySiteTerms();
+        $siteTermRecord['kind'] = $kind;
+        $siteTermRecord['site_term'] = $term;
+        $siteTermRecord['common_term_id'] = 0;
+        if (!$siteTermRecord->save())
+            throw new Exception('addNewUnmappedSiteTerm save failed');
+    }
+
     public static function emitVocabularyKindChooser()
     {
         $html = '';
