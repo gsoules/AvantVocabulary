@@ -98,7 +98,7 @@
 }
 
 .vocabulary-term-mapping {
-    width: 80px;
+    width: 140px;
     padding-left: 8px;
     display: inline-block;
 }
@@ -350,7 +350,7 @@ https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-wit
 /* When the screen is 1200px wide or less */
 @media screen and (max-width: 1200px) {
     .vocabulary-term-left {
-        width: 550px;
+        width: 490px;
     }
 }
 

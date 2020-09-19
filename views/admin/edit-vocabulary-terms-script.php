@@ -729,7 +729,7 @@
         if (siteTerm && commonTerm && siteTerm !== commonTerm)
         {
             leftTerm = '<span class="mapped-site-term">' + siteTerm + '</span><span class="mapped-common-term">(' + commonTermLink + ')<span>';
-            mappingIndicator = '<?php echo __('mapped'); ?>';
+            mappingIndicator = '<?php echo __('Mapped'); ?>';
             usageTerm = siteTerm;
         }
         else if (siteTerm && !commonTerm && suggestion)
@@ -738,20 +738,20 @@
             suggestionLink = "<button class='use-suggestion-button' title='" + altText + "'>" + suggestion + "</button>";
             leftTerm = siteTerm + '<span class="suggestion">' + suggestionLink + '<span>';
             leftTerm = '<span class="unmapped">' + leftTerm + '<span>';
-            mappingIndicator = '<span><?php echo __('unmapped'); ?><span>';
+            mappingIndicator = '<span><?php echo __('Mnmapped'); ?><span>';
             usageTerm = siteTerm;
         }
         else if (siteTerm && !commonTerm)
         {
             leftTerm = siteTerm;
             leftTerm = '<span class="unmapped">' + leftTerm + '<span>';
-            mappingIndicator = '<span><?php echo __('unmapped'); ?><span>';
+            mappingIndicator = '<span><?php echo __('Unmapped'); ?><span>';
             usageTerm = siteTerm;
         }
         else
         {
             leftTerm = commonTermLink;
-            mappingIndicator = '<?php echo __('common'); ?>';
+            mappingIndicator = '<?php echo __('Common'); ?>';
             usageTerm = commonTerm;
         }
 
@@ -759,7 +759,7 @@
         usageTerm = encodeURIComponent(usageTerm);
 
         item.find('.vocabulary-term-left').html(leftTerm);
-        item.find('.vocabulary-term-mapping').html(mappingIndicator);
+        item.find('.vocabulary-term-mapping').html(mappingIndicator + ' ' + kindName);
 
         let usageCount = itemValues.usageCount;
         let usageAttributes = '';
