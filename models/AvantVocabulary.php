@@ -168,6 +168,10 @@ class AvantVocabulary
                     $response = AvantVocabulary::handleRebuildCommonTermsTable();
                     break;
 
+                case 'vocab-report':
+                    $response = AvantVocabulary::handleReportSiteTermsTable();
+                    break;
+
                 default:
                     $response = 'Unsupported AvantVocabulary action: ' . $action;
                     break;
@@ -176,6 +180,22 @@ class AvantVocabulary
         else
         {
             $response = '';
+        }
+
+        return $response;
+    }
+
+    public static function handleReportSiteTermsTable()
+    {
+        $tableBuilder = new AvantVocabularyTableBuilder();
+
+        try
+        {
+            $response = self::reportSiteTermsTable();
+        }
+        catch (Exception $e)
+        {
+            $response = 'Request failed: ' . $e->getMessage();
         }
 
         return $response;
@@ -239,6 +259,31 @@ class AvantVocabulary
     public static function progressFileName()
     {
         return VOCABULARY_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'progress-' . current_user()->id . '.txt';
+    }
+
+    public static function reportSiteTermsTable()
+    {
+        $kind = AvantVocabulary::KIND_SUBJECT;
+        $kindFields = self::getVocabularyFields();
+        $kindName = array_search($kind, $kindFields);
+        $siteTermItems = get_db()->getTable('VocabularySiteTerms')->getSiteTermItems($kind);
+        $vocabularyTermsEditor = new VocabularyTermsEditor();
+        $elementId = ItemMetadata::getElementIdForElementName($kindName);
+
+        $results = "\n";
+
+        foreach ($siteTermItems as $siteTermItem)
+        {
+            $siteTerm = $siteTermItem['site_term'];
+            if (empty($siteTerm) || strpos($siteTerm, "Other") === false)
+            {
+                continue;
+            }
+            $usageCount = $vocabularyTermsEditor->getSiteTermUsageCount($elementId, $siteTerm);
+            $results .= "\n$siteTerm ($usageCount)";
+        }
+
+        return $results;
     }
 
     public static function vocabulary_diff_url()
