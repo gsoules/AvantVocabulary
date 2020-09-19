@@ -104,15 +104,31 @@ class AvantVocabulary
         return $kindTable;
     }
 
-    public static function handleRebuildCommonAndLocalVocabularies()
+    public static function handleRebuildCommonTermsTable()
     {
         $tableBuilder = new AvantVocabularyTableBuilder();
 
         try
         {
             $tableBuilder->buildCommonTermsTable();
+            $response = 'Common Terms table rebuilt';
+        }
+        catch (Exception $e)
+        {
+            $response = 'Request failed: ' . $e->getMessage();
+        }
+
+        return $response;
+    }
+
+    public static function handleRebuildSiteTermsTable()
+    {
+        $tableBuilder = new AvantVocabularyTableBuilder();
+
+        try
+        {
             $tableBuilder->buildSiteTermsTable();
-            $response = 'Vocabulary tables rebuilt';
+            $response = 'Site Terms table rebuilt';
         }
         catch (Exception $e)
         {
@@ -147,10 +163,10 @@ class AvantVocabulary
                 case 'vocab-update':
                     $response = AvantVocabulary::handleRefreshCommonVocabulary();
                     break;
-//
-//                case 'vocab-rebuild':
-//                    $response = AvantVocabulary::handleRebuildCommonAndLocalVocabularies();
-//                    break;
+
+                case 'vocab-rebuild':
+                    $response = AvantVocabulary::handleRebuildCommonTermsTable();
+                    break;
 
                 default:
                     $response = 'Unsupported AvantVocabulary action: ' . $action;
