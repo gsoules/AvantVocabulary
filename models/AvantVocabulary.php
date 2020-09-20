@@ -263,24 +263,41 @@ class AvantVocabulary
 
     public static function reportSiteTermsTable()
     {
-        $kind = AvantVocabulary::KIND_SUBJECT;
+        $results = array();
         $kindFields = self::getVocabularyFields();
-        $kindName = array_search($kind, $kindFields);
-        $siteTermItems = get_db()->getTable('VocabularySiteTerms')->getSiteTermItems($kind);
-        $vocabularyTermsEditor = new VocabularyTermsEditor();
-        $elementId = ItemMetadata::getElementIdForElementName($kindName);
-
-        $results = "\n";
-
-        foreach ($siteTermItems as $siteTermItem)
+        foreach ($kindFields as $kindName => $kind)
         {
-            $siteTerm = $siteTermItem['site_term'];
-            if (empty($siteTerm) || strpos($siteTerm, "Other") === false)
+            $kindName = array_search($kind, $kindFields);
+            $elementId = ItemMetadata::getElementIdForElementName($kindName);
+
+            $siteTermItems = get_db()->getTable('VocabularySiteTerms')->getSiteTermItems($kind);
+            $vocabularyTermsEditor = new VocabularyTermsEditor();
+
+            foreach ($siteTermItems as $siteTermItem)
             {
-                continue;
+                $siteTerm = $siteTermItem['site_term'];
+                $commonTerm = $siteTermItem['common_term'];
+                $commonTermId = $siteTermItem['common_term_id'];
+
+                // Don't show the special term 'none'.
+                if ($commonTerm == ElementValidator::VALIDATION_NONE)
+                    continue;
+
+                if ($commonTermId)
+                    $mapping = $siteTerm ? 'mapped' : 'common';
+                else
+                    $mapping = 'unmapped';
+                $term = $siteTerm ? $siteTerm : $commonTerm;
+                if ($siteTerm && $commonTerm)
+                    $term .= " ($commonTerm)";
+                $usageCount = $vocabularyTermsEditor->getSiteTermUsageCount($elementId, $term);
+
+                $result['kind'] = $kindName;
+                $result['count'] = $usageCount;
+                $result['term'] = $term;
+                $result['mapping'] = $mapping;
+                $results[] = $result;
             }
-            $usageCount = $vocabularyTermsEditor->getSiteTermUsageCount($elementId, $siteTerm);
-            $results .= "\n$siteTerm ($usageCount)";
         }
 
         return $results;
