@@ -131,7 +131,6 @@ foreach ($siteTermItems as $index => $siteTermItem)
     foreach ($siteTermItems as $siteTermItem)
     {
         $hideClass = '';
-        $identifier = $siteTermItem['common_term_id'];
 
         $siteTerm = $siteTermItem['site_term'];
         $commonTermId = $siteTermItem['common_term_id'];
