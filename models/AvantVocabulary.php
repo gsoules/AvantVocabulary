@@ -288,9 +288,9 @@ class AvantVocabulary
                 else
                     $mapping = 'unmapped';
                 $term = $siteTerm ? $siteTerm : $commonTerm;
+                $usageCount = $vocabularyTermsEditor->getSiteTermUsageCount($elementId, $term);
                 if ($siteTerm && $commonTerm)
                     $term .= " ($commonTerm)";
-                $usageCount = $vocabularyTermsEditor->getSiteTermUsageCount($elementId, $term);
 
                 $result['kind'] = $kindName;
                 $result['count'] = $usageCount;
