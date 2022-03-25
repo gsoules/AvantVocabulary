@@ -291,6 +291,7 @@ class AvantVocabularyTableBuilder
         {
             $skip = false;
             $commonTermId = $siteTermsItem['common_term_id'];
+            $commonTerm = $siteTermsItem['common_term'];
             $siteTerm = $siteTermsItem['site_term'];
             if (empty($siteTerm) && $commonTermId == 0)
             {
@@ -315,6 +316,14 @@ class AvantVocabularyTableBuilder
                 $commonTermRecord = $this->db->getTable('VocabularyCommonTerms')->getCommonTermRecordByCommonTerm($kind, $siteTerm);
                 if ($commonTermRecord)
                     $skip = true;
+            }
+
+            if ($siteTerm == $commonTerm)
+            {
+                // The site term name is the same as the common term name. This should never happen, but if it does, fix it
+                // by erasing the site term text. This way the term will stay in the site terms table.
+                $siteTerm = "";
+                $siteTermsItems[$index]['site_term'] = $siteTerm;
             }
 
             if (!$skip)
