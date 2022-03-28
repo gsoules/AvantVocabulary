@@ -37,7 +37,7 @@ if (AvantCommon::isAjaxRequest())
     if ($action == 'progress')
     {
         $avantVocabularyTableBuilderProgress = new AvantVocabularyTableBuilderProgress();
-        $avantVocabularyTableBuilderProgress->handleAjaxProgressRequest($tableName, $action == 'start');
+        $avantVocabularyTableBuilderProgress->handleAjaxProgressRequest($tableName);
     }
     else
     {

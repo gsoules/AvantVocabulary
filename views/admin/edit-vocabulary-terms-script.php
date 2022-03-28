@@ -655,7 +655,7 @@
                     if (actionInProgress)
                     {
                         showBusyIndicator(data);
-                        progressTimer = setTimeout(reportProgress, 200);
+                        progressTimer = setTimeout(reportProgress, 1000);
                     }
                 },
                 error: function(request, status, error)
@@ -880,7 +880,7 @@
                     {
                         status = 'Build completed';
                         if (tableName === 'local')
-                            status += '. The page will reload.'
+                            status += '. Please wait for the page to reload.'
 
                         window.setTimeout(function ()
                         {

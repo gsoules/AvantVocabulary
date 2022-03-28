@@ -2,6 +2,8 @@
 
 class AvantVocabularyTableBuilder
 {
+    const OPTION_REPORT_PROGRESS = 'report-progress';
+
     protected $db;
 
     public function __construct()
@@ -11,11 +13,14 @@ class AvantVocabularyTableBuilder
 
     public function buildCommonTermsTable()
     {
+        set_option(self::OPTION_REPORT_PROGRESS, 0);
+
         VocabularyTableFactory::dropVocabularyCommonTermsTable();
         VocabularyTableFactory::createVocabularyCommonTermsTable();
 
         $rows = $this->readDataRowsFromRemoteCsvFile(AvantVocabulary::vocabulary_terms_url());
 
+        set_option(self::OPTION_REPORT_PROGRESS, 1);
         foreach ($rows as $row)
         {
             $kind = $row[0];
@@ -24,10 +29,14 @@ class AvantVocabularyTableBuilder
 
             $this->databaseInsertRecordForCommonTerm($kind, $id, $term);
         }
+
+        set_option(self::OPTION_REPORT_PROGRESS, 0);
     }
 
     public function buildSiteTermsTable()
     {
+        set_option(self::OPTION_REPORT_PROGRESS, 0);
+
         $fields = AvantVocabulary::getVocabularyFields();
 
         // Get the current terms from the site terms table in order to save terms that are unused and/or mapped.
@@ -41,11 +50,15 @@ class AvantVocabularyTableBuilder
         VocabularyTableFactory::dropVocabularySiteTermsTable();
         VocabularyTableFactory::createVocabularySiteTermsTable();
 
+        set_option(self::OPTION_REPORT_PROGRESS, 1);
+
         // Create new terms for each kind.
         foreach ($fields as $elementName => $kind)
         {
             $this->createSiteTerms($elementName, $kind, $oldTermItems[$kind]);
         }
+
+        set_option(self::OPTION_REPORT_PROGRESS, 0);
     }
 
     protected function convertSiteTermsToUnmapped($commonTermId)
