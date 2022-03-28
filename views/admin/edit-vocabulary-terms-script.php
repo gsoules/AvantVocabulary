@@ -19,6 +19,7 @@
     let originalItemValues = null;
     let progressCount = 0;
     let progressTimer;
+    let status = '';
     let tableName = '';
     let termChooserDialogTimer;
     let termChooserResultsCount = 0;
