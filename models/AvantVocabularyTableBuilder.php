@@ -346,7 +346,7 @@ class AvantVocabularyTableBuilder
         return $siteTermsItems;
     }
 
-    public function handleAjaxRequest($tableName)
+    public function handleAjaxBuildRequest($tableName)
     {
         // This method is called in response to Ajax requests from the client. For more information, see the comments
         // for this same method in AvantElasticSearchIndexBuilder.

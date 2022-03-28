@@ -37,7 +37,7 @@ if (AvantCommon::isAjaxRequest())
     if ($action == 'progress')
     {
         $avantVocabularyTableBuilderProgress = new AvantVocabularyTableBuilderProgress();
-        $avantVocabularyTableBuilderProgress->handleAjaxRequest($tableName);
+        $avantVocabularyTableBuilderProgress->handleAjaxProgressRequest($tableName, $action == 'start');
     }
     else
     {
@@ -45,7 +45,7 @@ if (AvantCommon::isAjaxRequest())
         ini_set('max_execution_time', 10 * 60);
 
         $avantVocabularyTableBuilder = new AvantVocabularyTableBuilder();
-        $avantVocabularyTableBuilder->handleAjaxRequest($tableName);
+        $avantVocabularyTableBuilder->handleAjaxBuildRequest($tableName);
     }
     // Leave so that the code to display the Vocabulary Editor will not execute.
     return;

@@ -9,7 +9,7 @@ class AvantVocabularyTableBuilderProgress
         $this->db = get_db();
     }
 
-    public function handleAjaxRequest($tableName)
+    public function handleAjaxProgressRequest($tableName, $firstRequest)
     {
         $response = $this->getProgress($tableName);
         echo json_encode($response);
