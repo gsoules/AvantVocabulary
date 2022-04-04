@@ -304,7 +304,7 @@ https://webdesign.tutsplus.com/tutorials/how-to-build-flexible-modal-dialogs-wit
 
 .modal-dialog {
     position: relative;
-    width: 80%;
+    width: 50%;
     height: 80%;
     border-radius: 5px;
     background: #fff;
