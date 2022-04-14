@@ -739,7 +739,7 @@
             suggestionLink = "<button class='use-suggestion-button' title='" + altText + "'>" + suggestion + "</button>";
             leftTerm = siteTerm + '<span class="suggestion">' + suggestionLink + '<span>';
             leftTerm = '<span class="unmapped">' + leftTerm + '<span>';
-            mappingIndicator = '<span><?php echo __('Mnmapped'); ?><span>';
+            mappingIndicator = '<span><?php echo __('Unmapped'); ?><span>';
             usageTerm = siteTerm;
         }
         else if (siteTerm && !commonTerm)
